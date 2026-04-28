@@ -1,0 +1,2097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IWA — Intelligent Work Assignment | Covalent Networks</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #FAF6EF; -webkit-font-smoothing: antialiased; }
+    #root { width: 100%; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PALETTE & TOKENS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const P = {
+  cream: "#FAF6EF", ink: "#1A1612", inkLight: "#3D3630", inkMuted: "#6B6258",
+  inkFaint: "#9E9487", rule: "#D6CFC4", ruleFaint: "#E8E2D9",
+  accent: "#05448E", accentLight: "#2D6AB8", accentFaint: "rgba(5,68,142,0.08)",
+  green: "#2E7D57", greenFaint: "rgba(46,125,87,0.08)",
+  red: "#B44130", redFaint: "rgba(180,65,48,0.08)",
+  amber: "#A67C28", amberFaint: "rgba(166,124,40,0.08)",
+  violet: "#6A49A1", violetFaint: "rgba(106,73,161,0.08)",
+  cardBg: "#FFFFFF",
+};
+
+const serif = "'IBM Plex Serif', 'Georgia', serif";
+const sans = "'IBM Plex Sans', 'Helvetica Neue', sans-serif";
+const mono = "'IBM Plex Mono', 'Menlo', monospace";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE HOOK
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function useWidth() {
+  const [w, setW] = useState(typeof window !== "undefined" ? window.innerWidth : 900);
+  useEffect(() => {
+    const h = () => setW(window.innerWidth);
+    window.addEventListener("resize", h);
+    return () => window.removeEventListener("resize", h);
+  }, []);
+  return w;
+}
+
+// SVG viewBox width that stays large enough for text readability
+// On mobile, we keep the viewBox wide and let SVG scale down proportionally
+// This ensures text inside SVGs stays readable at any screen size
+function useSvgW(maxW = 780) {
+  const vw = useWidth();
+  // Always use a minimum viewBox width of 600 so text doesn't shrink too small
+  // The SVG will scale down visually but text proportions stay correct
+  return Math.min(Math.max(vw - 32, 600), maxW);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYOUT WRAPPERS — three tiers of width
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+// Prose — left-aligned, fills the same width as Wide
+function Prose({ children, style: s }) {
+  return (
+    <div style={{
+      width: "min(100%, max(920px, 72vw))", margin: "0 auto",
+      padding: "0 clamp(16px, 4vw, 48px)", boxSizing: "border-box",
+      fontFamily: serif, fontSize: "clamp(16px, 0.6vw + 13px, 20px)", color: P.inkLight,
+      lineHeight: 1.75, marginBottom: 28, ...s,
+    }}>
+      {children}
+    </div>
+  );
+}
+
+// Wide — for figures & interactive elements, stretches more
+function Wide({ children, style: s }) {
+  return (
+    <div style={{
+      width: "min(100%, max(920px, 72vw))", margin: "0 auto",
+      padding: "0 clamp(16px, 4vw, 48px)", boxSizing: "border-box", ...s,
+    }}>
+      {children}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TINY COMPONENTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function ActHeader({ number, title, subtitle }) {
+  return (
+    <Wide style={{ paddingTop: "clamp(48px, 6vw, 80px)", paddingBottom: 32 }}>
+      <div style={{ fontFamily: mono, fontSize: 11, letterSpacing: "0.18em", color: P.accent, textTransform: "uppercase", fontWeight: 500, marginBottom: 12 }}>
+        Act {number}
+      </div>
+      <h2 style={{ fontFamily: serif, fontSize: "clamp(26px, 2.5vw + 10px, 42px)", fontWeight: 400, color: P.ink, lineHeight: 1.25, margin: "0 0 10px", fontStyle: "italic" }}>
+        {title}
+      </h2>
+      {subtitle && <p style={{ fontFamily: sans, fontSize: "clamp(14px, 0.6vw + 9px, 18px)", color: P.inkMuted, lineHeight: 1.6, margin: 0, maxWidth: "min(600px, 80%)" }}>{subtitle}</p>}
+      <div style={{ width: 40, height: 2, background: P.accent, marginTop: 24 }} />
+    </Wide>
+  );
+}
+
+function SectionHeader({ title, subtitle }) {
+  return (
+    <Wide style={{ paddingTop: "clamp(56px, 6vw, 90px)", paddingBottom: 28 }}>
+      <h2 style={{ fontFamily: serif, fontSize: "clamp(26px, 2.5vw + 10px, 42px)", fontWeight: 400, color: P.ink, lineHeight: 1.25, margin: "0 0 10px", fontStyle: "italic" }}>
+        {title}
+      </h2>
+      {subtitle && <p style={{ fontFamily: sans, fontSize: "clamp(14px, 0.6vw + 9px, 18px)", color: P.inkMuted, lineHeight: 1.6, margin: 0, maxWidth: "min(600px, 80%)" }}>{subtitle}</p>}
+      <div style={{ width: 40, height: 2, background: P.accent, marginTop: 24 }} />
+    </Wide>
+  );
+}
+
+function Aside({ children, color = P.accent, bg = P.accentFaint }) {
+  return (
+    <Wide style={{ marginBottom: 28 }}>
+      <div style={{ background: bg, borderLeft: `3px solid ${color}`, borderRadius: "0 8px 8px 0", padding: "clamp(14px, 1.5vw, 20px) clamp(16px, 2vw, 24px)", fontFamily: sans, fontSize: "clamp(14px, 0.5vw + 9px, 17px)", color: P.inkLight, lineHeight: 1.65 }}>
+        {children}
+      </div>
+    </Wide>
+  );
+}
+
+function Label({ children }) {
+  return <span style={{ fontFamily: mono, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: P.inkFaint, fontWeight: 500 }}>{children}</span>;
+}
+
+function Divider() {
+  return <Wide style={{ paddingTop: 32, paddingBottom: 32 }}><div style={{ borderTop: `1px solid ${P.ruleFaint}` }} /></Wide>;
+}
+
+function Figure({ children, caption }) {
+  return (
+    <Wide style={{ marginBottom: 32 }}>
+      <div style={{ background: P.cardBg, border: `1px solid ${P.ruleFaint}`, borderRadius: 10, padding: "clamp(16px, 2vw, 28px)", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+        {children}
+      </div>
+      {caption && <div style={{ fontFamily: sans, fontSize: 12, color: P.inkFaint, marginTop: 8, textAlign: "center", fontStyle: "italic" }}>{caption}</div>}
+    </Wide>
+  );
+}
+
+function SectionLabel({ children }) {
+  return <p style={{ fontFamily: sans, fontSize: "clamp(12px, 0.4vw + 8px, 15px)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: P.accent, marginBottom: 4 }}>{children}</p>;
+}
+
+const btnStyle = { fontFamily: sans, fontSize: 12, fontWeight: 500, padding: "5px 12px", borderRadius: 4, border: `1px solid ${P.rule}`, background: P.cream, color: P.inkMuted, cursor: "pointer" };
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DIAGRAMS (reused from technical version)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function BeforeAfterDiagram() {
+  const vw = useWidth();
+  const [mode, setMode] = useState("before"); // "before" | "after"
+  const [hoveredWorker, setHoveredWorker] = useState(null);
+  const [hoveredJob, setHoveredJob] = useState(null);
+
+  const workers = [
+    { id: "w1", name: "Easton", initials: "EA" },
+    { id: "w2", name: "Harper", initials: "HA" },
+    { id: "w3", name: "Crowley", initials: "CR" },
+    { id: "w4", name: "Donovan", initials: "DO" },
+    { id: "w5", name: "Langford", initials: "LA" },
+  ];
+
+  const jobs = [
+    { id: "j1", label: "Engine #1012", sub: "Rank 1 · ML06 · Headcount 2", hc: 2, rank: 1 },
+    { id: "j2", label: "Engine #1014", sub: "Rank 2 · ML01-05 · Headcount 2", hc: 2, rank: 2 },
+    { id: "j3", label: "Engine #1017", sub: "Rank 3 · ML06 · Headcount 2", hc: 2, rank: 3 },
+    { id: "j4", label: "Engine #1019", sub: "Rank 4 · ML01-05 · Headcount 2", hc: 2, rank: 4 },
+  ];
+
+  // Before: chaotic gut assignments with specific problems
+  const beforeLinks = [
+    { w: "w1", j: "j3", problem: "High-skill worker wasted on Rank 3" },
+    { w: "w2", j: "j3", problem: "Two workers stacked on low-priority work" },
+    { w: "w3", j: "j2", problem: null },
+    { w: "w4", j: "j4", problem: "Assigned to Rank 4 while Rank 1 is empty" },
+    // w5 is idle, j1 is unstaffed
+  ];
+
+  // After: optimized assignments
+  const afterLinks = [
+    { w: "w2", j: "j1" }, { w: "w1", j: "j1" },
+    { w: "w3", j: "j2" }, { w: "w4", j: "j2" },
+    { w: "w5", j: "j3" },
+  ];
+
+  const links = mode === "before" ? beforeLinks : afterLinks;
+  const isBefore = mode === "before";
+
+  const wSpacing = 68;
+  const jSpacing = 76;
+  const svgH = Math.max(workers.length * wSpacing + 70, jobs.length * jSpacing + 70);
+  const svgW = useSvgW(780);
+  const wColW = svgW * 0.22;
+  const jColW = svgW * 0.28;
+  const wX = wColW;
+  const jX = svgW - jColW;
+  const wStartY = 60;
+  const jStartY = 60;
+
+  function getWY(id) { return wStartY + workers.findIndex(w => w.id === id) * wSpacing; }
+  function getJY(id) { return jStartY + jobs.findIndex(j => j.id === id) * jSpacing; }
+
+  const anyHover = hoveredWorker || hoveredJob;
+  const idleWorkers = isBefore ? ["w5"] : [];
+  const assignedToWorker = (wid) => links.filter(l => l.w === wid);
+  const assignedToJob = (jid) => links.filter(l => l.j === jid);
+
+  function getJobStatus(jid) {
+    const count = assignedToJob(jid).length;
+    const job = jobs.find(j => j.id === jid);
+    if (count === 0) return { label: "UNSTAFFED", detail: "0 / " + job.hc, color: P.red, bg: P.redFaint };
+    if (count < job.hc) return { label: "SHORT", detail: count + " / " + job.hc, color: P.amber, bg: P.amberFaint };
+    if (count === job.hc) return { label: isBefore ? "MET" : "STAFFED", detail: count + " / " + job.hc, color: P.green, bg: P.greenFaint };
+    return { label: "OVER", detail: count + " / " + job.hc, color: P.amber, bg: P.amberFaint };
+  }
+
+  function isLinkActive(link) {
+    if (hoveredWorker && link.w === hoveredWorker) return true;
+    if (hoveredJob && link.j === hoveredJob) return true;
+    return false;
+  }
+
+  // Callout text
+  let callout = null;
+  if (isBefore) {
+    if (hoveredWorker === "w5") callout = { text: "Langford sits idle while the highest-priority engine goes unstaffed.", color: P.red };
+    else if (hoveredWorker) {
+      const link = beforeLinks.find(l => l.w === hoveredWorker);
+      if (link?.problem) callout = { text: link.problem, color: P.amber };
+    }
+    if (hoveredJob === "j1") callout = { text: "Engine #1012 — highest priority — has zero workers assigned.", color: P.red };
+    else if (hoveredJob === "j3") callout = { text: "Two workers assigned to Rank 3 while Rank 1 sits empty.", color: P.amber };
+    else if (hoveredJob === "j4") callout = { text: "Rank 4 has a worker while higher-priority jobs need people.", color: P.amber };
+  }
+
+  return (
+    <div>
+      {/* Toggle switch */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
+        <Label>Assignment Quality</Label>
+        <div style={{ display: "flex", background: P.ruleFaint, borderRadius: 8, padding: 3 }}>
+          <button onClick={() => { setMode("before"); setHoveredWorker(null); setHoveredJob(null); }}
+            style={{
+              fontFamily: sans, fontSize: 13, fontWeight: mode === "before" ? 600 : 400,
+              padding: "8px 20px", borderRadius: 6, border: "none", cursor: "pointer",
+              background: mode === "before" ? P.cardBg : "transparent",
+              color: mode === "before" ? P.red : P.inkFaint,
+              boxShadow: mode === "before" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+              transition: "all 0.2s",
+            }}>
+            ✗ Without IWA
+          </button>
+          <button onClick={() => { setMode("after"); setHoveredWorker(null); setHoveredJob(null); }}
+            style={{
+              fontFamily: sans, fontSize: 13, fontWeight: mode === "after" ? 600 : 400,
+              padding: "8px 20px", borderRadius: 6, border: "none", cursor: "pointer",
+              background: mode === "after" ? P.cardBg : "transparent",
+              color: mode === "after" ? P.green : P.inkFaint,
+              boxShadow: mode === "after" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+              transition: "all 0.2s",
+            }}>
+            ✓ With IWA
+          </button>
+        </div>
+      </div>
+
+      {/* SVG diagram */}
+      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <svg viewBox={`0 0 ${svgW} ${svgH}`} width="100%" style={{ display: "block" }}>
+
+          {/* Column headers */}
+          <text x={10} y={18} textAnchor="start" fontSize={10} fontFamily={mono} fontWeight={500}
+            fill={P.inkFaint} letterSpacing="0.1em">WORKERS</text>
+          <text x={jX - 4} y={18} textAnchor="start" fontSize={10} fontFamily={mono} fontWeight={500}
+            fill={P.inkFaint} letterSpacing="0.1em">JOBS</text>
+
+          {/* Connection curves */}
+          {links.map((link, i) => {
+            const wy = getWY(link.w);
+            const jy = getJY(link.j);
+            const active = isLinkActive(link);
+            const dimmed = anyHover && !active;
+            const hasProblem = isBefore && link.problem;
+            const midX = (wX + jX) / 2;
+            const path = `M ${wX + 8} ${wy} C ${midX} ${wy}, ${midX} ${jy}, ${jX - 8} ${jy}`;
+
+            return (
+              <path key={i} d={path} fill="none"
+                stroke={isBefore ? (hasProblem ? P.amber : P.rule) : P.green}
+                strokeWidth={active ? 3 : 2}
+                strokeDasharray={hasProblem ? "8 4" : "none"}
+                opacity={dimmed ? 0.1 : active ? 0.9 : isBefore ? 0.4 : 0.5}
+                style={{ transition: "all 0.25s ease" }}
+              />
+            );
+          })}
+
+          {/* Workers */}
+          {workers.map((w) => {
+            const y = getWY(w.id);
+            const idle = idleWorkers.includes(w.id);
+            const isHovered = hoveredWorker === w.id;
+            const linkedToHoveredJob = hoveredJob && links.some(l => l.w === w.id && l.j === hoveredJob);
+            const dimmed = anyHover && !isHovered && !linkedToHoveredJob;
+            const assignCount = assignedToWorker(w.id).length;
+
+            return (
+              <g key={w.id}
+                onMouseEnter={() => { setHoveredWorker(w.id); setHoveredJob(null); }}
+                onMouseLeave={() => setHoveredWorker(null)}
+                style={{ cursor: isBefore ? "pointer" : "default" }}>
+                <rect x={8} y={y - 24} width={wColW - 16} height={48} rx={10}
+                  fill={idle ? P.redFaint : isHovered ? (isBefore ? P.amberFaint : P.accentFaint) : P.cardBg}
+                  stroke={idle ? P.red + "66" : isHovered ? (isBefore ? P.amber : P.accent) : P.ruleFaint}
+                  strokeWidth={isHovered ? 1.5 : 1}
+                  opacity={dimmed ? 0.2 : 1}
+                  style={{ transition: "all 0.2s" }}
+                />
+                <circle cx={30} cy={y} r={15}
+                  fill={idle ? P.red + "18" : isBefore ? P.accentFaint : P.greenFaint}
+                  opacity={dimmed ? 0.2 : 1} style={{ transition: "opacity 0.2s" }} />
+                <text x={30} y={y + 4} textAnchor="middle" fontSize={9} fontFamily={mono} fontWeight={600}
+                  fill={idle ? P.red : isBefore ? P.accent : P.green}
+                  opacity={dimmed ? 0.2 : 1}>{w.initials}</text>
+                <text x={54} y={y - 4} fontSize={13} fontFamily={sans} fontWeight={500}
+                  fill={P.ink} opacity={dimmed ? 0.2 : 1}>{w.name}</text>
+                <text x={54} y={y + 12} fontSize={10} fontFamily={sans}
+                  fill={idle ? P.red : P.inkFaint}
+                  opacity={dimmed ? 0.2 : 1}>
+                  {idle ? "idle — no assignment" : `${assignCount} job${assignCount !== 1 ? "s" : ""} assigned`}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Jobs */}
+          {jobs.map((j) => {
+            const y = getJY(j.id);
+            const status = getJobStatus(j.id);
+            const isHovered = hoveredJob === j.id;
+            const linkedToHoveredWorker = hoveredWorker && links.some(l => l.j === j.id && l.w === hoveredWorker);
+            const dimmed = anyHover && !isHovered && !linkedToHoveredWorker;
+
+            return (
+              <g key={j.id}
+                onMouseEnter={() => { setHoveredJob(j.id); setHoveredWorker(null); }}
+                onMouseLeave={() => setHoveredJob(null)}
+                style={{ cursor: isBefore ? "pointer" : "default" }}>
+                <rect x={jX - 6} y={y - 28} width={jColW - 4} height={56} rx={10}
+                  fill={status.bg}
+                  stroke={status.color + "44"}
+                  strokeWidth={isHovered ? 1.5 : 1}
+                  opacity={dimmed ? 0.2 : 1}
+                  style={{ transition: "all 0.2s" }}
+                />
+                <text x={jX + 6} y={y - 8} fontSize={13} fontFamily={sans} fontWeight={500}
+                  fill={P.ink} opacity={dimmed ? 0.2 : 1}>{j.label}</text>
+                <text x={jX + 6} y={y + 8} fontSize={10} fontFamily={sans}
+                  fill={P.inkFaint} opacity={dimmed ? 0.2 : 1}>{j.sub}</text>
+                {/* Status badge */}
+                <text x={svgW - 16} y={y - 10} textAnchor="end" fontSize={9} fontFamily={mono} fontWeight={600}
+                  fill={status.color} opacity={dimmed ? 0.2 : 1}>{status.label}</text>
+                <text x={svgW - 16} y={y + 6} textAnchor="end" fontSize={11} fontFamily={mono} fontWeight={600}
+                  fill={status.color} opacity={dimmed ? 0.2 : 1}>{status.detail}</text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* Callout area */}
+      <div style={{ minHeight: 44, marginTop: 8 }}>
+        {callout ? (
+          <div style={{
+            background: callout.color === P.red ? P.redFaint : P.amberFaint,
+            borderLeft: `3px solid ${callout.color}`,
+            borderRadius: "0 6px 6px 0", padding: "10px 14px",
+            fontFamily: sans, fontSize: 14, color: P.inkLight, lineHeight: 1.5,
+          }}>
+            <strong style={{ color: callout.color }}>{hoveredWorker ? workers.find(w => w.id === hoveredWorker)?.name : jobs.find(j => j.id === hoveredJob)?.label}:</strong>{" "}
+            {callout.text}
+          </div>
+        ) : (
+          <div style={{ fontFamily: sans, fontSize: 13, color: P.inkFaint, textAlign: "center", paddingTop: 8 }}>
+            {isBefore
+              ? "Hover a worker or job to see what goes wrong with gut-based assignments."
+              : "Every worker is utilized. High-priority work is staffed first. No waste."}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AbsenceCascadeDiagram() {
+  const vw = useWidth();
+  const [absentWorker, setAbsentWorker] = useState(null);
+  const [phase, setPhase] = useState("stable"); // stable | cascade | reoptimized
+
+  const workers = [
+    { id: "w1", name: "Easton", initials: "EA" },
+    { id: "w2", name: "Harper", initials: "HA" },
+    { id: "w3", name: "Crowley", initials: "CR" },
+    { id: "w4", name: "Donovan", initials: "DO" },
+    { id: "w5", name: "Langford", initials: "LA" },
+  ];
+
+  const jobs = [
+    { id: "j1", label: "Engine #1012", sub: "Rank 1 · ML06 · Headcount 2", hc: 2, rank: 1 },
+    { id: "j2", label: "Engine #1014", sub: "Rank 2 · ML01-05 · Headcount 2", hc: 2, rank: 2 },
+    { id: "j3", label: "Engine #1017", sub: "Rank 3 · ML06 · Headcount 2", hc: 2, rank: 3 },
+  ];
+
+  // Stable optimized state
+  const stableLinks = [
+    { w: "w2", j: "j1" }, { w: "w1", j: "j1" },
+    { w: "w3", j: "j2" }, { w: "w4", j: "j2" },
+    { w: "w5", j: "j3" },
+  ];
+
+  // Cascade definitions per absent worker
+  const cascades = {
+    w1: {
+      steps: [
+        { text: "Easton calls out sick.", type: "absence" },
+        { text: "Engine #1012 (Rank 1) drops to 1/2 — short-staffed.", type: "gap" },
+        { text: "Supervisor pulls Donovan from #1014 to cover #1012.", type: "move", from: "w4", fromJob: "j2", toJob: "j1" },
+        { text: "Now #1014 (Rank 2) drops to 1/2.", type: "gap" },
+        { text: "Supervisor pulls Langford from #1017 to cover #1014.", type: "move", from: "w5", fromJob: "j3", toJob: "j2" },
+        { text: "Engine #1017 (Rank 3) is now completely unstaffed.", type: "gap" },
+      ],
+      cascadeLinks: [
+        { w: "w2", j: "j1" }, { w: "w4", j: "j1" },
+        { w: "w3", j: "j2" }, { w: "w5", j: "j2" },
+      ],
+      reoptLinks: [
+        { w: "w2", j: "j1" }, { w: "w4", j: "j1" },
+        { w: "w3", j: "j2" }, { w: "w5", j: "j3" },
+      ],
+    },
+    w2: {
+      steps: [
+        { text: "Harper calls out sick.", type: "absence" },
+        { text: "Engine #1012 (Rank 1) drops to 1/2 — short-staffed.", type: "gap" },
+        { text: "Supervisor pulls Crowley from #1014 to cover #1012.", type: "move" },
+        { text: "Now #1014 (Rank 2) drops to 1/2.", type: "gap" },
+        { text: "Supervisor pulls Langford from #1017 to cover #1014.", type: "move" },
+        { text: "Engine #1017 is now completely unstaffed.", type: "gap" },
+      ],
+      cascadeLinks: [
+        { w: "w1", j: "j1" }, { w: "w3", j: "j1" },
+        { w: "w4", j: "j2" }, { w: "w5", j: "j2" },
+      ],
+      reoptLinks: [
+        { w: "w1", j: "j1" }, { w: "w4", j: "j1" },
+        { w: "w3", j: "j2" }, { w: "w5", j: "j3" },
+      ],
+    },
+    w3: {
+      steps: [
+        { text: "Crowley calls out sick.", type: "absence" },
+        { text: "Engine #1014 (Rank 2) drops to 1/2.", type: "gap" },
+        { text: "Supervisor pulls Langford from #1017 to cover.", type: "move" },
+        { text: "Engine #1017 is now unstaffed.", type: "gap" },
+      ],
+      cascadeLinks: [
+        { w: "w2", j: "j1" }, { w: "w1", j: "j1" },
+        { w: "w4", j: "j2" }, { w: "w5", j: "j2" },
+      ],
+      reoptLinks: [
+        { w: "w2", j: "j1" }, { w: "w1", j: "j1" },
+        { w: "w4", j: "j2" }, { w: "w5", j: "j3" },
+      ],
+    },
+    w4: {
+      steps: [
+        { text: "Donovan calls out sick.", type: "absence" },
+        { text: "Engine #1014 (Rank 2) drops to 1/2.", type: "gap" },
+        { text: "Supervisor pulls Langford from #1017 to cover.", type: "move" },
+        { text: "Engine #1017 is now unstaffed.", type: "gap" },
+      ],
+      cascadeLinks: [
+        { w: "w2", j: "j1" }, { w: "w1", j: "j1" },
+        { w: "w3", j: "j2" }, { w: "w5", j: "j2" },
+      ],
+      reoptLinks: [
+        { w: "w2", j: "j1" }, { w: "w1", j: "j1" },
+        { w: "w3", j: "j2" }, { w: "w5", j: "j3" },
+      ],
+    },
+    w5: {
+      steps: [
+        { text: "Langford calls out sick.", type: "absence" },
+        { text: "Engine #1017 (Rank 3) is now unstaffed.", type: "gap" },
+        { text: "No cascade needed — higher-priority work unaffected.", type: "ok" },
+      ],
+      cascadeLinks: [
+        { w: "w2", j: "j1" }, { w: "w1", j: "j1" },
+        { w: "w3", j: "j2" }, { w: "w4", j: "j2" },
+      ],
+      reoptLinks: [
+        { w: "w2", j: "j1" }, { w: "w1", j: "j1" },
+        { w: "w3", j: "j2" }, { w: "w4", j: "j2" },
+      ],
+    },
+  };
+
+  const activeLinks = !absentWorker ? stableLinks
+    : phase === "stable" ? stableLinks
+    : phase === "reoptimized" ? cascades[absentWorker].reoptLinks
+    : cascades[absentWorker].cascadeLinks;
+
+  const availableWorkers = absentWorker
+    ? workers.filter(w => w.id !== absentWorker)
+    : workers;
+
+  function handleWorkerClick(wid) {
+    if (phase !== "stable" && absentWorker === wid) return;
+    setAbsentWorker(wid);
+    setPhase("cascade");
+  }
+
+  function handleReoptimize() {
+    setPhase("reoptimized");
+  }
+
+  function handleReset() {
+    setAbsentWorker(null);
+    setPhase("stable");
+  }
+
+  const wSpacing = 68;
+  const jSpacing = 80;
+  const svgW = useSvgW(780);
+  const svgH = Math.max(workers.length * wSpacing + 70, jobs.length * jSpacing + 70);
+  const wColW = svgW * 0.22;
+  const jColW = svgW * 0.28;
+  const wX = wColW;
+  const jX = svgW - jColW;
+  const wStartY = 60;
+  const jStartY = 60;
+
+  function getWY(id) { return wStartY + workers.findIndex(w => w.id === id) * wSpacing; }
+  function getJY(id) { return jStartY + jobs.findIndex(j => j.id === id) * jSpacing; }
+
+  function getJobStatus(jid) {
+    const count = activeLinks.filter(l => l.j === jid).length;
+    const job = jobs.find(j => j.id === jid);
+    if (count === 0) return { label: "UNSTAFFED", detail: "0 / " + job.hc, color: P.red, bg: P.redFaint };
+    if (count < job.hc) return { label: "SHORT", detail: count + " / " + job.hc, color: P.amber, bg: P.amberFaint };
+    return { label: "STAFFED", detail: count + " / " + job.hc, color: P.green, bg: P.greenFaint };
+  }
+
+  const cascade = absentWorker ? cascades[absentWorker] : null;
+
+  const stepTypeIcon = { absence: "🔴", gap: "⚠️", move: "↪", ok: "✓" };
+  const stepTypeColor = { absence: P.red, gap: P.amber, move: P.amber, ok: P.green };
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+        <Label>Absence Cascade Simulator</Label>
+        {absentWorker && (
+          <div style={{ display: "flex", gap: 6 }}>
+            {phase === "cascade" && (
+              <button onClick={handleReoptimize} style={{
+                ...btnStyle, background: P.green, color: "#fff", border: `1px solid ${P.green}`,
+                fontWeight: 600,
+              }}>
+                ▶ Rerun IWA
+              </button>
+            )}
+            <button onClick={handleReset} style={btnStyle}>Reset</button>
+          </div>
+        )}
+      </div>
+
+      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <svg viewBox={`0 0 ${svgW} ${svgH}`} width="100%" style={{ display: "block" }}>
+          <text x={10} y={18} textAnchor="start" fontSize={10} fontFamily={mono} fontWeight={500}
+            fill={P.inkFaint} letterSpacing="0.1em">WORKERS</text>
+          <text x={jX - 4} y={18} textAnchor="start" fontSize={10} fontFamily={mono} fontWeight={500}
+            fill={P.inkFaint} letterSpacing="0.1em">JOBS</text>
+
+          {/* Connections */}
+          {activeLinks.map((link, i) => {
+            const wy = getWY(link.w);
+            const jy = getJY(link.j);
+            const midX2 = (wX + jX) / 2;
+            const path = `M ${wX + 8} ${wy} C ${midX2} ${wy}, ${midX2} ${jy}, ${jX - 8} ${jy}`;
+            const isNewConnection = phase === "cascade" && cascade && !stableLinks.some(sl => sl.w === link.w && sl.j === link.j);
+            return (
+              <path key={i} d={path} fill="none"
+                stroke={phase === "reoptimized" ? P.green : isNewConnection ? P.amber : P.green}
+                strokeWidth={2}
+                strokeDasharray={isNewConnection ? "8 4" : "none"}
+                opacity={phase === "reoptimized" ? 0.6 : 0.5}
+                style={{ transition: "all 0.4s ease" }}
+              />
+            );
+          })}
+
+          {/* Broken connections (from absent worker) */}
+          {absentWorker && phase !== "stable" && stableLinks.filter(l => l.w === absentWorker).map((link, i) => {
+            const wy = getWY(link.w);
+            const jy = getJY(link.j);
+            const midX2 = (wX + jX) / 2;
+            const path = `M ${wX + 8} ${wy} C ${midX2} ${wy}, ${midX2} ${jy}, ${jX - 8} ${jy}`;
+            return (
+              <path key={"broken" + i} d={path} fill="none"
+                stroke={P.red} strokeWidth={1.5} strokeDasharray="4 4" opacity={0.25}
+                style={{ transition: "all 0.4s" }}
+              />
+            );
+          })}
+
+          {/* Workers */}
+          {workers.map((w) => {
+            const y = getWY(w.id);
+            const isAbsent = w.id === absentWorker && phase !== "stable";
+            const isClickable = phase === "stable" || (!isAbsent && phase === "stable");
+            const assignCount = activeLinks.filter(l => l.w === w.id).length;
+            const wasReassigned = phase === "cascade" && cascade && !stableLinks.some(sl => sl.w === w.id && activeLinks.some(al => al.w === w.id && al.j === sl.j));
+
+            return (
+              <g key={w.id}
+                onClick={() => phase === "stable" ? handleWorkerClick(w.id) : null}
+                style={{ cursor: phase === "stable" ? "pointer" : "default" }}>
+                <rect x={8} y={y - 24} width={wColW - 16} height={48} rx={10}
+                  fill={isAbsent ? P.redFaint : wasReassigned ? P.amberFaint : P.cardBg}
+                  stroke={isAbsent ? P.red + "88" : wasReassigned ? P.amber + "66" : P.ruleFaint}
+                  strokeWidth={1}
+                  opacity={isAbsent ? 0.6 : 1}
+                  style={{ transition: "all 0.3s" }}
+                />
+                <circle cx={30} cy={y} r={15}
+                  fill={isAbsent ? P.red + "22" : phase === "reoptimized" ? P.greenFaint : P.accentFaint}
+                  opacity={isAbsent ? 0.5 : 1} style={{ transition: "all 0.3s" }} />
+                <text x={30} y={y + 4} textAnchor="middle" fontSize={9} fontFamily={mono} fontWeight={600}
+                  fill={isAbsent ? P.red : phase === "reoptimized" ? P.green : P.accent}
+                  opacity={isAbsent ? 0.5 : 1}>{w.initials}</text>
+                <text x={54} y={y - 4} fontSize={13} fontFamily={sans} fontWeight={500}
+                  fill={isAbsent ? P.red : P.ink}
+                  opacity={isAbsent ? 0.5 : 1}
+                  style={{ textDecoration: isAbsent ? "line-through" : "none" }}>{w.name}</text>
+                <text x={54} y={y + 12} fontSize={10} fontFamily={sans}
+                  fill={isAbsent ? P.red : P.inkFaint}
+                  opacity={isAbsent ? 0.5 : 1}>
+                  {isAbsent ? "absent today" : phase === "stable" ? "click to remove" : `${assignCount} job${assignCount !== 1 ? "s" : ""}`}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Jobs */}
+          {jobs.map((j) => {
+            const y = getJY(j.id);
+            const status = getJobStatus(j.id);
+            return (
+              <g key={j.id}>
+                <rect x={jX - 6} y={y - 28} width={jColW - 4} height={56} rx={10}
+                  fill={status.bg} stroke={status.color + "44"} strokeWidth={1}
+                  style={{ transition: "all 0.3s" }}
+                />
+                <text x={jX + 6} y={y - 8} fontSize={13} fontFamily={sans} fontWeight={500} fill={P.ink}>{j.label}</text>
+                <text x={jX + 6} y={y + 8} fontSize={10} fontFamily={sans} fill={P.inkFaint}>{j.sub}</text>
+                <text x={svgW - 16} y={y - 10} textAnchor="end" fontSize={9} fontFamily={mono} fontWeight={600}
+                  fill={status.color}>{status.label}</text>
+                <text x={svgW - 16} y={y + 6} textAnchor="end" fontSize={11} fontFamily={mono} fontWeight={600}
+                  fill={status.color}>{status.detail}</text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* Cascade narration */}
+      <div style={{ minHeight: 60, marginTop: 8 }}>
+        {phase === "stable" && !absentWorker && (
+          <div style={{ fontFamily: sans, fontSize: 13, color: P.inkFaint, textAlign: "center", padding: "8px 0" }}>
+            Everything is optimally staffed. Click any worker to simulate them calling out sick.
+          </div>
+        )}
+        {phase === "cascade" && cascade && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {cascade.steps.map((step, i) => (
+              <div key={i} style={{
+                display: "flex", alignItems: "flex-start", gap: 10,
+                padding: "6px 12px", borderRadius: 6,
+                background: step.type === "absence" ? P.redFaint : step.type === "ok" ? P.greenFaint : P.amberFaint,
+                borderLeft: `3px solid ${stepTypeColor[step.type]}`,
+              }}>
+                <span style={{ fontSize: 11, flexShrink: 0, lineHeight: "20px" }}>{stepTypeIcon[step.type]}</span>
+                <span style={{ fontFamily: sans, fontSize: 13, color: P.inkLight, lineHeight: 1.5 }}>{step.text}</span>
+              </div>
+            ))}
+            <div style={{ fontFamily: sans, fontSize: 13, color: P.inkFaint, textAlign: "center", marginTop: 8 }}>
+              One absence triggered {cascade.steps.filter(s => s.type === "move").length} reassignment{cascade.steps.filter(s => s.type === "move").length !== 1 ? "s" : ""}. Click <strong>Rerun IWA</strong> to see instant re-optimization.
+            </div>
+          </div>
+        )}
+        {phase === "reoptimized" && (
+          <div style={{
+            background: P.greenFaint, borderLeft: `3px solid ${P.green}`,
+            borderRadius: "0 6px 6px 0", padding: "12px 16px",
+          }}>
+            <div style={{ fontFamily: sans, fontSize: 14, fontWeight: 600, color: P.green, marginBottom: 4 }}>
+              IWA re-optimized in seconds.
+            </div>
+            <div style={{ fontFamily: sans, fontSize: 13, color: P.inkLight, lineHeight: 1.5 }}>
+              The model instantly recalculated the best assignments for {workers.length - 1} available workers.
+              Priority work stays covered. No manual cascade needed.
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EligibilityGraph() {
+  const vw = useWidth();
+  const [hoveredWorker, setHoveredWorker] = useState(null);
+  const [hoveredJob, setHoveredJob] = useState(null);
+
+  const workers = [
+    { id: "Easton", initials: "EA", eff: { "ML01-05": 100, "ML06": 63 } },
+    { id: "Harper", initials: "HA", eff: { "ML01-05": 108, "ML06": 108 } },
+    { id: "Crowley", initials: "CR", eff: { "ML01-05": 73, "ML06": 73 } },
+    { id: "Donovan", initials: "DO", eff: { "ML01-05": 100, "ML06": 62 } },
+    { id: "Marchand", initials: "MA", eff: { "ML06": 45 } },
+    { id: "Langford", initials: "LA", eff: { "ML01-05": 66, "ML06": 66 } },
+  ];
+
+  const jobTemplates = [
+    { id: "ML01-05", label: "ML01-05", sub: "Assembly · 115h", req: 2 },
+    { id: "ML06", label: "ML06", sub: "Final checkout · 7h", req: 2 },
+  ];
+
+  // Build links
+  const links = [];
+  workers.forEach(w => {
+    Object.entries(w.eff).forEach(([jt, eff]) => {
+      links.push({ worker: w.id, job: jt, eff });
+    });
+  });
+
+  const svgW = useSvgW(800);
+  const wSpacing = 60;
+  const jSpacing = 120;
+  const svgH = workers.length * wSpacing + 40;
+  const wColW2 = svgW * 0.22;
+  const jColW2 = svgW * 0.24;
+  const wX = wColW2;
+  const jX = svgW - jColW2;
+  const wStartY = 30;
+  const jStartY = svgH / 2 - ((jobTemplates.length - 1) * jSpacing) / 2;
+
+  function getWY(id) { return wStartY + workers.findIndex(w => w.id === id) * wSpacing; }
+  function getJY(id) { return jStartY + jobTemplates.findIndex(j => j.id === id) * jSpacing; }
+
+  function effToColor(eff) {
+    if (eff >= 100) return P.green;
+    if (eff >= 70) return P.accent;
+    return P.amber;
+  }
+
+  function effToWidth(eff) {
+    return Math.max(1, (eff / 108) * 4);
+  }
+
+  const anyHover = hoveredWorker || hoveredJob;
+
+  // When hovering a job, sort workers by efficiency on that job
+  const rankedWorkers = hoveredJob ? workers
+    .filter(w => w.eff[hoveredJob] !== undefined)
+    .sort((a, b) => (b.eff[hoveredJob] || 0) - (a.eff[hoveredJob] || 0))
+    .map((w, i) => ({ id: w.id, rank: i + 1 }))
+    : [];
+
+  function getRank(wid) {
+    const r = rankedWorkers.find(r => r.id === wid);
+    return r ? r.rank : null;
+  }
+
+  return (
+    <div>
+      <Label>Eligibility & Efficiency Map</Label>
+      <div style={{ marginTop: 12, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <svg viewBox={`0 0 ${svgW} ${svgH}`} width="100%" style={{ display: "block" }}>
+          {/* Connection lines */}
+          {links.map((link, i) => {
+            const wy = getWY(link.worker);
+            const jy = getJY(link.job);
+            const active = (hoveredWorker === link.worker) || (hoveredJob === link.job);
+            const relevant = active && (hoveredWorker ? true : link.worker === link.worker);
+            const dimmed = anyHover && !active;
+            const isHoveredWorkerLink = hoveredWorker === link.worker;
+            const isHoveredJobLink = hoveredJob === link.job;
+            const showEff = isHoveredWorkerLink || isHoveredJobLink;
+
+            // Curved path
+            const midX = (wX + jX) / 2;
+            const path = `M ${wX + 16} ${wy} C ${midX} ${wy}, ${midX} ${jy}, ${jX - 16} ${jy}`;
+
+            return (
+              <g key={i}>
+                <path d={path}
+                  fill="none"
+                  stroke={active ? effToColor(link.eff) : P.rule}
+                  strokeWidth={active ? effToWidth(link.eff) + 1 : effToWidth(link.eff)}
+                  opacity={dimmed ? 0.08 : active ? 0.85 : 0.3}
+                  style={{ transition: "all 0.25s ease" }}
+                />
+                {showEff && (
+                  <text x={midX} y={(wy + jy) / 2 - 6} textAnchor="middle"
+                    fontSize={11} fontFamily={mono} fontWeight={600}
+                    fill={effToColor(link.eff)}
+                    opacity={dimmed ? 0 : 1}
+                    style={{ transition: "opacity 0.2s" }}
+                  >
+                    {link.eff}%
+                  </text>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Workers (left) */}
+          {workers.map((w, i) => {
+            const y = getWY(w.id);
+            const isHovered = hoveredWorker === w.id;
+            const isLinkedToHoveredJob = hoveredJob && w.eff[hoveredJob] !== undefined;
+            const isIneligibleForHoveredJob = hoveredJob && w.eff[hoveredJob] === undefined;
+            const dimmed = anyHover && !isHovered && !isLinkedToHoveredJob;
+            const rank = getRank(w.id);
+            const eligibleCount = Object.keys(w.eff).length;
+
+            return (
+              <g key={w.id}
+                onMouseEnter={() => { setHoveredWorker(w.id); setHoveredJob(null); }}
+                onMouseLeave={() => setHoveredWorker(null)}
+                style={{ cursor: "pointer" }}>
+                <rect x={4} y={y - 22} width={wX} height={44} rx={8}
+                  fill={isIneligibleForHoveredJob ? P.redFaint : isHovered ? P.accentFaint : "white"}
+                  stroke={isIneligibleForHoveredJob ? P.red + "44" : isHovered ? P.accent : P.ruleFaint}
+                  strokeWidth={isHovered ? 1.5 : 1}
+                  opacity={dimmed ? 0.25 : 1}
+                  style={{ transition: "all 0.2s" }}
+                />
+                <circle cx={26} cy={y} r={14}
+                  fill={isIneligibleForHoveredJob ? P.red + "15" : P.accentFaint}
+                  opacity={dimmed ? 0.25 : 1}
+                  style={{ transition: "all 0.2s" }}
+                />
+                <text x={26} y={y + 4} textAnchor="middle" fontSize={9} fontFamily={mono} fontWeight={600}
+                  fill={isIneligibleForHoveredJob ? P.red : P.accent}
+                  opacity={dimmed ? 0.25 : 1}>{w.initials}</text>
+                <text x={48} y={y - 3} fontSize={12} fontFamily={sans} fontWeight={500}
+                  fill={isIneligibleForHoveredJob ? P.red : P.ink}
+                  opacity={dimmed ? 0.25 : 1}>{w.id}</text>
+                <text x={48} y={y + 12} fontSize={10} fontFamily={sans}
+                  fill={isIneligibleForHoveredJob ? P.red : P.inkFaint}
+                  opacity={dimmed ? 0.25 : 1}>
+                  {isIneligibleForHoveredJob ? "not eligible" : `eligible for ${eligibleCount} job${eligibleCount > 1 ? "s" : ""}`}
+                </text>
+                {rank && (
+                  <text x={wX - 4} y={y + 4} textAnchor="end" fontSize={10} fontFamily={mono} fontWeight={600}
+                    fill={rank <= 2 ? P.green : P.inkFaint}>
+                    #{rank}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Job templates (right) */}
+          {jobTemplates.map((j, i) => {
+            const y = getJY(j.id);
+            const isHovered = hoveredJob === j.id;
+            const isLinkedToHoveredWorker = hoveredWorker && workers.find(w => w.id === hoveredWorker)?.eff[j.id] !== undefined;
+            const dimmed = anyHover && !isHovered && !isLinkedToHoveredWorker;
+            const eligibleCount = workers.filter(w => w.eff[j.id] !== undefined).length;
+
+            return (
+              <g key={j.id}
+                onMouseEnter={() => { setHoveredJob(j.id); setHoveredWorker(null); }}
+                onMouseLeave={() => setHoveredJob(null)}
+                style={{ cursor: "pointer" }}>
+                <rect x={jX - 14} y={y - 32} width={svgW - jX + 10} height={64} rx={8}
+                  fill={isHovered ? P.accentFaint : "white"}
+                  stroke={isHovered ? P.accent : P.ruleFaint}
+                  strokeWidth={isHovered ? 1.5 : 1}
+                  opacity={dimmed ? 0.25 : 1}
+                  style={{ transition: "all 0.2s" }}
+                />
+                <text x={jX} y={y - 10} fontSize={14} fontFamily={sans} fontWeight={600}
+                  fill={P.ink} opacity={dimmed ? 0.25 : 1}>{j.label}</text>
+                <text x={jX} y={y + 8} fontSize={11} fontFamily={sans}
+                  fill={P.inkFaint} opacity={dimmed ? 0.25 : 1}>{j.sub}</text>
+                <text x={jX} y={y + 24} fontSize={10} fontFamily={mono}
+                  fill={P.accent} opacity={dimmed ? 0.25 : 1}>
+                  {eligibleCount} eligible worker{eligibleCount !== 1 ? "s" : ""}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+      <div style={{ fontFamily: sans, fontSize: 13, color: P.inkMuted, marginTop: 8, lineHeight: 1.6, textAlign: "center" }}>
+        {!anyHover && "Hover a worker to see their eligible jobs, or a job to rank eligible workers by efficiency."}
+        {hoveredWorker && (() => {
+          const w = workers.find(w => w.id === hoveredWorker);
+          const eligibleJobs = Object.entries(w.eff).map(([j, e]) => `${j} (${e}%)`).join(", ");
+          return `${w.id} is eligible for: ${eligibleJobs}`;
+        })()}
+        {hoveredJob && (() => {
+          const eligible = workers.filter(w => w.eff[hoveredJob]).length;
+          const ineligible = workers.filter(w => !w.eff[hoveredJob]).length;
+          return `${hoveredJob}: ${eligible} eligible workers ranked by efficiency. ${ineligible > 0 ? `${ineligible} worker${ineligible > 1 ? "s" : ""} ineligible.` : ""}`;
+        })()}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STATIC — Priority Ranking Rationale
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function PriorityRanking() {
+  const vw = useWidth();
+  const compact = vw < 520;
+
+  const jobs = [
+    { rank: 1, label: "Engine #1012", tpl: "ML06 · Final Checkout", progress: 92, delivery: "Ships Friday", urgency: "Critical", color: P.red },
+    { rank: 2, label: "Engine #1014", tpl: "ML01-05 · Assembly", progress: 57, delivery: "Ships next week", urgency: "High", color: P.amber },
+    { rank: 3, label: "Engine #1017", tpl: "ML06 · Final Checkout", progress: 30, delivery: "Ships in 10 days", urgency: "Medium", color: P.accent },
+    { rank: 4, label: "Engine #1019", tpl: "ML01-05 · Assembly", progress: 0, delivery: "Ships in 3 weeks", urgency: "Standard", color: P.inkFaint },
+  ];
+
+  return (
+    <div>
+      <Label>Job Priority List — Ranked by Planner</Label>
+      <div style={{ marginTop: 12 }}>
+        {jobs.map((j, i) => (
+          <div key={i} style={{
+            display: "flex", alignItems: "center", gap: compact ? 10 : 16,
+            padding: compact ? "12px 10px" : "14px 16px", marginBottom: 6, borderRadius: 10,
+            background: P.cardBg, border: `1px solid ${P.ruleFaint}`,
+          }}>
+            {/* Rank badge */}
+            <div style={{
+              width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center",
+              justifyContent: "center", fontFamily: mono, fontSize: 16, fontWeight: 600,
+              color: P.accent, background: P.accentFaint, flexShrink: 0,
+            }}>{j.rank}</div>
+
+            {/* Job info */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: sans, fontSize: compact ? 13 : 14, fontWeight: 500, color: P.ink }}>{j.label}</div>
+              <div style={{ fontFamily: sans, fontSize: 11, color: P.inkFaint, marginTop: 2 }}>{j.tpl}</div>
+            </div>
+
+            {/* Progress + delivery */}
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
+                <div style={{ width: 60, height: 5, background: P.ruleFaint, borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ width: `${j.progress}%`, height: "100%", background: j.color, borderRadius: 3 }} />
+                </div>
+                <span style={{ fontFamily: mono, fontSize: 11, color: j.color, fontWeight: 600, width: 32, textAlign: "right" }}>{j.progress}%</span>
+              </div>
+              <div style={{ fontFamily: sans, fontSize: 10, color: P.inkFaint, marginTop: 3 }}>{j.delivery}</div>
+            </div>
+
+            {/* Urgency */}
+            <div style={{
+              fontFamily: mono, fontSize: 9, fontWeight: 600, letterSpacing: "0.05em",
+              color: j.color, textTransform: "uppercase", flexShrink: 0, width: compact ? 50 : 60, textAlign: "right",
+            }}>{j.urgency}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontFamily: sans, fontSize: 12, color: P.inkFaint, marginTop: 10, lineHeight: 1.5, textAlign: "center" }}>
+        Higher progress and earlier delivery dates drive higher priority. The model staffs Rank 1 first, then works down.
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STATIC — Worker Availability Roster
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function WorkerRoster() {
+  const vw = useWidth();
+  const compact = vw < 520;
+
+  const workers = [
+    { name: "Easton", initials: "EA", available: true, hours: 8 },
+    { name: "Harper", initials: "HA", available: true, hours: 8 },
+    { name: "Crowley", initials: "CR", available: true, hours: 8 },
+    { name: "Donovan", initials: "DO", available: true, hours: 8 },
+    { name: "Langford", initials: "LA", available: true, hours: 8 },
+    { name: "Marchand", initials: "MA", available: false, hours: 0 },
+  ];
+
+  return (
+    <div>
+      <Label>Shift Roster — Who's Working Today</Label>
+      <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: compact ? "1fr" : "1fr 1fr", gap: 8 }}>
+        {workers.map((w, i) => (
+          <div key={i} style={{
+            display: "flex", alignItems: "center", gap: 12,
+            padding: "10px 14px", borderRadius: 10,
+            background: w.available ? P.cardBg : P.redFaint,
+            border: `1px solid ${w.available ? P.ruleFaint : P.red + "33"}`,
+            opacity: w.available ? 1 : 0.7,
+          }}>
+            {/* Avatar */}
+            <div style={{
+              width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center",
+              justifyContent: "center", flexShrink: 0,
+              background: w.available ? P.greenFaint : P.red + "15",
+            }}>
+              <span style={{ fontFamily: mono, fontSize: 9, fontWeight: 600, color: w.available ? P.green : P.red }}>{w.initials}</span>
+            </div>
+
+            {/* Name + status */}
+            <div style={{ flex: 1 }}>
+              <div style={{
+                fontFamily: sans, fontSize: 13, fontWeight: 500,
+                color: w.available ? P.ink : P.red,
+                textDecoration: w.available ? "none" : "line-through",
+              }}>{w.name}</div>
+              <div style={{ fontFamily: sans, fontSize: 10, color: w.available ? P.inkFaint : P.red }}>
+                {w.available ? "available" : "unavailable — called out"}
+              </div>
+            </div>
+
+            {/* Capacity bar */}
+            <div style={{ flexShrink: 0, textAlign: "right" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <div style={{ width: 48, height: 6, background: w.available ? P.ruleFaint : P.red + "22", borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ width: w.available ? "100%" : "0%", height: "100%", background: w.available ? P.green : P.red, borderRadius: 3 }} />
+                </div>
+                <span style={{ fontFamily: mono, fontSize: 11, fontWeight: 600, color: w.available ? P.green : P.red, width: 20 }}>
+                  {w.hours}h
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontFamily: sans, fontSize: 12, color: P.inkFaint, marginTop: 10, lineHeight: 1.5, textAlign: "center" }}>
+        Five workers available with 8 hours each. Marchand called out — marked unavailable by the supervisor.
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AUCTION VISUAL
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function AuctionVisual() {
+  const vw = useWidth();
+  const compact = vw < 560;
+  const [step, setStep] = useState(0);
+
+  const allWorkers = [
+    { id: "w1", name: "Harper", initials: "HA", eff: { B: 108, A: 108 } },
+    { id: "w2", name: "Easton", initials: "EA", eff: { B: 63, A: 100 } },
+    { id: "w3", name: "Donovan", initials: "DO", eff: { B: 62, A: 100 } },
+    { id: "w4", name: "Crowley", initials: "CR", eff: { B: 73, A: 73 } },
+    { id: "w5", name: "Langford", initials: "LA", eff: { B: 66, A: 66 } },
+  ];
+
+  const jobs = [
+    { id: "j1", label: "Engine #1012", sub: "Rank 1 · ML01-05", tpl: "A", hc: 2, rank: 1 },
+    { id: "j2", label: "Engine #1014", sub: "Rank 2 · ML01-05", tpl: "A", hc: 2, rank: 2 },
+    { id: "j3", label: "Engine #1017", sub: "Rank 3 · ML06", tpl: "B", hc: 1, rank: 3 },
+  ];
+
+  // Precompute the full assignment sequence
+  const sequence = useMemo(() => {
+    const steps = [{ assigned: {}, available: allWorkers.map(w => w.id), activeJob: null, picks: [], narrative: "Five workers are available. Three jobs need staffing, starting with the highest priority." }];
+
+    let available = [...allWorkers.map(w => w.id)];
+    const assigned = {};
+
+    jobs.forEach(job => {
+      // Sort available workers by efficiency on this job's template
+      const ranked = available
+        .map(wid => {
+          const w = allWorkers.find(ww => ww.id === wid);
+          return { id: wid, name: w.name, eff: w.eff[job.tpl] || 0 };
+        })
+        .sort((a, b) => b.eff - a.eff);
+
+      const picks = ranked.slice(0, job.hc);
+      const pickNames = picks.map(p => `${p.name} (${p.eff}%)`).join(" and ");
+
+      // Show the ranking step
+      steps.push({
+        assigned: { ...assigned },
+        available: [...available],
+        activeJob: job.id,
+        rankedForJob: ranked,
+        picks: [],
+        narrative: `${job.label} needs ${job.hc} worker${job.hc > 1 ? "s" : ""}. Available workers ranked by efficiency on ${job.tpl === "B" ? "ML06" : "ML01-05"}.`,
+      });
+
+      // Show the pick step
+      picks.forEach(p => {
+        assigned[p.id] = job.id;
+        available = available.filter(wid => wid !== p.id);
+      });
+
+      steps.push({
+        assigned: { ...assigned },
+        available: [...available],
+        activeJob: job.id,
+        rankedForJob: ranked,
+        picks: picks.map(p => p.id),
+        narrative: `${pickNames} assigned to ${job.label}. ${available.length} worker${available.length !== 1 ? "s" : ""} remain available.`,
+      });
+    });
+
+    steps.push({
+      assigned: { ...assigned },
+      available: [...available],
+      activeJob: null,
+      picks: [],
+      narrative: "All priority work is staffed. Every assignment went to the best available person for that job.",
+      done: true,
+    });
+
+    return steps;
+  }, []);
+
+  const current = sequence[step];
+  const maxStep = sequence.length - 1;
+
+  const svgW = useSvgW(780);
+  const svgH = compact ? 380 : 340;
+  const poolX = 10;
+  const poolW = svgW * 0.28;
+  const jobsX = svgW * 0.38;
+  const jobsW = svgW * 0.58;
+  const workerH = 44;
+  const workerGap = 6;
+  const jobH = 70;
+  const jobGap = 12;
+  const startY = 44;
+
+  function effColor(eff) {
+    if (eff >= 100) return P.green;
+    if (eff >= 70) return P.accent;
+    return P.amber;
+  }
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+        <Label>Watch the Model Assign</Label>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}
+            style={{ ...btnStyle, opacity: step === 0 ? 0.3 : 1 }}>← Back</button>
+          <button onClick={() => setStep(Math.min(maxStep, step + 1))} disabled={step === maxStep}
+            style={{
+              ...btnStyle, opacity: step === maxStep ? 0.3 : 1,
+              background: step < maxStep ? P.accent : P.ruleFaint,
+              color: step < maxStep ? "#fff" : P.inkFaint,
+              border: `1px solid ${step < maxStep ? P.accent : P.rule}`,
+              fontWeight: 600,
+            }}>
+            {step === 0 ? "Start →" : step < maxStep ? "Next →" : "Done"}
+          </button>
+          {step > 0 && <button onClick={() => setStep(0)} style={btnStyle}>Reset</button>}
+        </div>
+      </div>
+
+      <div style={{ overflowX: "auto" }}>
+        <svg viewBox={`0 0 ${svgW} ${svgH}`} width="100%" style={{ display: "block" }}>
+
+          {/* Pool header */}
+          <text x={poolX + 4} y={20} fontSize={10} fontFamily={mono} fontWeight={500} fill={P.inkFaint} letterSpacing="0.1em">AVAILABLE WORKERS</text>
+
+          {/* Jobs header */}
+          <text x={jobsX} y={20} fontSize={10} fontFamily={mono} fontWeight={500} fill={P.inkFaint} letterSpacing="0.1em">JOBS BY PRIORITY</text>
+
+          {/* Available worker pool */}
+          {allWorkers.map((w, i) => {
+            const isAvailable = current.available.includes(w.id);
+            const isAssigned = current.assigned[w.id];
+            const isPicked = current.picks.includes(w.id);
+            const isRanked = current.rankedForJob?.find(r => r.id === w.id);
+            const rankIdx = current.rankedForJob?.findIndex(r => r.id === w.id);
+            const y = startY + i * (workerH + workerGap);
+
+            // If ranked for current job, show rank number
+            const showRank = current.activeJob && isAvailable && isRanked;
+
+            return (
+              <g key={w.id} style={{ transition: "opacity 0.4s" }}>
+                <rect x={poolX} y={y} width={poolW} height={workerH} rx={8}
+                  fill={isPicked ? P.greenFaint : isAssigned ? P.ruleFaint : P.cardBg}
+                  stroke={isPicked ? P.green + "66" : isAssigned ? P.ruleFaint : showRank ? effColor(isRanked.eff) + "44" : P.ruleFaint}
+                  strokeWidth={isPicked ? 1.5 : 1}
+                  opacity={isAssigned && !isPicked ? 0.3 : 1}
+                  style={{ transition: "all 0.35s ease" }}
+                />
+                <circle cx={poolX + 20} cy={y + workerH / 2} r={13}
+                  fill={isPicked ? P.green + "22" : isAssigned ? P.ruleFaint : P.accentFaint}
+                  opacity={isAssigned && !isPicked ? 0.3 : 1}
+                  style={{ transition: "all 0.35s" }}
+                />
+                <text x={poolX + 20} y={y + workerH / 2 + 4} textAnchor="middle" fontSize={8}
+                  fontFamily={mono} fontWeight={600}
+                  fill={isPicked ? P.green : isAssigned ? P.inkFaint : P.accent}
+                  opacity={isAssigned && !isPicked ? 0.3 : 1}>
+                  {w.initials}
+                </text>
+                <text x={poolX + 40} y={y + 17} fontSize={12} fontFamily={sans} fontWeight={500}
+                  fill={isAssigned && !isPicked ? P.inkFaint : P.ink}
+                  opacity={isAssigned && !isPicked ? 0.3 : 1}
+                  style={{ textDecoration: isAssigned && !isPicked ? "line-through" : "none" }}>
+                  {w.name}
+                </text>
+                <text x={poolX + 40} y={y + 32} fontSize={10} fontFamily={sans}
+                  fill={isPicked ? P.green : isAssigned ? P.inkFaint : P.inkFaint}
+                  opacity={isAssigned && !isPicked ? 0.3 : 1}>
+                  {isPicked ? "✓ assigned" : isAssigned ? "assigned" : showRank ? `${isRanked.eff}% efficiency` : "available"}
+                </text>
+
+                {/* Rank badge when sorting */}
+                {showRank && !isPicked && (
+                  <g>
+                    <circle cx={poolX + poolW - 16} cy={y + workerH / 2} r={11}
+                      fill={rankIdx < (jobs.find(j => j.id === current.activeJob)?.hc || 0) ? effColor(isRanked.eff) + "22" : "transparent"}
+                      stroke={effColor(isRanked.eff) + "44"} strokeWidth={1} />
+                    <text x={poolX + poolW - 16} y={y + workerH / 2 + 4} textAnchor="middle"
+                      fontSize={10} fontFamily={mono} fontWeight={600}
+                      fill={effColor(isRanked.eff)}>
+                      {rankIdx + 1}
+                    </text>
+                  </g>
+                )}
+
+                {/* Connection line to assigned job */}
+                {isPicked && (() => {
+                  const jobIdx = jobs.findIndex(j => j.id === current.activeJob);
+                  const jobY = startY + jobIdx * (jobH + jobGap) + jobH / 2;
+                  const srcX = poolX + poolW;
+                  const srcY2 = y + workerH / 2;
+                  const dstX = jobsX - 4;
+                  const midX = (srcX + dstX) / 2;
+                  return (
+                    <path d={`M ${srcX} ${srcY2} C ${midX} ${srcY2}, ${midX} ${jobY}, ${dstX} ${jobY}`}
+                      fill="none" stroke={P.green} strokeWidth={2} opacity={0.6}
+                      style={{ transition: "all 0.4s" }}
+                    />
+                  );
+                })()}
+                {isAssigned && !isPicked && (() => {
+                  const jobIdx = jobs.findIndex(j => j.id === isAssigned);
+                  if (jobIdx < 0) return null;
+                  const jobY = startY + jobIdx * (jobH + jobGap) + jobH / 2;
+                  const srcX = poolX + poolW;
+                  const srcY2 = y + workerH / 2;
+                  const dstX = jobsX - 4;
+                  const midX = (srcX + dstX) / 2;
+                  return (
+                    <path d={`M ${srcX} ${srcY2} C ${midX} ${srcY2}, ${midX} ${jobY}, ${dstX} ${jobY}`}
+                      fill="none" stroke={P.rule} strokeWidth={1} opacity={0.2}
+                      strokeDasharray="4 3"
+                    />
+                  );
+                })()}
+              </g>
+            );
+          })}
+
+          {/* Jobs */}
+          {jobs.map((job, i) => {
+            const y = startY + i * (jobH + jobGap);
+            const isActive = current.activeJob === job.id;
+            const assignedWorkers = Object.entries(current.assigned).filter(([_, jid]) => jid === job.id);
+            const isFilled = assignedWorkers.length >= job.hc;
+            const hasAny = assignedWorkers.length > 0;
+
+            return (
+              <g key={job.id}>
+                <rect x={jobsX} y={y} width={jobsW} height={jobH} rx={10}
+                  fill={isFilled ? P.greenFaint : isActive ? P.accentFaint : P.cardBg}
+                  stroke={isFilled ? P.green + "44" : isActive ? P.accent + "55" : P.ruleFaint}
+                  strokeWidth={isActive ? 2 : 1}
+                  style={{ transition: "all 0.3s" }}
+                />
+                {/* Rank circle */}
+                <circle cx={jobsX + 24} cy={y + jobH / 2} r={16}
+                  fill={isFilled ? P.green + "18" : isActive ? P.accentFaint : P.ruleFaint}
+                  style={{ transition: "all 0.3s" }} />
+                <text x={jobsX + 24} y={y + jobH / 2 + 5} textAnchor="middle"
+                  fontSize={14} fontFamily={mono} fontWeight={600}
+                  fill={isFilled ? P.green : isActive ? P.accent : P.inkFaint}>
+                  {job.rank}
+                </text>
+
+                <text x={jobsX + 50} y={y + 24} fontSize={14} fontFamily={sans} fontWeight={500} fill={P.ink}>{job.label}</text>
+                <text x={jobsX + 50} y={y + 42} fontSize={11} fontFamily={sans} fill={P.inkFaint}>{job.sub} · Headcount {job.hc}</text>
+
+                {/* Status */}
+                <text x={jobsX + jobsW - 14} y={y + 28} textAnchor="end"
+                  fontSize={10} fontFamily={mono} fontWeight={600}
+                  fill={isFilled ? P.green : hasAny ? P.amber : P.inkFaint}>
+                  {isFilled ? "STAFFED" : hasAny ? `${assignedWorkers.length}/${job.hc}` : isActive ? "FILLING..." : "WAITING"}
+                </text>
+                {isFilled && (
+                  <text x={jobsX + jobsW - 14} y={y + 44} textAnchor="end"
+                    fontSize={10} fontFamily={sans} fill={P.green}>
+                    {assignedWorkers.map(([wid]) => allWorkers.find(w => w.id === wid)?.name).join(", ")}
+                  </text>
+                )}
+
+                {/* Active job glow */}
+                {isActive && !isFilled && (
+                  <rect x={jobsX - 3} y={y - 3} width={jobsW + 6} height={jobH + 6} rx={13}
+                    fill="none" stroke={P.accent} strokeWidth={1} opacity={0.2}
+                    strokeDasharray="6 3" />
+                )}
+              </g>
+            );
+          })}
+
+          {/* Done checkmark */}
+          {current.done && (
+            <text x={svgW / 2} y={svgH - 10} textAnchor="middle" fontSize={12} fontFamily={sans} fontWeight={600} fill={P.green}>
+              ✓ All assignments complete
+            </text>
+          )}
+        </svg>
+      </div>
+
+      {/* Narrative callout */}
+      <div style={{
+        marginTop: 8, padding: "10px 16px", borderRadius: 8,
+        background: current.done ? P.greenFaint : current.activeJob ? P.accentFaint : P.cardBg,
+        border: `1px solid ${current.done ? P.green + "33" : current.activeJob ? P.accent + "33" : P.ruleFaint}`,
+        fontFamily: sans, fontSize: 14, color: P.inkLight, lineHeight: 1.5,
+        transition: "all 0.3s",
+      }}>
+        {current.narrative}
+      </div>
+    </div>
+  );
+}
+
+function Gate1Timeline() {
+  const vw = useWidth();
+  const [mode, setMode] = useState("with"); // with | without
+  const [hoveredW, setHoveredW] = useState(null);
+
+  const workers = [
+    { id: "w1", name: "Easton", initials: "EA" },
+    { id: "w2", name: "Harper", initials: "HA" },
+    { id: "w3", name: "Crowley", initials: "CR" },
+    { id: "w4", name: "Donovan", initials: "DO" },
+  ];
+
+  const shift1 = [
+    { w: "w1", job: "Engine #1014", jid: "A" },
+    { w: "w2", job: "Engine #1014", jid: "A" },
+    { w: "w3", job: "Engine #1012", jid: "B" },
+    { w: "w4", job: "Engine #1017", jid: "C" },
+  ];
+
+  const shift2With = [
+    { w: "w1", job: "Engine #1014", jid: "A", type: "ftw" },
+    { w: "w2", job: "Engine #1014", jid: "A", type: "ftw" },
+    { w: "w3", job: "Engine #1012", jid: "B", type: "ftw" },
+    { w: "w4", job: "Engine #1017", jid: "C", type: "ftw" },
+  ];
+
+  const shift2Without = [
+    { w: "w1", job: "Engine #1017", jid: "C", type: "greedy" },
+    { w: "w2", job: "Engine #1012", jid: "B", type: "greedy" },
+    { w: "w3", job: "Engine #1014", jid: "A", type: "greedy" },
+    { w: "w4", job: "Engine #1014", jid: "A", type: "greedy" },
+  ];
+
+  const shift2 = mode === "with" ? shift2With : shift2Without;
+  const jobColors = { A: P.accent, B: P.green, C: P.amber };
+  const jobColorsFaint = { A: P.accentFaint, B: P.greenFaint, C: P.amberFaint };
+
+  const rowH = 52;
+  const svgW = useSvgW(780);
+  const colW = (svgW - 60) / 2;
+  const col1X = 10;
+  const col2X = svgW / 2 + 10;
+  const startY = 50;
+
+  function continued(wid) {
+    const s1 = shift1.find(s => s.w === wid);
+    const s2 = shift2.find(s => s.w === wid);
+    return s1 && s2 && s1.jid === s2.jid;
+  }
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+        <Label>Cross-Shift Continuity</Label>
+        <div style={{ display: "flex", background: P.ruleFaint, borderRadius: 8, padding: 3 }}>
+          <button onClick={() => setMode("with")} style={{
+            fontFamily: sans, fontSize: 13, fontWeight: mode === "with" ? 600 : 400,
+            padding: "8px 16px", borderRadius: 6, border: "none", cursor: "pointer",
+            background: mode === "with" ? P.cardBg : "transparent",
+            color: mode === "with" ? P.green : P.inkFaint,
+            boxShadow: mode === "with" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+          }}>✓ With Gate</button>
+          <button onClick={() => setMode("without")} style={{
+            fontFamily: sans, fontSize: 13, fontWeight: mode === "without" ? 600 : 400,
+            padding: "8px 16px", borderRadius: 6, border: "none", cursor: "pointer",
+            background: mode === "without" ? P.cardBg : "transparent",
+            color: mode === "without" ? P.red : P.inkFaint,
+            boxShadow: mode === "without" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+          }}>✗ Without Gate</button>
+        </div>
+      </div>
+
+      <div style={{ overflowX: "auto" }}>
+        <svg viewBox={`0 0 ${svgW} ${startY + workers.length * rowH + 30}`} width="100%" style={{ display: "block" }}>
+          {/* Column headers */}
+          <text x={col1X + colW / 2} y={18} textAnchor="middle" fontSize={11} fontFamily={mono} fontWeight={600} fill={P.inkMuted} letterSpacing="0.08em">SHIFT 1 — YESTERDAY</text>
+          <text x={col2X + colW / 2} y={18} textAnchor="middle" fontSize={11} fontFamily={mono} fontWeight={600} fill={P.inkMuted} letterSpacing="0.08em">SHIFT 2 — TODAY</text>
+          {/* Divider line */}
+          <line x1={svgW / 2} y1={30} x2={svgW / 2} y2={startY + workers.length * rowH + 10} stroke={P.rule} strokeWidth={1} strokeDasharray="4 3" />
+
+          {workers.map((w, i) => {
+            const y = startY + i * rowH;
+            const s1 = shift1.find(s => s.w === w.id);
+            const s2 = shift2.find(s => s.w === w.id);
+            const isContinued = continued(w.id);
+            const isHovered = hoveredW === w.id;
+            const dim = hoveredW && !isHovered;
+
+            return (
+              <g key={w.id} onMouseEnter={() => setHoveredW(w.id)} onMouseLeave={() => setHoveredW(null)} style={{ cursor: "pointer" }}>
+                {/* Shift 1 block */}
+                <rect x={col1X} y={y} width={colW - 10} height={40} rx={8}
+                  fill={jobColorsFaint[s1.jid]} stroke={jobColors[s1.jid] + "55"} strokeWidth={1}
+                  opacity={dim ? 0.25 : 1} style={{ transition: "opacity 0.2s" }} />
+                <circle cx={col1X + 22} cy={y + 20} r={13} fill={jobColors[s1.jid] + "22"}
+                  opacity={dim ? 0.25 : 1} />
+                <text x={col1X + 22} y={y + 24} textAnchor="middle" fontSize={8} fontFamily={mono} fontWeight={600}
+                  fill={jobColors[s1.jid]} opacity={dim ? 0.25 : 1}>{w.initials}</text>
+                <text x={col1X + 42} y={y + 16} fontSize={12} fontFamily={sans} fontWeight={500}
+                  fill={P.ink} opacity={dim ? 0.25 : 1}>{w.name}</text>
+                <text x={col1X + 42} y={y + 30} fontSize={10} fontFamily={sans}
+                  fill={jobColors[s1.jid]} opacity={dim ? 0.25 : 1}>{s1.job}</text>
+
+                {/* Arrow — follows the engine's destination */}
+                {(() => {
+                  let targetY = y + 20; // default: same row (with gate)
+                  if (mode === "without") {
+                    // Precompute: for each shift1 worker, find a unique shift2 row
+                    // that has the same engine, consuming targets sequentially
+                    const engineTargets = {};
+                    shift2.forEach((s2entry, idx) => {
+                      if (!engineTargets[s2entry.jid]) engineTargets[s2entry.jid] = [];
+                      engineTargets[s2entry.jid].push(idx);
+                    });
+                    // Count how many workers before this one (index i) share the same engine
+                    const s1Engine = s1.jid;
+                    let priorCount = 0;
+                    for (let k = 0; k < i; k++) {
+                      if (shift1[k].jid === s1Engine) priorCount++;
+                    }
+                    const targets = engineTargets[s1Engine] || [];
+                    const targetIdx = targets[Math.min(priorCount, targets.length - 1)];
+                    if (targetIdx !== undefined) {
+                      targetY = startY + targetIdx * rowH + 20;
+                    }
+                  }
+                  const arrowColor = isContinued && mode === "with" ? P.green : mode === "without" ? P.red : P.rule;
+                  const x1 = col1X + colW - 12;
+                  const x2 = col2X + 2;
+                  const midX = (x1 + x2) / 2;
+                  const srcY = y + 20;
+                  const path = `M ${x1} ${srcY} C ${midX} ${srcY}, ${midX} ${targetY}, ${x2} ${targetY}`;
+                  return (
+                    <path d={path} fill="none"
+                      stroke={arrowColor} strokeWidth={1.5}
+                      strokeDasharray={isContinued && mode === "with" ? "none" : "6 3"}
+                      markerEnd={`url(#arrow-${isContinued && mode === "with" ? "green" : "red"})`}
+                      opacity={0.5}
+                      style={{ transition: "all 0.25s" }}
+                    />
+                  );
+                })()}
+
+                {/* Shift 2 block */}
+                <rect x={col2X} y={y} width={colW - 10} height={40} rx={8}
+                  fill={jobColorsFaint[s2.jid]}
+                  stroke={(isContinued && mode === "with" ? P.green : mode === "without" ? P.red + "44" : jobColors[s2.jid]) + "55"}
+                  strokeWidth={1}
+                  opacity={dim ? 0.25 : 1} style={{ transition: "opacity 0.2s" }} />
+                <circle cx={col2X + 22} cy={y + 20} r={13} fill={jobColors[s2.jid] + "22"}
+                  opacity={dim ? 0.25 : 1} />
+                <text x={col2X + 22} y={y + 24} textAnchor="middle" fontSize={8} fontFamily={mono} fontWeight={600}
+                  fill={jobColors[s2.jid]} opacity={dim ? 0.25 : 1}>{w.initials}</text>
+                <text x={col2X + 42} y={y + 16} fontSize={12} fontFamily={sans} fontWeight={500}
+                  fill={P.ink} opacity={dim ? 0.25 : 1}>{w.name}</text>
+                <text x={col2X + 42} y={y + 30} fontSize={10} fontFamily={sans}
+                  fill={jobColors[s2.jid]} opacity={dim ? 0.25 : 1}>{s2.job}</text>
+
+                {/* Continuity badge */}
+                {isContinued && mode === "with" && (
+                  <text x={col2X + colW - 18} y={y + 24} textAnchor="end" fontSize={9} fontFamily={mono} fontWeight={600}
+                    fill={P.green} opacity={dim ? 0.25 : 1}>CONTINUES</text>
+                )}
+                {!isContinued && mode === "without" && (
+                  <text x={col2X + colW - 18} y={y + 24} textAnchor="end" fontSize={9} fontFamily={mono} fontWeight={600}
+                    fill={P.red} opacity={dim ? 0.25 : 1}>REASSIGNED</text>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Arrow markers */}
+          <defs>
+            <marker id="arrow-green" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0 0, 10 3.5, 0 7" fill={P.green} />
+            </marker>
+            <marker id="arrow-red" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+              <polygon points="0 0, 10 3.5, 0 7" fill={P.red} />
+            </marker>
+          </defs>
+        </svg>
+      </div>
+
+      <div style={{ fontFamily: sans, fontSize: 13, color: P.inkMuted, marginTop: 8, textAlign: "center", lineHeight: 1.6 }}>
+        {mode === "with"
+          ? (hoveredW ? `${workers.find(w => w.id === hoveredW)?.name} continues on the same engine — no ramp-up time, no lost context.` : "Hover a worker to trace their continuity across shifts. Every worker stays on their engine.")
+          : (hoveredW ? `${workers.find(w => w.id === hoveredW)?.name} was reassigned to a different engine — context lost, slower start.` : "Without the gate, the greedy model reshuffles everyone. Hover to see who moved.")}
+      </div>
+    </div>
+  );
+}
+
+function Gate2BatchTrack() {
+  const vw = useWidth();
+  const [mode, setMode] = useState("with");
+
+  const templates = {
+    DIFF: { label: "Diffuser", color: "#3B82A0", faint: "rgba(59,130,160,0.12)" },
+    GBX: { label: "Gearbox", color: "#8B6E4E", faint: "rgba(139,110,78,0.12)" },
+    FDC: { label: "FDC", color: "#7B5EA7", faint: "rgba(123,94,167,0.12)" },
+    LPT: { label: "LPT", color: "#C17A3A", faint: "rgba(193,122,58,0.12)" },
+  };
+
+  const withGate = [
+    { tpl: "DIFF", hours: 2.3 }, { tpl: "DIFF", hours: 2.5 }, { tpl: "DIFF", hours: 2.0 },
+  ];
+
+  const withoutGate = [
+    { tpl: "DIFF", hours: 2.3 }, { tpl: "GBX", hours: 1.2 }, { tpl: "FDC", hours: 2.5 }, { tpl: "DIFF", hours: 2.0 },
+  ];
+
+  const blocks = mode === "with" ? withGate : withoutGate;
+  const capacity = 8;
+  const switchCount = mode === "with" ? 0 : 3;
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+        <Label>Donovan's Shift — Modules Zone</Label>
+        <div style={{ display: "flex", background: P.ruleFaint, borderRadius: 8, padding: 3 }}>
+          <button onClick={() => setMode("with")} style={{
+            fontFamily: sans, fontSize: 13, fontWeight: mode === "with" ? 600 : 400,
+            padding: "8px 16px", borderRadius: 6, border: "none", cursor: "pointer",
+            background: mode === "with" ? P.cardBg : "transparent",
+            color: mode === "with" ? P.green : P.inkFaint,
+            boxShadow: mode === "with" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+          }}>✓ With Gate</button>
+          <button onClick={() => setMode("without")} style={{
+            fontFamily: sans, fontSize: 13, fontWeight: mode === "without" ? 600 : 400,
+            padding: "8px 16px", borderRadius: 6, border: "none", cursor: "pointer",
+            background: mode === "without" ? P.cardBg : "transparent",
+            color: mode === "without" ? P.red : P.inkFaint,
+            boxShadow: mode === "without" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+          }}>✗ Without Gate</button>
+        </div>
+      </div>
+
+      {/* Track */}
+      <div style={{ display: "flex", height: 64, borderRadius: 10, overflow: "hidden", border: `1px solid ${P.rule}` }}>
+        {blocks.map((b, i) => {
+          const t = templates[b.tpl];
+          const prev = i > 0 ? blocks[i - 1].tpl : null;
+          const isSwitch = prev && prev !== b.tpl;
+          return (
+            <div key={i} style={{
+              width: `${(b.hours / capacity) * 100}%`,
+              background: t.color, position: "relative",
+              display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column",
+              borderLeft: isSwitch ? `3px solid ${P.cream}` : i > 0 ? `1px solid rgba(255,255,255,0.2)` : "none",
+              transition: "all 0.35s ease",
+            }}>
+              <span style={{ fontFamily: sans, fontSize: 11, fontWeight: 600, color: "#fff" }}>{t.label}</span>
+              <span style={{ fontFamily: mono, fontSize: 10, color: "rgba(255,255,255,0.7)" }}>{b.hours}h</span>
+              {isSwitch && (
+                <div style={{
+                  position: "absolute", left: -1, top: -18,
+                  fontFamily: mono, fontSize: 8, color: P.red, fontWeight: 600,
+                  letterSpacing: "0.05em", whiteSpace: "nowrap",
+                }}>↕ SWITCH</div>
+              )}
+            </div>
+          );
+        })}
+        {(() => {
+          const used = blocks.reduce((s, b) => s + b.hours, 0);
+          const idle = capacity - used;
+          if (idle <= 0.1) return null;
+          return (
+            <div style={{
+              width: `${(idle / capacity) * 100}%`,
+              background: `repeating-linear-gradient(45deg, transparent, transparent 4px, ${P.ruleFaint} 4px, ${P.ruleFaint} 8px)`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <span style={{ fontFamily: mono, fontSize: 10, color: P.inkFaint }}>{idle.toFixed(1)}h</span>
+            </div>
+          );
+        })()}
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+        {Array.from({ length: 9 }, (_, i) => <span key={i} style={{ fontFamily: mono, fontSize: 9, color: P.inkFaint }}>{i}h</span>)}
+      </div>
+
+      {/* Stats */}
+      <div style={{ display: "flex", gap: 16, marginTop: 16, flexWrap: "wrap" }}>
+        <div style={{ flex: 1, minWidth: 100, padding: 12, borderRadius: 8, background: mode === "with" ? P.greenFaint : P.redFaint, border: `1px solid ${mode === "with" ? P.green + "33" : P.red + "33"}` }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: mode === "with" ? P.green : P.red, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>Context Switches</div>
+          <div style={{ fontFamily: serif, fontSize: 28, fontWeight: 400, color: mode === "with" ? P.green : P.red, marginTop: 2 }}>{switchCount}</div>
+        </div>
+        <div style={{ flex: 1, minWidth: 100, padding: 12, borderRadius: 8, background: P.accentFaint, border: `1px solid ${P.accent}33` }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: P.accent, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>Unique Templates</div>
+          <div style={{ fontFamily: serif, fontSize: 28, fontWeight: 400, color: P.accent, marginTop: 2 }}>{new Set(blocks.map(b => b.tpl)).size}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Gate3Precedence() {
+  const vw = useWidth();
+  const [hoveredW, setHoveredW] = useState(null);
+  const [phase, setPhase] = useState(0); // 0=all, 1=pass1 (primary), 2=pass2 (borrowed)
+
+  const workers = [
+    { id: "w1", name: "Easton", initials: "EA", type: "primary", eff: 100 },
+    { id: "w2", name: "Harper", initials: "HA", type: "primary", eff: 108 },
+    { id: "w3", name: "Crowley", initials: "CR", type: "primary", eff: 73 },
+    { id: "w5", name: "Marchand", initials: "MA", type: "borrowed", eff: 45 },
+    { id: "w6", name: "Langford", initials: "LA", type: "borrowed", eff: 66 },
+  ];
+
+  const jobs = [
+    { id: "j1", label: "Engine #1012", sub: "Rank 1 · Headcount 2", hc: 2 },
+    { id: "j2", label: "Engine #1014", sub: "Rank 2 · Headcount 2", hc: 2 },
+    { id: "j3", label: "Engine #1017", sub: "Rank 3 · Headcount 2", hc: 2 },
+  ];
+
+  // Pass 1: primary workers fill by greedy
+  const pass1Links = [
+    { w: "w2", j: "j1" }, { w: "w1", j: "j1" },
+    { w: "w3", j: "j2" },
+  ];
+
+  // Pass 2: borrowed workers fill remaining
+  const pass2Links = [
+    { w: "w6", j: "j2" },
+    { w: "w5", j: "j3" },
+  ];
+
+  const allLinks = [...pass1Links, ...pass2Links];
+
+  const visibleLinks = phase === 0 ? allLinks : phase === 1 ? pass1Links : allLinks;
+
+  const wSpacing = 60;
+  const borrowedGap = 40; // extra space between primary and borrowed groups
+  const jSpacing = 80;
+  const svgW = useSvgW(780);
+  const svgH = Math.max(workers.length * wSpacing + borrowedGap + 80, jobs.length * jSpacing + 80);
+  const wColW = svgW * 0.24;
+  const jColW = svgW * 0.26;
+  const wX = wColW;
+  const jX = svgW - jColW;
+  const wStartY = 60;
+  const jStartY = 60;
+
+  function getWY(id) {
+    const idx = workers.findIndex(w => w.id === id);
+    const w = workers[idx];
+    const gap = w.type === "borrowed" ? borrowedGap : 0;
+    return wStartY + idx * wSpacing + gap;
+  }
+  function getJY(id) { return jStartY + jobs.findIndex(j => j.id === id) * jSpacing; }
+
+  const isBorrowedHovered = hoveredW && workers.find(w => w.id === hoveredW)?.type === "borrowed";
+  const anyHover = !!hoveredW;
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+        <Label>Two-Pass Assignment</Label>
+        <div style={{ display: "flex", gap: 4, background: P.ruleFaint, borderRadius: 8, padding: 3 }}>
+          {[
+            { p: 0, label: "Both Passes" },
+            { p: 1, label: "Pass 1: Primary" },
+            { p: 2, label: "Pass 2: Borrowed" },
+          ].map(({ p, label }) => (
+            <button key={p} onClick={() => setPhase(p)} style={{
+              fontFamily: sans, fontSize: 12, fontWeight: phase === p ? 600 : 400,
+              padding: "7px 14px", borderRadius: 6, border: "none", cursor: "pointer",
+              background: phase === p ? P.cardBg : "transparent",
+              color: phase === p ? (p === 1 ? P.accent : p === 2 ? P.amber : P.green) : P.inkFaint,
+              boxShadow: phase === p ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+            }}>{label}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ overflowX: "auto" }}>
+        <svg viewBox={`0 0 ${svgW} ${svgH}`} width="100%" style={{ display: "block" }}>
+          <text x={10} y={22} textAnchor="start" fontSize={10} fontFamily={mono} fontWeight={500} fill={P.inkFaint} letterSpacing="0.1em">WORKERS</text>
+          <text x={jX - 4} y={22} textAnchor="start" fontSize={10} fontFamily={mono} fontWeight={500} fill={P.inkFaint} letterSpacing="0.1em">JOBS</text>
+
+          {/* Pass labels on worker side */}
+          <text x={10} y={wStartY - 10} fontSize={9} fontFamily={mono} fill={P.accent} fontWeight={600} letterSpacing="0.05em">PRIMARY</text>
+          <line x1={10} y1={wStartY + 3 * wSpacing - 12} x2={wColW - 10} y2={wStartY + 3 * wSpacing - 12} stroke={P.rule} strokeDasharray="3 2" />
+          <text x={10} y={wStartY + 3 * wSpacing + 8} fontSize={9} fontFamily={mono} fill={P.amber} fontWeight={600} letterSpacing="0.05em">BORROWED</text>
+
+          {/* Connections */}
+          {visibleLinks.map((link, i) => {
+            const wy = getWY(link.w);
+            const jy = getJY(link.j);
+            const midX2 = (wX + jX) / 2;
+            const path = `M ${wX + 8} ${wy} C ${midX2} ${wy}, ${midX2} ${jy}, ${jX - 8} ${jy}`;
+            const isPrimary = pass1Links.some(l => l.w === link.w && l.j === link.j);
+            const dimmedByPhase = (phase === 1 && !isPrimary) || (phase === 2 && isPrimary);
+            const dimmedByHover = anyHover && hoveredW !== link.w;
+
+            return (
+              <path key={i} d={path} fill="none"
+                stroke={isPrimary ? P.accent : P.amber}
+                strokeWidth={hoveredW === link.w ? 3 : 2}
+                strokeDasharray={isPrimary ? "none" : "8 4"}
+                opacity={dimmedByHover ? 0.08 : dimmedByPhase ? 0.15 : isPrimary ? 0.7 : 0.5}
+                style={{ transition: "all 0.25s" }}
+              />
+            );
+          })}
+
+          {/* Workers */}
+          {workers.map((w) => {
+            const y = getWY(w.id);
+            const isPrimary = w.type === "primary";
+            const isHovered = hoveredW === w.id;
+            const dim = anyHover && !isHovered;
+            const blocked = phase === 1 && !isPrimary;
+            const active = phase === 2 && !isPrimary;
+            const wColor = isPrimary ? P.accent : P.amber;
+
+            return (
+              <g key={w.id} onMouseEnter={() => setHoveredW(w.id)} onMouseLeave={() => setHoveredW(null)} style={{ cursor: "pointer" }}>
+                <rect x={8} y={y - 22} width={wColW - 16} height={44} rx={10}
+                  fill={blocked ? P.redFaint : isHovered ? (isPrimary ? P.accentFaint : P.amberFaint) : P.cardBg}
+                  stroke={blocked ? P.red + "44" : wColor + "44"}
+                  strokeWidth={1}
+                  strokeDasharray={isPrimary ? "none" : "6 3"}
+                  opacity={dim ? 0.2 : blocked ? 0.5 : 1}
+                  style={{ transition: "all 0.2s" }}
+                />
+                <circle cx={30} cy={y} r={14} fill={wColor + "18"} opacity={dim ? 0.2 : 1} />
+                <text x={30} y={y + 4} textAnchor="middle" fontSize={9} fontFamily={mono} fontWeight={600}
+                  fill={wColor} opacity={dim ? 0.2 : 1}>{w.initials}</text>
+                <text x={52} y={y - 4} fontSize={12} fontFamily={sans} fontWeight={500}
+                  fill={P.ink} opacity={dim ? 0.2 : 1}>{w.name}</text>
+                <text x={52} y={y + 11} fontSize={10} fontFamily={sans}
+                  fill={blocked ? P.red : P.inkFaint} opacity={dim ? 0.2 : 1}>
+                  {blocked ? "waiting — pass 2" : `${isPrimary ? "primary" : "borrowed"} · ${w.eff}%`}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Jobs */}
+          {jobs.map((j) => {
+            const y = getJY(j.id);
+            const count = visibleLinks.filter(l => l.j === j.id).length;
+            const full = count >= j.hc;
+            const partial = count > 0 && count < j.hc;
+            const statusColor = full ? P.green : partial ? P.amber : P.inkFaint;
+            const dim = anyHover && !visibleLinks.some(l => l.j === j.id && l.w === hoveredW);
+
+            return (
+              <g key={j.id}>
+                <rect x={jX - 6} y={y - 28} width={jColW - 4} height={56} rx={10}
+                  fill={full ? P.greenFaint : partial ? P.amberFaint : P.cardBg}
+                  stroke={statusColor + "44"} strokeWidth={1}
+                  opacity={dim ? 0.2 : 1} style={{ transition: "all 0.2s" }}
+                />
+                <text x={jX + 6} y={y - 8} fontSize={13} fontFamily={sans} fontWeight={500}
+                  fill={P.ink} opacity={dim ? 0.2 : 1}>{j.label}</text>
+                <text x={jX + 6} y={y + 8} fontSize={10} fontFamily={sans}
+                  fill={P.inkFaint} opacity={dim ? 0.2 : 1}>{j.sub}</text>
+                <text x={svgW - 16} y={y} textAnchor="end" fontSize={12} fontFamily={mono} fontWeight={600}
+                  fill={statusColor} opacity={dim ? 0.2 : 1}>{count} / {j.hc}</text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      <div style={{ fontFamily: sans, fontSize: 13, color: P.inkMuted, marginTop: 8, textAlign: "center", lineHeight: 1.6 }}>
+        {phase === 0 && !hoveredW && "Primary workers (solid borders) fill slots first. Borrowed workers (dashed) take what remains."}
+        {phase === 1 && "Pass 1: Only primary workers are considered. Borrowed workers wait regardless of their efficiency."}
+        {phase === 2 && "Pass 2: Remaining slots are filled by borrowed workers. Primary workers already have their assignments."}
+        {hoveredW && (() => {
+          const w = workers.find(ww => ww.id === hoveredW);
+          const assigned = allLinks.filter(l => l.w === hoveredW);
+          if (w.type === "borrowed") return `${w.name} (borrowed, ${w.eff}%) — must wait for all primary workers to be placed before being considered.`;
+          return `${w.name} (primary, ${w.eff}%) — assigned in Pass 1 with priority over all borrowed workers.`;
+        })()}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MAIN — Customer-Facing Version
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function IWACustomer() {
+  const vw = useWidth();
+  const compact = vw < 520;
+
+  return (
+    <div style={{ background: P.cream, minHeight: "100vh", paddingBottom: 120, width: "100%", overflowX: "hidden" }}>
+      <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+      {/* ── HERO ── */}
+      <Wide style={{ paddingTop: compact ? 48 : 80, paddingBottom: compact ? 40 : 60 }}>
+        <div style={{ fontFamily: mono, fontSize: 11, letterSpacing: "0.2em", color: P.accent, textTransform: "uppercase", fontWeight: 500, marginBottom: 20 }}>
+          Covalent Networks — Workforce Intelligence
+        </div>
+        <h1 style={{ fontFamily: serif, fontSize: "clamp(30px, 4vw + 8px, 56px)", fontWeight: 300, color: P.ink, lineHeight: 1.15, margin: "0 0 20px" }}>
+          The Right Person on the Right Job, Every Shift
+        </h1>
+        <p style={{ fontFamily: serif, fontSize: "clamp(16px, 0.8vw + 10px, 21px)", color: P.inkMuted, lineHeight: 1.7, margin: 0, maxWidth: "min(580px, 80%)" }}>
+          Intelligent Work Assignment automatically matches your workforce to your highest-priority
+          work — respecting skills, capacity, and your operational rules.
+        </p>
+        <div style={{ width: 60, height: 1, background: P.rule, marginTop: 40 }} />
+      </Wide>
+
+      {/* ═══════════════ SECTION 1: THE CHALLENGE ═══════════════ */}
+      <SectionHeader
+        title="The Challenge"
+        subtitle="Shift planning is a high-stakes puzzle that gets solved under pressure."
+      />
+      <Prose>
+        <p>
+          Every shift, someone has to decide who works on what. Dozens of workers with
+          different skills. Dozens of jobs at different stages of completion. When it's done
+          by gut — scanning a whiteboard, making mental tradeoffs — things slip through the cracks.
+          High-priority work goes understaffed. Skilled workers get wasted on low-priority jobs.
+          New starters sit idle.
+        </p>
+      </Prose>
+      <Figure caption="Toggle between views to see the difference optimization makes.">
+        <BeforeAfterDiagram />
+      </Figure>
+
+      {/* ═══════════════ SECTION 2: HOW IT WORKS ═══════════════ */}
+      <SectionHeader
+        title="How It Works"
+        subtitle="Three things the model knows about your operation."
+      />
+      <Prose>
+        <p>
+          The model takes three inputs and produces one output: an optimized set of assignments
+          for the shift.
+        </p>
+      </Prose>
+
+      <Prose><SectionLabel>1 · Priorities</SectionLabel>
+        <p>
+          <strong>It knows your priorities.</strong> A production planner ranks every job by
+          urgency — considering progress, delivery dates, and operational needs. Rank 1 gets staffed first, then Rank 2, and so on. The model always
+          respects this order.
+        </p>
+      </Prose>
+      <Figure caption="Jobs ranked by the planner. Progress and delivery dates drive the priority order.">
+        <PriorityRanking />
+      </Figure>
+
+      <Prose><SectionLabel>2 · Availability</SectionLabel>
+        <p>
+          <strong>It knows who's available.</strong> The supervisor marks who showed up and who
+          didn't. Each available worker has a fixed number of hours in their shift. As jobs get assigned,
+          their remaining capacity ticks down. The model packs work into each person's shift
+          without overloading them.
+        </p>
+      </Prose>
+      <Figure caption="Five workers ready with 8 hours each. Marchand called out — the supervisor flagged them as unavailable.">
+        <WorkerRoster />
+      </Figure>
+
+      <Prose><SectionLabel>3 · Skills & Efficiency</SectionLabel>
+        <p>
+          <strong>It knows who can do what — and how well.</strong> Not every worker is
+          certified for every job. Among those who are, the model knows their historical
+          efficiency — how fast they've completed similar work before. It assigns the
+          best-qualified available person to each job.
+        </p>
+      </Prose>
+      <Figure caption="Hover a worker to see their eligible jobs, or a job to rank eligible workers by efficiency.">
+        <EligibilityGraph />
+      </Figure>
+      <Prose>
+        <p>
+          With this knowledge, the model works through the priority list one job at a time.
+          For each job, it ranks the available workers by how well they'd perform, picks the best,
+          and moves on — filling shifts efficiently without overloading anyone.
+        </p>
+      </Prose>
+      <Figure caption="Step through the assignment process. Watch the model pick the best available workers for each job.">
+        <AuctionVisual />
+      </Figure>
+      <Aside>
+        <strong>The result:</strong> The highest-priority work gets the most capable available
+        people, every shift, automatically — with a clear rationale for every decision.
+      </Aside>
+
+      <Divider />
+      <Prose>
+        <p style={{ fontFamily: serif, fontSize: "clamp(21px, 1.8vw + 10px, 28px)", fontWeight: 400, fontStyle: "italic", color: P.ink, marginBottom: 4 }}>
+          And When the Plan Breaks?
+        </p>
+        <p>
+          A good plan is only useful until something changes. A worker calls out sick.
+          A rush job gets added. Without IWA, one absence cascades into three or four manual
+          reassignments — each one a rushed gut call that ripples across the floor.
+        </p>
+        <p>
+          With IWA, you just rerun the model. It takes the updated roster and produces a
+          new optimized plan in seconds. No scrambling, no dominoes.
+        </p>
+      </Prose>
+      <Figure caption="Click any worker to simulate an absence. Watch the manual cascade, then hit Rerun IWA.">
+        <AbsenceCascadeDiagram />
+      </Figure>
+
+      {/* ═══════════════ SECTION 3: YOUR RULES, BUILT IN ═══════════════ */}
+      <SectionHeader
+        title="Your Rules, Built In"
+        subtitle="Optimization alone isn't enough. The model adapts to how your operation actually runs."
+      />
+      <Prose>
+        <p>
+          Every factory floor has rules that pure optimization would ignore — crew continuity
+          on multi-day jobs, union agreements about worker priority, and workflow preferences
+          that keep things running smoothly. IWA has configurable rules (called <em>gates</em>)
+          that enforce these constraints automatically.
+        </p>
+      </Prose>
+
+      {/* Gate 1 */}
+      <Divider />
+      <Prose>
+        <p style={{ fontFamily: serif, fontSize: "clamp(21px, 1.8vw + 10px, 28px)", fontWeight: 400, fontStyle: "italic", color: P.ink, marginBottom: 4 }}>
+          Keep Crews Together Across Shifts
+        </p>
+        <p>
+          When a job takes multiple days — like assembling a jet engine — the workers
+          who started it should continue it. They know the work, they own the quality.
+          IWA automatically reserves them for the same engine, even if priorities shift overnight.
+        </p>
+      </Prose>
+      <Figure caption="Toggle to see the difference. With the rule, every worker continues their engine.">
+        <Gate1Timeline />
+      </Figure>
+
+      {/* Gate 2 */}
+      <Divider />
+      <Prose>
+        <p style={{ fontFamily: serif, fontSize: "clamp(21px, 1.8vw + 10px, 28px)", fontWeight: 400, fontStyle: "italic", color: P.ink, marginBottom: 4 }}>
+          Reduce Context Switching
+        </p>
+        <p>
+          When a worker builds three diffusers in a shift, they stay in flow — same tooling,
+          same setup, same muscle memory. Without this rule, the model might scatter them across
+          different job types, wasting time on workstation changes and mental resets.
+        </p>
+      </Prose>
+      <Figure caption="Toggle to compare. With the rule, one job type dominates the shift.">
+        <Gate2BatchTrack />
+      </Figure>
+
+      {/* Gate 3 */}
+      <Divider />
+      <Prose>
+        <p style={{ fontFamily: serif, fontSize: "clamp(21px, 1.8vw + 10px, 28px)", fontWeight: 400, fontStyle: "italic", color: P.ink, marginBottom: 4 }}>
+          Respect Union Agreements
+        </p>
+        <p>
+          When workers are borrowed from another zone to help with overflow, union contracts
+          require that the zone's own people get first pick of assignments. IWA enforces this
+          automatically — primary workers are assigned first, borrowed workers fill what remains.
+        </p>
+      </Prose>
+      <Figure caption="Step through the two passes. Primary workers go first, borrowed workers fill the rest.">
+        <Gate3Precedence />
+      </Figure>
+
+      {/* ═══════════════ SECTION 4: THE OUTCOME ═══════════════ */}
+      <SectionHeader
+        title="The Outcome"
+        subtitle="What changes when assignment decisions are automated."
+      />
+
+      <Wide style={{ marginBottom: 40 }}>
+        <div style={{ display: "grid", gridTemplateColumns: compact ? "1fr" : vw < 768 ? "1fr 1fr" : "1fr 1fr 1fr", gap: 16 }}>
+          {[
+            { metric: "Seconds", desc: "to generate a full shift of optimized assignments — replacing hours of manual planning", icon: "⚡" },
+            { metric: "Zero", desc: "manual cascade when someone calls out. Rerun the model and get a new plan instantly", icon: "🔄" },
+            { metric: "Higher", desc: "labor utilization per shift. Workers are fully loaded with priority work — no idle time, no overloading", icon: "📈" },
+            { metric: "Every", desc: "assignment backed by a clear rationale — who was picked, why, and what rule applied. Audit-ready from day one", icon: "📋" },
+            { metric: "Consistent", desc: "enforcement of your operational rules, every shift, every time. No human variance, no forgotten constraints", icon: "✓" },
+            { metric: "Broader", desc: "skill development across your workforce. Workers get varied assignments instead of the same top performers carrying every shift", icon: "🌱" },
+          ].map((item, i) => (
+            <div key={i} style={{
+              padding: "clamp(20px, 2vw, 32px)", borderRadius: 12,
+              background: P.cardBg, border: `1px solid ${P.ruleFaint}`,
+              boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+            }}>
+              <div style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</div>
+              <div style={{ fontFamily: serif, fontSize: "clamp(24px, 1.8vw + 10px, 36px)", fontWeight: 400, color: P.accent, lineHeight: 1.1 }}>
+                {item.metric}
+              </div>
+              <div style={{ fontFamily: sans, fontSize: "clamp(13px, 0.5vw + 8px, 15px)", color: P.inkMuted, marginTop: 8, lineHeight: 1.5 }}>
+                {item.desc}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Wide>
+
+      <Prose style={{ paddingBottom: 40 }}>
+        <p style={{ fontFamily: serif, fontSize: "clamp(16px, 0.8vw + 10px, 21px)", color: P.inkMuted, lineHeight: 1.7, fontStyle: "italic" }}>
+          Every shift starts with clarity. Every assignment has a reason. And when the unexpected
+          happens, you're seconds away from a new optimized plan.
+        </p>
+        <div style={{ marginTop: 40, paddingTop: 20, borderTop: `1px solid ${P.rule}` }}>
+          <span style={{ fontFamily: mono, fontSize: 10, letterSpacing: "0.15em", color: P.inkFaint, textTransform: "uppercase" }}>
+            Covalent Networks · Workforce Intelligence Suite
+          </span>
+        </div>
+      </Prose>
+    </div>
+  );
+}
+
+    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(IWACustomer));
+  </script>
+</body>
+</html>
