@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #FAF6EF; -webkit-font-smoothing: antialiased; }
+    body { background: #F6F6F6; -webkit-font-smoothing: antialiased; }
     #root { width: 100%; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
@@ -24,8 +24,8 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 const P = {
-  cream: "#FAF6EF", ink: "#1A1612", inkLight: "#3D3630", inkMuted: "#6B6258",
-  inkFaint: "#9E9487", rule: "#D6CFC4", ruleFaint: "#E8E2D9",
+  cream: "#F6F6F6", ink: "#1A1612", inkLight: "#3D3630", inkMuted: "#6B6258",
+  inkFaint: "#9E9487", rule: "#BFBFBF", ruleFaint: "#D0D0D0",
   accent: "#05448E", accentLight: "#2D6AB8", accentFaint: "rgba(5,68,142,0.08)",
   green: "#2E7D57", greenFaint: "rgba(46,125,87,0.08)",
   red: "#B44130", redFaint: "rgba(180,65,48,0.08)",
@@ -159,6 +159,106 @@ function SectionLabel({ children }) {
 }
 
 const btnStyle = { fontFamily: sans, fontSize: 12, fontWeight: 500, padding: "5px 12px", borderRadius: 4, border: `1px solid ${P.rule}`, background: P.cream, color: P.inkMuted, cursor: "pointer" };
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GATES SECTION — full-bleed tinted band + module cards
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+// Tinted band that breaks out of the page max-width wrapper. The page already
+// has overflowX: hidden so this is safe.
+function GateBand({ children }) {
+  return (
+    <div style={{
+      background: "#E8E8E8",
+      borderTop: `1px solid ${P.ruleFaint}`,
+      borderBottom: `1px solid ${P.ruleFaint}`,
+      paddingTop: "clamp(48px, 5vw, 80px)",
+      paddingBottom: "clamp(48px, 5vw, 80px)",
+      marginTop: "clamp(40px, 4vw, 64px)",
+      marginBottom: "clamp(40px, 4vw, 64px)",
+    }}>
+      {children}
+    </div>
+  );
+}
+
+// Section header variant for the gates band: includes a small "CONFIGURABLE LAYER"
+// eyebrow above the title to signal the shift.
+function GatesSectionHeader({ eyebrow, title, subtitle }) {
+  return (
+    <Wide style={{ paddingBottom: 32 }}>
+      <div style={{
+        fontFamily: mono, fontSize: 11, letterSpacing: "0.2em",
+        color: P.accent, textTransform: "uppercase", fontWeight: 600,
+        marginBottom: 14,
+        display: "inline-flex", alignItems: "center", gap: 8,
+      }}>
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: P.accent, display: "inline-block" }} />
+        {eyebrow}
+      </div>
+      <h2 style={{
+        fontFamily: serif, fontSize: "clamp(26px, 2.5vw + 10px, 42px)",
+        fontWeight: 400, color: P.ink, lineHeight: 1.25,
+        margin: "0 0 10px", fontStyle: "italic",
+      }}>
+        {title}
+      </h2>
+      {subtitle && (
+        <p style={{
+          fontFamily: sans, fontSize: "clamp(14px, 0.6vw + 9px, 18px)",
+          color: P.inkMuted, lineHeight: 1.6, margin: 0,
+          maxWidth: "min(620px, 90%)",
+        }}>
+          {subtitle}
+        </p>
+      )}
+      <div style={{ width: 40, height: 2, background: P.accent, marginTop: 24 }} />
+    </Wide>
+  );
+}
+
+// Single gate module card: numbered tag, ON/OFF toggle visual, title, body, then the diagram.
+function GateModule({ number, title, description, caption, children }) {
+  return (
+    <Wide style={{ marginTop: 28, marginBottom: 0 }}>
+      <div style={{
+        background: P.cardBg,
+        border: `1px solid ${P.ruleFaint}`,
+        borderRadius: 14,
+        padding: "clamp(20px, 2.5vw, 36px)",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+      }}>
+        {/* Title + description */}
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{
+            fontFamily: serif, fontSize: "clamp(20px, 1.4vw + 11px, 26px)",
+            fontWeight: 400, color: P.ink, lineHeight: 1.3,
+            margin: "0 0 10px", fontStyle: "italic",
+          }}>
+            {title}
+          </h3>
+          <p style={{
+            fontFamily: serif, fontSize: "clamp(15px, 0.5vw + 11px, 18px)",
+            color: P.inkLight, lineHeight: 1.65, margin: 0,
+          }}>
+            {description}
+          </p>
+        </div>
+
+        {/* Diagram */}
+        <div>
+          {children}
+          {caption && (
+            <div style={{
+              fontFamily: sans, fontSize: 12, color: P.inkFaint,
+              marginTop: 10, textAlign: "center", fontStyle: "italic",
+            }}>{caption}</div>
+          )}
+        </div>
+      </div>
+    </Wide>
+  );
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    DIAGRAMS (reused from technical version)
@@ -2010,6 +2110,11 @@ function IWACustomer() {
           High-priority work goes understaffed. Skilled workers get wasted on low-priority jobs.
           New starters sit idle.
         </p>
+        <p style={{ marginTop: 16 }}>
+          Use the interactive below to toggle between <strong>Without IWA</strong> and{" "}
+          <strong>With IWA</strong> — and see how the same workers and jobs get assigned
+          differently when the model is doing the matching.
+        </p>
       </Prose>
       <Figure caption="Toggle between views to see the difference optimization makes.">
         <BeforeAfterDiagram />
@@ -2096,66 +2201,69 @@ function IWACustomer() {
       </Figure>
 
       {/* ═══════════════ SECTION 3: YOUR RULES, BUILT IN ═══════════════ */}
-      <SectionHeader
-        title="Your Rules, Built In"
-        subtitle="Optimization alone isn't enough. The model adapts to how your operation actually runs."
-      />
-      <Prose>
-        <p>
-          Every factory floor has rules that pure optimization would ignore — crew continuity
-          on multi-day jobs, union agreements about worker priority, and workflow preferences
-          that keep things running smoothly. IWA has configurable rules (called <em>gates</em>)
-          that enforce these constraints automatically.
-        </p>
-      </Prose>
+      <GateBand>
+        <GatesSectionHeader
+          eyebrow="Configurable Layer · Optional Gates"
+          title="Your Rules, Built In"
+          subtitle="Optimization alone isn't enough. The model adapts to how your operation actually runs."
+        />
+        <Prose>
+          <p>
+            Every factory floor has rules that pure optimization would ignore — crew continuity
+            on multi-day jobs, union agreements about worker priority, and workflow preferences
+            that keep things running smoothly. IWA has configurable rules (called <em>gates</em>)
+            that enforce these constraints automatically.
+          </p>
+        </Prose>
+        <Divider />
 
-      {/* Gate 1 */}
-      <Divider />
-      <Prose>
-        <p style={{ fontFamily: serif, fontSize: "clamp(21px, 1.8vw + 10px, 28px)", fontWeight: 400, fontStyle: "italic", color: P.ink, marginBottom: 4 }}>
-          Keep Crews Together Across Shifts
-        </p>
-        <p>
-          When a job takes multiple days — like assembling a jet engine — the workers
-          who started it should continue it. They know the work, they own the quality.
-          IWA automatically reserves them for the same engine, even if priorities shift overnight.
-        </p>
-      </Prose>
-      <Figure caption="Toggle to see the difference. With the rule, every worker continues their engine.">
-        <Gate1Timeline />
-      </Figure>
+        {/* Gate 1 */}
+        <Prose>
+          <p style={{ fontFamily: serif, fontSize: "clamp(21px, 1.8vw + 10px, 28px)", fontWeight: 400, fontStyle: "italic", color: P.ink, marginBottom: 4 }}>
+            Keep Crews Together Across Shifts
+          </p>
+          <p>
+            When a job takes multiple days — like assembling a jet engine — the workers
+            who started it should continue it. They know the work, they own the quality.
+            IWA automatically reserves them for the same engine, even if priorities shift overnight.
+          </p>
+        </Prose>
+        <Figure caption="Toggle to see the difference. With the rule, every worker continues their engine.">
+          <Gate1Timeline />
+        </Figure>
 
-      {/* Gate 2 */}
-      <Divider />
-      <Prose>
-        <p style={{ fontFamily: serif, fontSize: "clamp(21px, 1.8vw + 10px, 28px)", fontWeight: 400, fontStyle: "italic", color: P.ink, marginBottom: 4 }}>
-          Reduce Context Switching
-        </p>
-        <p>
-          When a worker builds three diffusers in a shift, they stay in flow — same tooling,
-          same setup, same muscle memory. Without this rule, the model might scatter them across
-          different job types, wasting time on workstation changes and mental resets.
-        </p>
-      </Prose>
-      <Figure caption="Toggle to compare. With the rule, one job type dominates the shift.">
-        <Gate2BatchTrack />
-      </Figure>
+        {/* Gate 2 */}
+        <Divider />
+        <Prose>
+          <p style={{ fontFamily: serif, fontSize: "clamp(21px, 1.8vw + 10px, 28px)", fontWeight: 400, fontStyle: "italic", color: P.ink, marginBottom: 4 }}>
+            Reduce Context Switching
+          </p>
+          <p>
+            When a worker builds three diffusers in a shift, they stay in flow — same tooling,
+            same setup, same muscle memory. Without this rule, the model might scatter them across
+            different job types, wasting time on workstation changes and mental resets.
+          </p>
+        </Prose>
+        <Figure caption="Toggle to compare. With the rule, one job type dominates the shift.">
+          <Gate2BatchTrack />
+        </Figure>
 
-      {/* Gate 3 */}
-      <Divider />
-      <Prose>
-        <p style={{ fontFamily: serif, fontSize: "clamp(21px, 1.8vw + 10px, 28px)", fontWeight: 400, fontStyle: "italic", color: P.ink, marginBottom: 4 }}>
-          Respect Union Agreements
-        </p>
-        <p>
-          When workers are borrowed from another zone to help with overflow, union contracts
-          require that the zone's own people get first pick of assignments. IWA enforces this
-          automatically — primary workers are assigned first, borrowed workers fill what remains.
-        </p>
-      </Prose>
-      <Figure caption="Step through the two passes. Primary workers go first, borrowed workers fill the rest.">
-        <Gate3Precedence />
-      </Figure>
+        {/* Gate 3 */}
+        <Divider />
+        <Prose>
+          <p style={{ fontFamily: serif, fontSize: "clamp(21px, 1.8vw + 10px, 28px)", fontWeight: 400, fontStyle: "italic", color: P.ink, marginBottom: 4 }}>
+            Respect Union Agreements
+          </p>
+          <p>
+            When workers are borrowed from another zone to help with overflow, union contracts
+            require that the zone's own people get first pick of assignments. IWA enforces this
+            automatically — primary workers are assigned first, borrowed workers fill what remains.
+          </p>
+        </Prose>
+        <Figure caption="Step through the two passes. Primary workers go first, borrowed workers fill the rest.">
+          <Gate3Precedence />
+        </Figure>
+      </GateBand>
 
       {/* ═══════════════ SECTION 4: THE OUTCOME ═══════════════ */}
       <SectionHeader
