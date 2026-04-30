@@ -1,0 +1,370 @@
+import React from "react";
+
+const IconBase = ({ className = "", children, viewBox = "0 0 24 24" }) => (
+  <svg className={className} viewBox={viewBox} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {children}
+  </svg>
+);
+
+const ArrowRight = ({ className }) => <IconBase className={className}><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></IconBase>;
+const Bell = ({ className }) => <IconBase className={className}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></IconBase>;
+const CheckCircle2 = ({ className }) => <IconBase className={className}><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-5" /></IconBase>;
+const ClipboardCheck = ({ className }) => <IconBase className={className}><rect x="8" y="2" width="8" height="4" rx="1" /><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3" /><path d="m9 14 2 2 4-5" /></IconBase>;
+const Clock3 = ({ className }) => <IconBase className={className}><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></IconBase>;
+const Factory = ({ className }) => <IconBase className={className}><path d="M3 21h18" /><path d="M5 21V9l5 3V9l5 3V5h4v16" /><path d="M9 17h1" /><path d="M14 17h1" /></IconBase>;
+const FileCheck2 = ({ className }) => <IconBase className={className}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="m9 15 2 2 4-5" /></IconBase>;
+const Gift = ({ className }) => <IconBase className={className}><rect x="3" y="8" width="18" height="4" rx="1" /><path d="M12 8v13" /><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" /><path d="M7.5 8A2.5 2.5 0 1 1 12 6a2.5 2.5 0 1 1 4.5 2" /></IconBase>;
+const LineChart = ({ className }) => <IconBase className={className}><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></IconBase>;
+const LockKeyhole = ({ className }) => <IconBase className={className}><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /><circle cx="12" cy="16" r="1" /></IconBase>;
+const Menu = ({ className }) => <IconBase className={className}><path d="M4 6h16" /><path d="M4 12h16" /><path d="M4 18h16" /></IconBase>;
+const Play = ({ className }) => <IconBase className={className}><circle cx="12" cy="12" r="10" /><path d="m10 8 6 4-6 4V8z" /></IconBase>;
+const ShieldCheck = ({ className }) => <IconBase className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /><path d="m9 12 2 2 4-5" /></IconBase>;
+const Target = ({ className }) => <IconBase className={className}><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></IconBase>;
+const Users = ({ className }) => <IconBase className={className}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></IconBase>;
+const Zap = ({ className }) => <IconBase className={className}><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" /></IconBase>;
+
+const calendlyUrl = "https://calendly.com/d/cxtw-9kw-jv8/manufacturing-skills-matrix-overview";
+const heroImageUrl = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDACAWGBwYFCAcGhwkIiAmMFA0MCwsMGJGSjpQdGZ6eHJmcG6AkLicgIiuim5woNqirr7EztDOfJri8uDI8LjKzsb/2wBDASIkJDAqMF40NF7GhHCExsbGxsbGxsbGxsbGxsbGxsbGxsbGxsbGxsbGxsbGxsbGxsbGxsbGxsbGxsbGxsb/wgARCAE2AggDASIAAhEBAxEB/8QAGQABAAMBAQAAAAAAAAAAAAAAAAEEBQMC/8QAFwEBAQEBAAAAAAAAAAAAAAAAAAECA//aAAwDAQACEAMQAAABpaFXXKa4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4Ka4KcXRhOwa+RrgAAAAAAAAAAAAAAAAAAAAAAAAAAAgkgkAGQBr5GuK1mqeenL0evdfiXefgdelSS1z5ci8qdSfM8zt7qju5eS3FToWenPoVfXgdPVbodfLid3DqSjgWp5yPHXke+c8yzPLydPXIdevDuAAAAImDgDvMSAZAGvka4iR49SPPGwPMyPPLuPE+hEehCR5eh5ehEehEh5mR5mR489R5mREehCRCREehCR5mREgAAAAiRCREgBkAa+RrgBEHogkAglEgABEhAkgkABEhEgAgkAAAAglAkAAAAAAAGQBr5GuK9iucvHvwd48eTp0p9j3z68Dt04ST1pXDvx7czj2r+yfPkW6ffmeo8wdnMR2rjqcC7X78ya1niWuXTgdPMcixPPye/VbuI9cj165+z30q3AAAAAAADIA18jXAAPPLuAAAAAAAAAAAAAAAAAAAAOXUAAAAAAAMgDXyNcAPPoEEvPoAPHokAABAlEhAlEhHk9vI9PHol49gAAAAAAAAAAAAAGQBr5GuPPquVLnEdONjiR28QLFO2Vz2Rz8+zo8SWOnPoVu3noVusCfFjicrXIefNiseyTy89jxYrWQAAAAAAAAAAAAADIA18jXAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMgDXyNcHk9OHU9EEokAAPHsEEvPoAHCTuz/bN1E3YAAAAAAAAAAAAAAAAAGQBr5GuOPbkVXv0Ofsc+keT10eSx68yVekQT59SRHTwefcdT3naNDOPHr1ynO3Y49tdQugAAAAAAAAAAAAAAAAMgDXyNcAAAAAAAAAAePYq++6ZC6AAAAAAAAAAAAAAAAAAyANfI1wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADIA18jXBVS0yG5rsga7IGuyBrsga7IGuyBrsga7IGuyBrsga7IGuyBrsga7IGuyBrsga7IGuyBrsga7IGuyBrsga7IGuyBrsga7IGuyBrsi7FoZ1kAa+RrildpWVB1wAAAAAAAAALBwWvMteLHpKs9ehWm1xOUWJK7v7Kq3zK4oAAAAAAAABbqW5bo5byANfI1xSu0rKg64AAAAAAAAAdeQ9+uQ9++In14HbzzHVyR18+Fdo5ICgAAAAAAAAFupblujlvIA18jXFW1CZLVbmU1RlNUZTVGU1RlNUZTVGU1RlNUZTVGU1RlNUZTVGU1RlNUZTVGU1RlNUZTVGU1RlNUZTVGU1RlNUZTVGVdsTEjOsgDXwtItqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgtqgpuI8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//xAArEAACAgAFAwMFAQADAAAAAAABAgARAwQSFDMQEzEhIlAgIzJAQzA0QmD/2gAIAQEAAQUCVdTbZZt1m3WbdZt1m3WbdZt1m3WbdZt1m3WbdZt1m3WbdZt1m3WbdZt1m3WbdZt1m3WbdZt1m3WbdZt1m3WbdZt1m3WbdZt1m3WbdZt1m3WbdZt1m3WbdZt1m3WbdZt1m3WbdZt1m3WbdZt1m3WbdZt1m3WMulsvy/P5jly/L8/mOXL8vz+Y5cvy9Mc0gSHFAPeWjiAKMUFk5+8s1jVrGvvLGcLEcNMckLrvBV9OEuIGPeWd5YzhQuIGiNq6ecVPz7ghcCK9lWAww/r3PXuiMwKF6ZW1R/Qux1nlbhLVFcGdwRnClXs/5EXAdE/M/RmOXL8vTMca9kROfC/E8DsHYeuKGUYJUjBQFkFaHGl8OteY/DGFTVWEvPhfiP8AjN4SjiKwbodPeX81/Dw/9wawT+afnhT+P905MQWijWmF7p/Bq1erKWXteH/v/nyQew/RmOXL8vTzNIlShMRNS0JUoTEDEKNK0OgFSr6UKoShKFQADrQ6UOhiLpSh1ofVQlXPEoX/ALEX9OY5cvy/P5jly/L8/mOXL8v0WB83mOXL8vTGbShwqR21IMT3IV196NiUe4SqsTgh9I1/c701Hpi3o0oZq97NahyEnjGxfCtpwtZsudStSs2lf76zAbGMPbicR7egeMT1mGfb3DC8DTuGi/u1my2rDDkKebX7B4/2zHLl+XpjLqQ4mpHXShPcxALYVR9mIGLhT9greXwwWUUBejoxIDlWhOnF8gt9vQJWpktpX2idZB0P5R3DJ/YaQF9FxePE4yylF/Gi7gFMQkRvC20GnT/Uc0LXh/1Yfc/3zHLl+X6T4w00/Eqpv/fMcuX5fn8xy5fl+fzHLl+XrYvqCCOpYCefr8dL6+ZdddS2SBAQZqWyampT+9mOXL8vQmgtqcR9MDPeDcDkYRf7ncYxG1qQDmPwxmd5isWwi5VVdta6umMo0/8AVVC4zml0DTg+MRR0UalxANJ9cbxisqrhuD2lI1fu5jly/L0xrKtg+0hiFLs2GGWYafZwVN6NJQUrahjKrM+kzSew6l1Qe5ST0xBeGPFfd84kwxQxBYxPHhVJEN6lsuCdRLafV3/dzHLl+X5/McuX5fn8xy5fl+fzHLl+XoTQGKhNjr5+osF+i/X6HepqMXEInn4bMcuX5emKutLFOD3XLWGZ8NbXAdiMJ3OtdZQXUYa3D/ap6IPesltZKF/fhtqEPqYaEwvHwuY5cvy9MRdSsuI4dGsq3cRCIEbtlMRkYPaIyqLqLhiu3PuUwOsD3qlYmkhluow0tq6YYpfhcxy5fl/WIDTtRcMD4fMcuX5fn8xy5fl+fzHLl+X5/McuX5fn8xy5fl6YzES5cuXLly5cuXLly5cuXLly5cuXLly5cuXLly5cuXLly5cuXLly5cuXLly5cuXLly5cuYLE9cxy5fl6Y/69GUZR60elGUT0oiUf2MDz0zHLl+Xpj/rVrUG8VeJfzr7eL+Qvtf1aOSsU2VJYepS/uqdS/q4HnpmOXL8vTH/WR9MVtJDDTY1a/uE2dXs1+4lZqE1nVqFFvTX79Xp+rgeemY5cvy9Mf5rA89Mxy5fl6Yy3KMoyjKMoyjKMoyjKMoyjKMoyjKMoyjKMoyjKMoyjKMoyjKMoyjKMoyjKMoyjKMoyjKMoyjKMoyjKMoyjKMoyjKMoyjMFa65jly/L1qVKlSpUqVKlSpUqVKlSpUqVKlSpUqVKlSpUqVKlSpUqVKlSpUqVKlSpUqVKlSpUqVK+jMcuX5fn8xyo2htwk3CTcJNwk3CTcJNwk3CTcJNwk3CTcJNwk3CTcJNwk3CTcJNwk3CTcJNwk3CTcJNwk3CTcJNwk3CTcJNwk3CTcJNwk3CTcJNwk3CTcJNwk3CTcJNwk3CTcJNwk3CTcJNwk3CTcJNwk3CTcJNwk3CTcJNwk3CTcJHbW3/AIH/xAAfEQEBAAEEAgMAAAAAAAAAAAASAAERIDFQAkAQYID/2gAIAQMBAT8B/KvE+g8/jHHQHHcKUpSlKUpSlKUpSlKUpSlKUpWuzPu42Z93G0xjGMYxjGMYxjGMYxjGMYxjG0+i/wD/xAAfEQEBAAEEAwEBAAAAAAAAAAAAEhEBAjAxECBQYID/2gAIAQIBAT8B/lbPwNfhY+volKUpSlKUpSlKUpSlKUpSlKUtduPTb3yZZZZZZZ493Xpt75ceMMeMce7r1pSlKUpSlKUpSlKUpSlKUpSlNd2fwv8A/8QANBAAAgEDAwIDBgUDBQAAAAAAAAERAjFBEiFREGEDInEgMDJAUIEzQlJwgmBiciOAkaGx/9oACAEBAAY/AoRdl2XZdl2XZdl2XZdl2XZdl2XZdl2XZdl2XZdl2XZdl2XZdl2XZdl2XZdl2XZdl2XZdl2XZdl2XZdl2XZdl2XZdl2XZdl2XZdl2XZdl2XZD/cfY/FY1vJkVWCNyszHIlyaTMc9dh/qQnURumWZkkiz6tamhqZRZxyLuREMneO5DTQ1DcGybE9/sRDnpS+4uFcS7FUSLLHiCzjkS5Is/eQ7H9vulyVniC9SjSeJ6DpyUvKK6s1EOuO0FO+0XG9WoXqalm5R/wCi80nidPDeIJ16mbdKtUWKlR8MG9cdjw/Q/ifco8+orKvUp9R+hWMqf6h1fYq9Rb6XyVq/c+1jw/Q/j7z+0h291ZdYpLdLEUkFum3WILdIjpsutulumy3IZb3W/SY/Zzf6/sSm9RQyKqYkr2gnT5eRJKWyrbzIepSijbZmngnT5eSmFKfTY/03DHSVrgT07dG/saeSkSqUSRSpgrqjJJ/ElUyiRuWM2+Lsbio5O62JVOwoUtjlRBq0+UhKSNO5XtDQm6din0HVx8psaYeooRTCex4qIq1zwKrEFXl2Kqci7FTd6iKtU8FNMPfpKUnk+Il5R4pp/NBueIh1PCgofBSqeZKtWTxPUSR/EirVIhjIiXHApG5iNi86hxNNXBTrX34Kkm3T3IeqeBf4lXoeKafzFPoacVb/AC+w23Lf0mW5f7LxPsbexu18jEo3NiJRubNfQpKfEeWJK7NLW5VwaklcppQ9MQiTfghWY9kkuRPAv1M01RvwPV0b6bcHcS4H6k5no3+oVKvgU4Q0sogSuQ6NL+hQlcuyiqN0Wikqp0jpY3V6DmjUWg1KmTXVsVTRL5IjcT02wfhwOVHRx0nsf49HPIo5I5NkS6apFXA6og1VUVdiUvsU7NJc/vLuX91v7DXHswrlzf6XCFT4lMFO/ofGqUVb2Jkpc7kTpXI912Zvfo+yNRMy+C+CtT6FMXY1q0wPMexGfpezhkOCl04NSSZXOR0MShbG0VLgfLN79PMpZVT+VkW7iqW5U+RvGBtKZN469/6A3L/7MIX1qH7a+YsW626WLdbfMP218tT/AMD9D4o3ImZNObkcChxuUrKuPzz2ElwVVRvBUnwUQ4PsVJ8fLP218sySGpE0oNRJpE43R8P/AGeamYJIpUSJcGqCKVHyz9tfWn7ixYsWLFixYsWLFixYsWLFixYsWLFixYsWLFixYsWLFixYsWLFixYsWLFixYsWLFixYt+w8mTJkyZMmTJkyZMmTJkyZMmTJkyZMmTJkyZMmTJkyZMmTJkyZMmTJkyZMmTJkyZMmTJkyZMmTJkn+gv/xAAqEAEAAgEEAgECBwEBAQAAAAABABExIVFhcUHwECBgMEBQgZGhsdHxwf/aAAgBAQABPyFizMKdf143d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d1p0gzZiYOn7AydEwdP2Bk6Jg6f1nHw6Z+nJ0TB0/KWpG/EurJtcoqhsTMBblYmrS0KVF4szP6EbsLg0ieq2s1mqwtZrY6Gkr7tXAS1qxMjCNk18QetoNYKRV/uaR7BmalriJAgjesQatbxXmMtEPDBKglNa/CXQAMNRurH5Y6yIMg0jo1fCoDWB4ZqT/YgpSuL8xFBmwlhe7UYlkaKQepKXRDtQiZGNvtNDCVP/VEpnQsxDYWvnuHVSnggOSyHxPN+xaRACuFQGoh4fwwFOIjy+LNdof39OTomDp+f9IrGlO5/Wn+r4ciVtwIDLDk3lTmIzpIRq7EkTc0CsKLdWunxC7UVCqtF7MRDThzP9Uy++YUs15NoA6AbQ9XdfAexMyv8AYuV0rXR0QAA2Wnp+8c0/dtrEeYuf3yYdsPbzCH/HOZ5lxQ1NxH+v8A2Z1U6RdjEGg8xVRLaQCJyOeXrP4agWzVbD+4n9gv05OiYOn5QGoM/wDGlBui4BdBrHCgpuBNgGUG6LmtdL3qaWqc3BAeJr3S96iCUlwBoDqIyB7iCUmk8AraBVQ04gF0Gs8AraUVVFbTAB1ADBXws2h/aABoVFm0XvUou61l6snlKip3geB/EoPGYAYJoVRUou61lF3WfgAKNIAYKmhVFRAoCcwAUFE8QvepRd1rKLutfw0EpxAoogCks+nJ0TB0/YGTomDp+wMnRMHT9LkA7+LPxVotmfrEcOPiy6vXb8daLfiy6vXb8jk6Jg6flNwtQtOBd3GXzcWrPFALgy3LVrw8wUCVAZkLlg25eYYivLiZqaC1lqS0Q3csbfG4Z1raARAYWoYLuaFYRMaYa3rMxXxti/eNqM/5hKq10DeAbTG7iFvRuptUwlZW7qeXrMuGk+bzAIYYv7GPE/qzyJp0trctTyrWYzz16jNXdS0b551lVfETEdpd/hP9CvWMDXi8wdY/OkrTQUkwcZrc8DfArCvIjUKUvj8fJ0TB0/K7w1mmLhVVGprR8TApnZGIyzDuFDpTi6lAUpo7zAGnETcappnQKT4mGBH/ACHwSyGvUoaZ6IYgNomSDYp136gtY2pVTHS0JrTzU0B1oQVMW9pDuDVjWIJLArGoDWG3QSwBbL0xK1QbeB4F1hAAhs/G/ryi1oKgoGVawB3iaSoqAzzAi4d5YzUcajylCsGjun7JW7Kqs0I/qImnrxDpjYqqlUO0rzgvyGTomDp+oqhU7zlgH9JA/GDTH5DJ0TB0/YGTomDp+wMnRMHT9A1As8fRenZ9C1Ce4ILET61Ba0fFLqy9vgRLGyCYNxGSHxZdXrBqLtrgNoDmA2hOIlZdtcAWqIMpT3+eydEwdPyTrxNwFcShvFLMWjR8RVw3QWN5ARdBpLZfR5HmVuMoYsgK8LiBsfuAwF0LPcP0HBBDhGNegzpXwp+rWnEC6bkoAqWWstCWJxAozfDV5jr8avU+XEGWXYFDUWwMI1YjRa6crNAlaXUpbBj89k6Jg6fkFc21mrpqwS2jzkvD3sxBFresRBpbgwkapcuSn4SVP8cFoCpUXRgmuGfELm6jiZLvJ5hpSs8rHsM6c/DBFtTBLYtNNx0zwL/f4airXGpL0RaTl1HeKNCMLz4xKjNKpPMCFCqBzEWB8KxEBWdVmpqGY3+eZOiYOn7AydEwdP2Bk6Jg6fsDJ0TB0/IWKiUghBBS3x8LRbBBY2fVUWq2j5sur12gUmcvq4X8oh5EEFmP0bJ0TB0/K+QzF0vOVAz/AIQhGgz5YA5+VZImHrpjWHHUq4U4zwzKJreCEEV+T8AVxUdzKZDXuUg7ymkodflKQwCGwKev+y7Q39o9hEqs8/Csd4CtGYQ8vJj1mz+jZOiYOn5SqggQybzSW7WH1QMPiDCvWPIDZjBA5TWRuXiUfXiPBNLp3VHGkw8urCniw8Q0KnbBkYU6xxmKVEQ/9ojschngQ7Hwyf1HToUsvxlMv6Nk6Jg6fy5lQ7IQt1f0fJ0TB0/YGTomDp+wMnRMHT9gZOiYOn7AydEwdPySJVy27Lbstuy27Lbstuy27Lbstuy27Lbstuy27Lbstuy27Lbstuy27Lbstuy27Lbstuy27Lbstuy27Lbstuy27Lbstuy27Lbstuy27Lbstuy27Lbstuy27Lbstuy27Lbstuy27Lbstuy27Lbstuy27LbstuwlS6+cnRMHT85/lqJkqcDBMJ/aUZX8SmrrSUmSDYT+0puqbieV/EMBPw5AkGLF/EBWgbiJkT8zcnRMHT85/lrY+btNBYEE/wDqo7u01XP4KcGwEK1NyqXqtQpRtRHGoHhNBQLRgVNWsD+61QDpyUXmMhurF/mbk6Jg6fnP8tQirv8AqYlekNpq7zKtBOZfD+0u90dCmG7mb3HMUNUXzFwajBua3TrpXESe5NZZWrfK9GnWJvROdfzNydEwdPzn+u7k6Jg6flgJ4nInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInInIjBXz85OiYOn6KbSm0ptKbSm0ptKbSm0ptKbSm0ptKbSm0ptKbSm0ptKbSm0ptKbSm0ptKbSm0ptKbSm0ptKbSm0ptKbSm0ptKbSm0ptKbSm0ptKbSm0ptKbSm0ptKbSm0pt9GTomDp+wMnRFE+IUf8AE9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RPUT1E9RGj/iKr8/YX//aAAwDAQACAAMAAAAQYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQMoAAAAAAAAAAAAAAAAAAAAAAAAAAAEEAA8oQwEEEgA0ME0IEw0scYgoocgAAAAA8oA8oAggAQgQAgwQAAAwAQAwQAAAAAAAAggA8oAMEAEIAAIMEAAAAAEAAAAEIAAAAAAAA8oEEkgIIwAAksgMc8ksokkIEsQAAAAAAA8oAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAA8oAIEAAAAAAEAAAAMAAAAAAAAAAAAAAAA8oQ4UckYo8AQww0UIAoAAAAAAAAAAAAAA8oAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8oEEEAAAIAAAHMAAAAAAAAAAAAAAAAAAA8oAgEAgEkM0YC3rAAAAAAAAAAAAAAAAAA8oAAAAAAAAAAQzAAAAAAAAAAAAAAAAAAA8oAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8oDAAAAAAAAAAAAAAAAAAAAAAAAAAAABA8oCCCCCCCCCCCU89xFhRBCCCCCCCCCCAA8oCCCCCCCCCCCAgggQiwjCCCCCCCCCCAA8oH4wwwwwwwwwwwwwwwwwwwwwwwwwwwtA8oMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMI8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/8QAHxEAAwACAgIDAAAAAAAAAAAAAAERMDEgQCFQQWCA/9oACAEDAQE/EPyq2krEnoNEOLRqvfaokeZ7duK90AAAAFbnDXGlSEJ5IT4ITHtw1xpwpWUpWUrx7cGqp3QAAAAUu/Rf/8QAHxEAAgMAAgIDAAAAAAAAAAAAABEBUXEwMSBQIWCA/9oACAECAQE/EPyrMoT0SOvQJ7eDlGzZs2bNmzZs2bNmzZs2bNmzZs2bNmzZs2IPnJlDHwOjIYZMlBuPs5yYfZMRIghBBQJx9nhEqWPQ9D0PQ9D0PQ9D0PQ9D0PQ9D0PQ9D0PQ9D0PQ9D0PRJBfRf/EACsQAQACAAUDAwMFAQEAAAAAAAEAESExUWHxQdHwEHGhIGCBQFCRscEw4f/aAAgBAQABPxCv4TN6QAtupR/k5w7TnDtOcO05w7TnDtOcO05w7TnDtOcO05w7TnDtOcO05w7TnDtOcO05w7TnDtOcO05w7TnDtOcO05w7TnDtOcO05w7TnDtOcO05w7TnDtOcO05w7TnDtOcO05w7TnDtOcO05w7TnDtOcO05w7TnDtOcO05w7TnDtOcO05w7TnDtOcO05w7TnDtOcO05w7TnDtOcO05w7TnDtOcO05w7RCpurT/kr+UzOs85p9gec0nnNPsDzmk85p+8qBVoOrMyyIFoDV+nzmk85p64HK4qtYheKp/xzmmjNlyy9uh8kxalooxJbg5lRDzHA7IFUI0iGKFSyyYKM2IBPdKoDNJTayjHI3SRXdSWq6MaVUXQ3rCuhR1VcWUsumlIgNB0hk3iQLmMGxj6IyxbBUEWnTUFnZBXpd1UGagxkRGtHS4Cx6sERpDla7uIsZaNNay1GCl4k3lOkknqCNqpJGBoyfIgqKuVTd5MTZSBu4HcWhUjDijC7wRlrxUkdVRcg4hzvAuPIwy3jdPiYK5sO33iJWQWmMMZpof8AJ7QQEKDdxlmbRprX/mjO1LLKfhgXm0YEAABgH0ec0nnNPXJ9v+xQ01N6p4HtPl/0Z8t/so3dlDIwmYOA+I5NUsmKscYi/gLxKj5gNpRYMHEc4jQjiFYaRaeDWE/n8T4T+mD6T/6YHVGirZvP4ikhsX9nCfK/oz5cMpECpdtYUWjeUr3lDAqcK9MgDAvA0dS2DbCMPKswamsU8FCmKV6ChMViiwWxlGFiXEQw2nitPR/wP9p8T/c+V/WMYyFPcxiGsb17BRCDxfgMfmPiaJcWXPQO2MrmmB1ky949SoQ43VVUyQwfeiH/ADBEgBmsq62jDWBz2vwwxLPo85pPOaetcI0S5x2CpJZoYsEAjMBnCey1kRkiZoYsFSSzQxYve+sLgtDaPMG0yBjXvFr32lytIaJcowugqFUZoLlACuiYRaz2LCJIbkQYQQCMwGcq/gLD+Jff0GDCCpY6KhqEFvAr0vztUMoRDQKltsdQuKBBGTWJAFUtGTD3i2ExdGLBQGDZQwYIUA5kM5YUFttGbMJgjYVhc6EwVdYwBADmQziWUwEADICoLQC7wKmNxRtKwZtQgXKwtAKgNHty4oEEZNYk6GwVdY1/zdCKzIABQZEQCTowAKMA+jzmk85p9gec0nnNPsDzmk85p9Fl1ZekrMUwLVfoIoIpmDl9CgKoB1YIljY9T6hHJH0BEAMVekEAiI4iel/Ta0Nqacn06WwXixr6bHJ/5AiAGKvSCII2OSRIsWLLYv6Hzmk85p64/VWOkfEWvWesIi82uqRrczVu4KEnbWvPpM3O9Ysf4gsxqDWGsQxXZGt7RiAGbHiy2qUDFQ4orT6w8oqzqm3+RzPj0uT0xmRTX1VGDQIi3uJNNHiZ3Mo1xd52R1VQ9BrUEAjY4ktXh9hGD/JFJ01OwxWO1AAZpcpiYagovRlkvS6gdI7ytVbj0wnUSCr1hAXvW9BpnRGJsLJa1BVLQxP59DAKSjEQ9vX5S9ojiDoMWdRY/g/8lmDkvMrNCM1AWjgK6xhcVuNo1GObOvQa1LTmu4CH/q06WtxLCC1fTWK4CDmBrUdtiyJeVWLck6Sh4BbZf9/OaTzmnqlBb0NYqY+uQay3K1TFjnMHhLdFeVOu+B/LCcNMLsGX25FwtwdYzszGwVUNo4qjqYyg1hwxwgiYgL6YQMkqWwODgosv8vSuEBUz9kAStFiOLG2WvigBSxyjGgHClLA9cBa0z9oOOlC7ehCrkCR3qG6ihOtYsLQQAY1jcr6AtAB/szBBYjhlD8ylCnpANLSv1dYpz6aX+Y6U6YB7KglkYZh7wqIK4Ze5AphbNrJoCu61qJ7ZB7oMYxYG9c94wtIsVg9tpiAFz09jJuMwI2s3+CWBCpsbdL6kIFcFDEdulQrEKBfTGBtprMjZbjlhnApcd6w39pfGG0v+JZA+Is/5w/Qec0nnNPqso5hS6YjuHdFftIl0MCgP0HnNJ5zT7A85pPOafYHnNJ5zT6ECGcHE9VAVQDNlCt1WfRscBAzfiA39bgQdVqCJZkzZzeLH0rS1BwhykBppvGFDcNFtegzIoWl4ktRaQub5aVTfLSuUgsthcSkDNWiGWjIAv67zmk85p65AhViSGge18f4j5raDkTr0wxxaMK+MLRzuv6hQIQhVaxoKtT0IhzesePsgAFnBNGOjtkfaHfjGXwM+0QxzAWDtBgQwXiYstonKKA4VCLSLRh7RKmn8L0C5HMWvYQTahTY05RBWY3G7bhhnT33CN6kjAav3gCKAQ0lXi4gVrHIigKtBnGWTVBmZD4/uUqQKGJWbCLWBHK7q4eDNitbq4DQlLMVBtLSRa1nB0QK0MfyfrvOaTzmnq2IxB0IgT4tXC4RWwVwUimmGWYygVuOnKJRZgfiEjA2HlQRdG3SuITiluoxwu4e0pNIq+2UrVbXAh6xmrPN7wPIenpPCUCJayx2gKpoV5PRsiYA6wobmBC3Z+Iu8p7sj3ZfHoGIlC+pC1EM1pcZ/q9Or/Ed1mSeu0zS7oKGhjlCstX5DPKVNxzx1WPQHABR/nOGPJYNLujQGigpWsj9d5zSec0+wPOaTzmn2B5zSec0+wPOaTzmnqmIGawNVXAUQYJVkJxfQEQAxV6Q4JMkbPq/uuh9elrF4sajZOFk1+mzgPVfSJW/jagQWvecMtaLH9m85pPOaerRKCAeu0pRNASiYfdMVX/7masrMntHKMXD0ThMP1hWm5KdWKUY4Rg59mWlyNlxd+8qdxkZvoiwYievG/wASpldYbMIWulKgRoRWDKhgYF5TBecoMFJgPEmsq/8AEug1y8LX56QA0wodH0RTFUFgqaqGg0OA4G0Vdlgfs3nNJ5zT1tjRYjV7MBO0Ut3KSKKsq5bJiKZqldRyqw694VqMpu27xiTpKrEzHCCsMtrGetLtht82LiRItrAlYrCrjisSgAro5uuECs4oRbA0NYFsDJpWOcPY1jQi5FLRo5pUxtVSJ1ISlE2dE/30EizG1LWiKh6+3o14pbr9m85pPOafp6yXo9SLeDW5BS1ZWYfs/nNJ5zT7A85pPOafYHnNJ5zT7A85pPOafYHnNJ5zT1Uxi2mdTlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmcszlmKYwaXOvXzmk85p6/Cf0yNItEqYwYyWYZmsNsrUTG5RottZTqDFV1hEAoDiWZwOytRMGr2FYwRRhmqhikGaFym6rHSVmOZWVLIY9RS2BoDGP05uV+m+Af76+c0nnNPX4T+mYvEdn8Q/wCsyCXyfltMsI61y4zpvNF/qvtFRcvjYWBcxcaZoyQZtQmoViYBViCq3WX8hgNdZe5Q2ukgwbpwcbH5jG1poVYMWJqNliRP03wD/fXzmk85p6/Cf0wowGGObWXWYRV1nLB8yKxScMabXNo5Y+lREsFLUs6o4kxXQKVxdjqhpgfolBSzRhZRUt0uidMXJs1pFOstVs8YF1TUMzrDBM6xLt+m+Af76+c0nnNPX4T+9fAP99fOaTzmnqG947CcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQziGcQwN6w0Pr5zSec09UHObababababababababababababababababababababababababababababababababababababababababababababababababababababababababaAGXr5zSec0+wPOaQhrtiakWFo6RuQ3IbkNyG5DchuQ3IbkNyG5DchuQ3IbkNyG5DchuQ3IbkNyG5DchuQ3IbkNyG5DchuQ3IbkNyG5DchuQ3IbkNyG5DchuQ3IbkNyG5DchuQGks6QQ1WwND7C/9k=";
+const videoEmbedUrl = "https://www.youtube.com/embed/h4BhDJfpv50?autoplay=1&rel=0";
+
+const customerLogos = [
+  { name: "Customer logo 1", src: "sandbox:/mnt/data/7.svg" },
+  { name: "Customer logo 2", src: "sandbox:/mnt/data/6.svg" },
+  { name: "Customer logo 3", src: "sandbox:/mnt/data/5.svg" },
+  { name: "Customer logo 4", src: "sandbox:/mnt/data/2.svg" },
+];
+
+const employees = [
+  ["Benjamin Wilson", "Assembler"],
+  ["Christopher Richardson", "Assembler"],
+  ["Elizabeth Montgomery", "Assembler"],
+  ["Katherine Henderson", "Assembler"],
+  ["Alexander Thompson", "Assembler"],
+  ["Stephanie Charleston", "Assembler"],
+];
+
+const columns = [
+  "Safety & Quality",
+  "Sub-Module 1A Prep",
+  "Sub-Module 1B Assembly",
+  "Sub-Module 1C Test",
+  "Module 1 QC Inspection",
+  "Sub-Module 2A Assembly",
+  "Sub-Module 2B Assembly",
+  "Packaging & Shipping",
+];
+
+const statusPattern = [
+  ["check", "clock", "warn", "check", "check", "check", "clock", "check"],
+  ["check", "check", "check", "check", "warn", "check", "check", "check"],
+  ["clock", "check", "check", "clock", "check", "check", "warn", "check"],
+  ["check", "check", "check", "check", "check", "clock", "check", "check"],
+  ["check", "clock", "warn", "check", "check", "check", "check", "clock"],
+  ["check", "check", "check", "check", "clock", "check", "check", "check"],
+];
+
+function Logo() {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="relative h-9 w-12">
+        <div className="absolute left-0 top-1.5 h-6 w-6 rounded-full border-2 border-white/90" />
+        <div className="absolute left-4 top-1.5 h-6 w-6 rounded-full border-2 border-white/90" />
+        <div className="absolute left-2 top-0 h-9 w-9 rounded-full border border-white/30" />
+      </div>
+      <span className="text-xl font-bold tracking-wide text-white">COVALENT</span>
+    </div>
+  );
+}
+
+function StatusIcon({ type }) {
+  if (type === "check") {
+    return <CheckCircle2 className="h-5 w-5 text-emerald-500" />;
+  }
+  if (type === "warn") {
+    return <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-600">!</span>;
+  }
+  return <Clock3 className="h-5 w-5 text-sky-500" />;
+}
+
+function ProductMockup() {
+  return (
+    <div className="relative mx-auto mt-14 max-w-6xl px-4">
+      <div className="absolute -left-2 top-20 z-20 hidden w-36 rounded-2xl border border-white/25 bg-white/95 p-4 shadow-2xl shadow-blue-950/25 backdrop-blur md:block lg:-left-10">
+        <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
+          <Bell className="h-5 w-5" />
+        </div>
+        <p className="text-xs font-semibold text-slate-500">Coverage Alerts</p>
+        <p className="mt-1 text-3xl font-bold text-slate-900">3</p>
+        <p className="text-xs text-slate-500">critical gaps</p>
+      </div>
+
+      <div className="absolute -left-2 bottom-16 z-20 hidden w-36 rounded-2xl border border-white/25 bg-white/95 p-4 shadow-2xl shadow-blue-950/25 backdrop-blur md:block lg:-left-10">
+        <div className="relative mb-3 h-14 w-14 rounded-full border-[7px] border-emerald-500 border-r-emerald-100">
+          <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-slate-900">84%</span>
+        </div>
+        <p className="text-xs font-semibold text-slate-500">Qualified Today</p>
+        <p className="text-xs text-slate-500">Line 1 · All Roles</p>
+      </div>
+
+      <div className="absolute -right-2 top-24 z-20 hidden w-36 rounded-2xl border border-white/25 bg-white/95 p-4 shadow-2xl shadow-blue-950/25 backdrop-blur md:block lg:-right-10">
+        <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+          <ShieldCheck className="h-5 w-5" />
+        </div>
+        <p className="text-xs font-semibold text-slate-500">Audit-ready records</p>
+        <p className="mt-1 text-3xl font-bold text-slate-900">100%</p>
+        <p className="text-xs text-slate-500">up to date</p>
+      </div>
+
+      <div className="absolute -right-2 bottom-20 z-20 hidden w-36 rounded-2xl border border-white/25 bg-white/95 p-4 shadow-2xl shadow-blue-950/25 backdrop-blur md:block lg:-right-10">
+        <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+          <LineChart className="h-5 w-5" />
+        </div>
+        <p className="text-xs font-semibold text-slate-500">Faster ramp-up</p>
+        <p className="mt-1 text-3xl font-bold text-slate-900">28%</p>
+        <p className="text-xs text-slate-500">improvement</p>
+      </div>
+
+      <div className="relative overflow-hidden rounded-[2.25rem] border border-white/25 bg-white/5 p-3 shadow-[0_30px_90px_rgba(0,26,80,0.38)] ring-1 ring-blue-100/20 backdrop-blur">
+        <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-blue-950/20" />
+        <img
+          src={heroImageUrl}
+          alt="Covalent manufacturing workforce operations visual"
+          className="relative z-10 w-full rounded-[1.75rem] object-cover shadow-2xl shadow-blue-950/30"
+        />
+      </div>
+    </div>
+  );
+}
+
+function FeatureCard({ icon: Icon, title, text, accent }) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-950/10">
+      <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl ${accent}`}>
+        <Icon className="h-7 w-7" />
+      </div>
+      <h3 className="text-xl font-bold text-slate-950">{title}</h3>
+      <p className="mt-3 text-sm leading-6 text-slate-600">{text}</p>
+    </div>
+  );
+}
+
+function App() {
+  const [isVideoOpen, setIsVideoOpen] = React.useState(false);
+
+  return (
+    <main className="min-h-screen bg-white font-sans text-slate-950">
+      <section className="relative overflow-hidden bg-[#031329] text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(33,116,255,0.45),transparent_30%),radial-gradient(circle_at_15%_40%,rgba(5,92,255,0.45),transparent_26%),linear-gradient(180deg,#061c3c_0%,#073f90_64%,#061c3c_100%)]" />
+        <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(255,255,255,.09)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.09)_1px,transparent_1px)] [background-size:72px_72px]" />
+        <div className="absolute left-1/2 top-28 h-96 w-96 -translate-x-1/2 rounded-full bg-blue-400/20 blur-3xl" />
+
+        <div className="relative mx-auto max-w-7xl px-5 pb-24 pt-6 sm:px-8">
+          <nav className="flex items-center justify-between rounded-3xl border border-white/10 bg-white/[0.03] px-4 py-3 backdrop-blur-xl">
+            <Logo />
+            <div className="hidden items-center gap-9 text-sm font-medium text-white/80 lg:flex">
+              <a href="#product" className="hover:text-white">Product</a>
+              <a href="#features" className="hover:text-white">Solutions</a>
+              <a href="#proof" className="hover:text-white">Customers</a>
+              <a href="#results" className="hover:text-white">Resources</a>
+              <a href="#demo" className="hover:text-white">About</a>
+            </div>
+            <div className="hidden items-center gap-3 sm:flex">
+              <button onClick={() => setIsVideoOpen(true)} className="rounded-2xl border border-white/25 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">See How It Works</button>
+              <a href={calendlyUrl} className="rounded-2xl bg-orange-500 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition hover:bg-orange-400">Book a Demo</a>
+            </div>
+            <button className="sm:hidden"><Menu className="h-6 w-6" /></button>
+          </nav>
+
+          <div className="mx-auto mt-14 max-w-5xl text-center">
+            <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-blue-200/20 bg-blue-400/15 px-4 py-2 text-sm font-bold text-blue-50 shadow-inner shadow-white/10">
+              <Factory className="h-4 w-4" /> Built for complex manufacturing
+            </div>
+            <h1 className="text-balance text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
+              Know who’s qualified. Close coverage gaps. Staff the line with confidence.
+            </h1>
+            <p className="mx-auto mt-6 max-w-3xl text-pretty text-lg leading-8 text-blue-50/80">
+              Covalent helps manufacturers replace paper OJT and spreadsheets with real-time workforce visibility, so teams can see who’s qualified, close coverage gaps, and keep audit-ready proof in one system.
+            </p>
+            <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <a href={calendlyUrl} className="group inline-flex items-center justify-center gap-3 rounded-2xl bg-orange-500 px-7 py-4 text-base font-bold text-white shadow-2xl shadow-orange-500/25 transition hover:-translate-y-0.5 hover:bg-orange-400">
+                Book a Demo <ArrowRight className="h-5 w-5 transition group-hover:translate-x-1" />
+              </a>
+              <button onClick={() => setIsVideoOpen(true)} className="inline-flex items-center justify-center gap-3 rounded-2xl border border-white/25 bg-white/5 px-7 py-4 text-base font-semibold text-white transition hover:bg-white/10">
+                <Play className="h-5 w-5" /> See How It Works
+              </button>
+            </div>
+            <p className="mt-5 flex items-center justify-center gap-2 text-sm font-medium text-blue-50/80">
+              <Gift className="h-4 w-4 text-orange-300" /> Demo Covalent and get a <span className="font-bold text-white">FREE Yeti Cooler*</span>
+            </p>
+            <p className="mt-1 text-xs text-blue-100/50">*Terms and conditions apply.</p>
+          </div>
+
+          <div id="product">
+            <ProductMockup />
+          </div>
+        </div>
+      </section>
+
+      <section id="proof" className="border-b border-slate-100 bg-white px-5 py-10 sm:px-8">
+        <div className="mx-auto max-w-7xl text-center">
+          <p className="text-sm font-semibold text-slate-500">Trusted by complex manufacturers</p>
+          <div className="mt-8 grid grid-cols-2 items-center gap-6 sm:grid-cols-4">
+            {customerLogos.map((logo) => (
+              <div key={logo.name} className="flex h-16 items-center justify-center rounded-2xl border border-slate-100 bg-white px-6 shadow-sm">
+                <img src={logo.src} alt={logo.name} className="max-h-9 max-w-full object-contain opacity-75 grayscale" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="features" className="bg-slate-50 px-5 py-20 sm:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="mb-4 inline-flex rounded-full bg-blue-100 px-4 py-2 text-sm font-bold text-blue-800">Manufacturing Skills Matrix</div>
+            <h2 className="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">Why manufacturers choose Covalent</h2>
+            <p className="mt-5 text-lg leading-8 text-slate-600">Make training records operational. Give supervisors the visibility they need to manage qualification, coverage, and risk in real time.</p>
+          </div>
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            <FeatureCard icon={Users} title="Live Skills Snapshot" accent="bg-blue-100 text-blue-700" text="See who is qualified, in training, expiring, or ready to backfill — in real time." />
+            <FeatureCard icon={Bell} title="Coverage Alerts" accent="bg-orange-100 text-orange-600" text="Spot risk by role, line, shift, or process before it disrupts production." />
+            <FeatureCard icon={ClipboardCheck} title="Audit-Ready Workflows" accent="bg-emerald-100 text-emerald-600" text="Digitize OJT, evaluations, sign-offs, and qualification history in one system." />
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white px-5 py-20 sm:px-8">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+          <div>
+            <div className="mb-4 inline-flex rounded-full bg-orange-100 px-4 py-2 text-sm font-bold text-orange-700">From spreadsheets to workforce operations</div>
+            <h2 className="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">Most plants still make staffing decisions with incomplete skills data.</h2>
+            <p className="mt-5 text-lg leading-8 text-slate-600">Covalent turns fragmented training records into a live system of record for workforce capability, so teams can answer the questions that matter before the shift starts.</p>
+            <div className="mt-8 grid gap-4">
+              {[
+                [CheckCircle2, "Who is qualified right now?"],
+                [Target, "Where are we short on coverage?"],
+                [FileCheck2, "Can we prove training during an audit?"],
+              ].map(([Icon, text]) => (
+                <div key={text} className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><Icon className="h-5 w-5" /></div>
+                  <p className="font-bold text-slate-900">{text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-[2rem] bg-gradient-to-br from-slate-950 via-blue-950 to-blue-800 p-6 text-white shadow-2xl shadow-blue-950/25">
+            <div className="rounded-[1.5rem] border border-white/10 bg-white/10 p-5 backdrop-blur">
+              <div className="mb-5 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-blue-100/70">Coverage plan</p>
+                  <h3 className="text-2xl font-bold">Line 1 readiness</h3>
+                </div>
+                <span className="rounded-full bg-orange-500 px-3 py-1 text-xs font-bold">3 gaps</span>
+              </div>
+              <div className="space-y-3">
+                {[
+                  ["Sub-Module 1B Assembly", "4 / 6 qualified", "High"],
+                  ["Module 1 QC Inspection", "3 / 5 qualified", "Medium"],
+                  ["Packaging & Shipping", "7 / 7 qualified", "Ready"],
+                ].map(([area, count, risk]) => (
+                  <div key={area} className="rounded-2xl bg-white p-4 text-slate-950">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-bold">{area}</p>
+                        <p className="text-sm text-slate-500">{count}</p>
+                      </div>
+                      <span className={`rounded-full px-3 py-1 text-xs font-bold ${risk === "High" ? "bg-orange-100 text-orange-700" : risk === "Ready" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>{risk}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button className="mt-5 w-full rounded-2xl bg-orange-500 px-5 py-4 font-bold text-white">Assign Training to Close Gaps</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="results" className="bg-slate-50 px-5 py-20 sm:px-8">
+        <div className="mx-auto max-w-7xl rounded-[2rem] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-slate-50 p-8 shadow-sm sm:p-12">
+          <div className="text-center">
+            <h2 className="text-4xl font-bold tracking-tight text-slate-950">Turn training data into operational decisions</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-slate-600">Built to improve training efficiency, audit readiness, and workforce decision-making across complex manufacturing environments.</p>
+          </div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              [Clock3, "65%", "reduction in training time"],
+              [ShieldCheck, "1,000+", "audits passed"],
+              [FileCheck2, "92%", "of manual admin tasks digitized"],
+              [LineChart, "5%", "increase in line productivity"],
+            ].map(([Icon, value, label]) => (
+              <div key={label} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700"><Icon className="h-6 w-6" /></div>
+                <p className="text-4xl font-bold text-slate-950">{value}</p>
+                <p className="mt-2 text-sm font-medium leading-5 text-slate-600">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="demo" className="bg-white px-5 py-20 sm:px-8">
+        <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] bg-gradient-to-r from-[#061c3c] via-[#073f90] to-[#061c3c] p-8 text-white shadow-2xl shadow-blue-950/20 sm:p-12">
+          <div className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div className="flex gap-6">
+              <div className="hidden h-20 w-20 shrink-0 items-center justify-center rounded-3xl border border-white/20 bg-white/10 sm:flex">
+                <Zap className="h-9 w-9 text-orange-300" />
+              </div>
+              <div>
+                <h2 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">See how Covalent helps your team replace spreadsheets, standardize OJT, and make workforce readiness visible.</h2>
+                <p className="mt-4 max-w-2xl text-blue-50/75">Book a short demo and see how a live skills matrix can support qualification visibility, coverage planning, and audit-ready training records.</p>
+                <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-blue-50"><Gift className="h-4 w-4 text-orange-300" /> Free Yeti Cooler for qualified demos*</p>
+              </div>
+            </div>
+            <a href={calendlyUrl} className="inline-flex items-center justify-center gap-3 rounded-2xl bg-orange-500 px-8 py-4 text-base font-bold text-white shadow-xl shadow-orange-500/25 transition hover:-translate-y-0.5 hover:bg-orange-400">
+              Book a Demo <ArrowRight className="h-5 w-5" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-slate-100 bg-white px-5 py-10 sm:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
+          <div className="flex items-center gap-3 text-slate-950">
+            <div className="relative h-8 w-10">
+              <div className="absolute left-0 top-1 h-6 w-6 rounded-full border-2 border-slate-900" />
+              <div className="absolute left-4 top-1 h-6 w-6 rounded-full border-2 border-slate-900" />
+            </div>
+            <span className="text-lg font-semibold tracking-wide">COVALENT</span>
+          </div>
+          <p className="text-sm text-slate-500">Workforce Operations Platform for complex manufacturing.</p>
+        </div>
+      </footer>
+
+      {isVideoOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-8 backdrop-blur-sm" role="dialog" aria-modal="true">
+          <div className="relative w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/15 bg-slate-950 shadow-2xl shadow-black/40">
+            <button
+              onClick={() => setIsVideoOpen(false)}
+              className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-2xl leading-none text-white transition hover:bg-white/20"
+              aria-label="Close video"
+            >
+              ×
+            </button>
+            <div className="aspect-video w-full">
+              <iframe
+                className="h-full w-full"
+                src={videoEmbedUrl}
+                title="Covalent video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}
+
+export default App;
+
