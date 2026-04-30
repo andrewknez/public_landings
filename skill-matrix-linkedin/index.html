@@ -1,1 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Covalent — Workforce Operations Platform for Manufacturing</title>
+  <meta name="description" content="Covalent helps manufacturers replace paper OJT and spreadsheets with real-time workforce visibility — see who's qualified, close coverage gaps, and keep audit-ready proof in one system." />
 
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Inter font (matches the look) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Calendly popup widget -->
+  <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
+  <script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
+
+  <style>
+    html { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif; }
+
+    /* Hero gradient + grid background */
+    .hero-bg {
+      background-color: #031329;
+      background-image:
+        radial-gradient(circle at 50% 10%, rgba(33,116,255,0.45), transparent 30%),
+        radial-gradient(circle at 15% 40%, rgba(5,92,255,0.45), transparent 26%),
+        linear-gradient(180deg, #061c3c 0%, #073f90 64%, #061c3c 100%);
+    }
+    .hero-grid {
+      background-image:
+        linear-gradient(rgba(255,255,255,.09) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.09) 1px, transparent 1px);
+      background-size: 72px 72px;
+      opacity: 0.30;
+    }
+
+    /* Floating UI cards on hero image */
+    .float-card {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* Smooth hover lift on feature cards */
+    .lift { transition: transform .25s ease, box-shadow .25s ease; }
+    .lift:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(0,26,80,0.18); }
+
+    /* ======= Skills Matrix Mockup ======= */
+    .skills-mockup {
+      position: relative;
+      background: #ffffff;
+      border-radius: 1.75rem;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Angled header strip */
+    .skills-headers {
+      position: relative;
+      height: 170px;
+      background: #0f3a7a;
+      padding-left: 200px;
+      overflow: hidden;
+    }
+    .skills-headers-inner {
+      display: flex;
+      height: 100%;
+      align-items: flex-end;
+      gap: 0;
+      padding-bottom: 8px;
+    }
+    .skills-objectives {
+      position: absolute;
+      left: 30px;
+      bottom: 30px;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 18px;
+      transform: rotate(-55deg);
+      transform-origin: left bottom;
+      letter-spacing: 0.02em;
+    }
+    .skills-tab {
+      width: 64px;
+      height: 100%;
+      flex: 0 0 auto;
+      position: relative;
+      transform: skewX(-35deg);
+      background: #0f3a7a;
+      border-right: 1px solid rgba(255,255,255,0.12);
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-start;
+      padding-bottom: 14px;
+    }
+    .skills-tab span {
+      transform: skewX(35deg) rotate(-55deg);
+      transform-origin: left bottom;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      position: absolute;
+      left: 18px;
+      bottom: 14px;
+    }
+    .skills-tab-highlight {
+      background: #4a5568;
+    }
+
+    /* Body */
+    .skills-body {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+    }
+    .skills-employees {
+      background: #0f3a7a;
+      color: #ffffff;
+      display: grid;
+      grid-template-rows: 45px repeat(6, 45px);
+    }
+    .skills-emp-header {
+      padding: 0 18px;
+      font-weight: 700;
+      font-size: 14px;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+    }
+    .skills-emp-row {
+      padding: 0 18px;
+      font-size: 13px;
+      font-weight: 500;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+    }
+    .skills-emp-row-active {
+      background: #4a5568;
+    }
+
+    /* Status grid: 7 cols x 7 rows (1 empty header row + 6 data rows) */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      grid-template-rows: 45px repeat(6, 45px);
+      background: #ffffff;
+    }
+    /* First row of grid is empty (aligns with Employee header) */
+    .skills-grid::before {
+      content: '';
+      grid-column: 1 / -1;
+      grid-row: 1;
+      border-bottom: 1px solid #e5e7eb;
+      background: #ffffff;
+    }
+    .skills-cell {
+      border-right: 1px solid #e5e7eb;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .skills-cell:nth-child(7n) { border-right: none; }
+    .skills-cell-active { background: rgba(255, 159, 64, 0.18); }
+
+    /* Status icons */
+    .status-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+    }
+    .status-icon svg { width: 16px; height: 16px; }
+    .status-check { background: #16a34a; }
+    .status-clock { background: #2563eb; }
+    .status-refresh { background: #6d28d9; }
+    .status-icon-inline { display: inline-flex; vertical-align: middle; margin-left: 4px; }
+
+    /* Light tinted cell backgrounds (subtle) */
+    .skills-cell:has(.status-check) { background: rgba(34,197,94,0.06); }
+    .skills-cell:has(.status-clock) { background: rgba(59,130,246,0.06); }
+    .skills-cell:has(.status-refresh) { background: rgba(124,58,237,0.08); }
+    .skills-cell-active:has(.status-check) { background: rgba(255,159,64,0.18); }
+
+    /* Orange L-shape selection — two overlapping rectangles forming a clean L */
+    .skills-selection {
+      position: absolute;
+      pointer-events: none;
+      inset: 0;
+      z-index: 5;
+    }
+    /* Vertical part: covers column 1B from top down through selected row */
+    .skills-sel-vert {
+      position: absolute;
+      left: calc(200px + (100% - 200px) / 7 * 1);
+      width: calc((100% - 200px) / 7);
+      top: 0;
+      height: calc(170px + 45px * 4); /* through header + emp header + 3 emp rows */
+      border: 2.5px solid #f97316;
+      border-radius: 6px;
+      background: rgba(249, 115, 22, 0.05);
+      box-sizing: border-box;
+    }
+    /* Horizontal part: covers selected row from left edge through selected cell */
+    .skills-sel-horiz {
+      position: absolute;
+      top: calc(170px + 45px * 3); /* header + emp header + 2 emp rows */
+      height: 45px;
+      left: calc(-1 * (200px + (100% - 200px) / 7 * 1));
+      width: calc(200px + (100% - 200px) / 7 * 2);
+      border: 2.5px solid #f97316;
+      border-radius: 6px;
+      background: rgba(249, 115, 22, 0.05);
+      box-sizing: border-box;
+    }
+
+    /* Detail popup card */
+    .skills-popup {
+      position: absolute;
+      top: 32%;
+      right: 4%;
+      width: 320px;
+      background: #ffffff;
+      border: 2px solid #1e293b;
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+      z-index: 30;
+    }
+    .skills-popup-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 22px;
+      height: 22px;
+      color: #64748b;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    .skills-popup-close svg { width: 18px; height: 18px; }
+    .skills-popup-row {
+      font-size: 13px;
+      color: #1e293b;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .skills-popup-label {
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .skills-popup-btn {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+      background: #0f3a7a;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      padding: 11px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* Donut for qualified percentage */
+    .donut {
+      background: conic-gradient(#10b981 0% 84%, #d1fae5 84% 100%);
+    }
+
+    /* Responsive: scale the mockup down on small screens */
+    @media (max-width: 640px) {
+      .skills-headers { padding-left: 130px; height: 130px; }
+      .skills-objectives { left: 18px; bottom: 22px; font-size: 14px; }
+      .skills-tab { width: 48px; }
+      .skills-tab span { font-size: 10px; left: 14px; bottom: 12px; }
+      .skills-body { grid-template-columns: 130px 1fr; }
+      .skills-emp-header { padding: 0 12px; font-size: 12px; }
+      .skills-emp-row { padding: 0 12px; font-size: 11px; }
+      .skills-employees { grid-template-rows: 38px repeat(6, 38px); }
+      .skills-grid { grid-template-rows: 38px repeat(6, 38px); }
+      .status-icon { width: 22px; height: 22px; }
+      .status-icon svg { width: 13px; height: 13px; }
+      .skills-popup {
+        width: 240px;
+        padding: 14px;
+        right: 3%;
+      }
+      .skills-popup-row { font-size: 11px; }
+      .skills-popup-btn { font-size: 11px; padding: 9px; }
+      .skills-sel-vert {
+        left: calc(130px + (100% - 130px) / 7 * 1);
+        width: calc((100% - 130px) / 7);
+        height: calc(130px + 38px * 4);
+      }
+      .skills-sel-horiz {
+        top: calc(130px + 38px * 3);
+        height: 38px;
+        left: calc(-1 * (130px + (100% - 130px) / 7 * 1));
+        width: calc(130px + (100% - 130px) / 7 * 2);
+      }
+    }
+  </style>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+          },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="bg-white text-slate-950 antialiased">
+
+  <main class="min-h-screen">
+    <!-- ============== HERO ============== -->
+    <section class="relative overflow-hidden text-white hero-bg">
+      <div class="absolute inset-0 hero-grid"></div>
+      <div class="absolute left-1/2 top-28 h-96 w-96 -translate-x-1/2 rounded-full bg-blue-400/20 blur-3xl"></div>
+
+      <div class="relative mx-auto max-w-7xl px-5 pb-24 pt-6 sm:px-8">
+        <!-- Nav -->
+        <nav class="flex items-center justify-between rounded-3xl border border-white/10 bg-white/[0.03] px-4 py-3 backdrop-blur-xl">
+          <!-- Logo -->
+          <a href="#" class="flex items-center">
+            <img src="assets/covalent-logo-white.png" alt="Covalent" class="h-8 w-auto sm:h-9" />
+          </a>
+
+          <div class="hidden items-center gap-3 sm:flex">
+            <button onclick="openVideo()" class="rounded-2xl border border-white/25 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">See How It Works</button>
+            <a href="https://calendly.com/d/cxtw-9kw-jv8/manufacturing-skills-matrix-overview" onclick="return openCalendly(event)" class="cursor-pointer rounded-2xl bg-orange-500 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition hover:bg-orange-400">Book a Demo</a>
+          </div>
+
+          <a href="https://calendly.com/d/cxtw-9kw-jv8/manufacturing-skills-matrix-overview" onclick="return openCalendly(event)" class="cursor-pointer rounded-2xl bg-orange-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-orange-500/25 sm:hidden">Book a Demo</a>
+        </nav>
+
+        <!-- Hero copy -->
+        <div class="mx-auto mt-14 max-w-5xl text-center">
+          <div class="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-blue-200/20 bg-blue-400/15 px-4 py-2 text-sm font-bold text-blue-50 shadow-inner shadow-white/10">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l5 3V9l5 3V5h4v16"/><path d="M9 17h1"/><path d="M14 17h1"/></svg>
+            Built for complex manufacturing
+          </div>
+          <h1 class="text-balance text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
+            Know who's qualified. Close coverage gaps. Staff the line with confidence.
+          </h1>
+          <p class="mx-auto mt-6 max-w-3xl text-pretty text-lg leading-8 text-blue-50/80">
+            Covalent helps manufacturers replace paper OJT and spreadsheets with real-time workforce visibility, so teams can see who's qualified, close coverage gaps, and keep audit-ready proof in one system.
+          </p>
+          <div class="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <a href="https://calendly.com/d/cxtw-9kw-jv8/manufacturing-skills-matrix-overview" onclick="return openCalendly(event)" class="group cursor-pointer inline-flex items-center justify-center gap-3 rounded-2xl bg-orange-500 px-7 py-4 text-base font-bold text-white shadow-2xl shadow-orange-500/25 transition hover:-translate-y-0.5 hover:bg-orange-400">
+              Book a Demo
+              <svg class="h-5 w-5 transition group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+            <button onclick="openVideo()" class="inline-flex items-center justify-center gap-3 rounded-2xl border border-white/25 bg-white/5 px-7 py-4 text-base font-semibold text-white transition hover:bg-white/10">
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4V8z"/></svg>
+              See How It Works
+            </button>
+          </div>
+          <p class="mt-5 flex items-center justify-center gap-2 text-sm font-medium text-blue-50/80">
+            <svg class="h-4 w-4 text-orange-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8A2.5 2.5 0 1 1 12 6a2.5 2.5 0 1 1 4.5 2"/></svg>
+            Demo Covalent and get a <span class="font-bold text-white">FREE Yeti Cooler*</span>
+          </p>
+          <p class="mt-1 text-xs text-blue-100/50">*Terms and conditions apply.</p>
+        </div>
+
+        <!-- Product mockup -->
+        <div id="product" class="relative mx-auto mt-12 max-w-4xl px-4">
+          <!-- Mockup frame -->
+          <div class="relative overflow-visible rounded-[1.75rem] border border-white/20 bg-white p-0 shadow-[0_30px_90px_rgba(0,26,80,0.45)] ring-1 ring-blue-100/20">
+            <div class="skills-mockup">
+              <!-- Angled column headers strip -->
+              <div class="skills-headers">
+                <div class="skills-headers-inner">
+                  <div class="skills-objectives">Objectives</div>
+                  <div class="skills-tab"><span>Diffuser OJT</span></div>
+                  <div class="skills-tab skills-tab-highlight"><span>Sub-Module 1B Assembly</span></div>
+                  <div class="skills-tab"><span>Sub-Module 1C Assembly</span></div>
+                  <div class="skills-tab"><span>Module 1 Assembly</span></div>
+                  <div class="skills-tab"><span>Mod 1 QC Inspection</span></div>
+                  <div class="skills-tab"><span>Sub-Module 2A Assembly</span></div>
+                  <div class="skills-tab"><span>Sub-Module 2B Assembly</span></div>
+                </div>
+              </div>
+
+              <!-- Grid: employee column + status grid -->
+              <div class="skills-body">
+                <!-- Employee column -->
+                <div class="skills-employees">
+                  <div class="skills-emp-header">Employee</div>
+                  <div class="skills-emp-row">Christopher Richardson</div>
+                  <div class="skills-emp-row">Elizabeth Montgomery</div>
+                  <div class="skills-emp-row skills-emp-row-active">Benjamin Williamson</div>
+                  <div class="skills-emp-row">Katherine Henderson</div>
+                  <div class="skills-emp-row">Alexander Thompson</div>
+                  <div class="skills-emp-row">Stephanie Charleston</div>
+                </div>
+
+                <!-- Status grid -->
+                <div class="skills-grid">
+                  <!-- Row 1: Christopher -->
+                  <div class="skills-cell"><div class="status-icon status-clock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"><div class="status-icon status-clock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div></div>
+
+                  <!-- Row 2: Elizabeth -->
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"><div class="status-icon status-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div></div>
+
+                  <!-- Row 3: Benjamin (highlighted) -->
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell skills-cell-active"><div class="status-icon status-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+
+                  <!-- Row 4: Katherine -->
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"><div class="status-icon status-clock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div></div>
+
+                  <!-- Row 5: Alexander -->
+                  <div class="skills-cell"><div class="status-icon status-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div></div>
+                  <div class="skills-cell"><div class="status-icon status-clock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+
+                  <!-- Row 6: Stephanie -->
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"><div class="status-icon status-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div></div>
+                  <div class="skills-cell"></div>
+                  <div class="skills-cell"><div class="status-icon status-refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg></div></div>
+                  <div class="skills-cell"><div class="status-icon status-clock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div></div>
+                  <div class="skills-cell"></div>
+                </div>
+              </div>
+
+              <!-- Orange L-shape selection overlay -->
+              <div class="skills-selection">
+                <div class="skills-sel-vert"></div>
+                <div class="skills-sel-horiz"></div>
+              </div>
+
+              <!-- Detail popup card -->
+              <div class="skills-popup">
+                <button class="skills-popup-close" aria-label="Close">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+                <div class="skills-popup-row"><span class="skills-popup-label">Employee Name:</span> <span>Benjamin Wilson</span></div>
+                <div class="skills-popup-row"><span class="skills-popup-label">Objective:</span> <span>Sub-Module 1B Assembly</span></div>
+                <div class="skills-popup-row"><span class="skills-popup-label">Active Date:</span> <span>11/11/2025</span></div>
+                <div class="skills-popup-row"><span class="skills-popup-label">Status:</span> <span>Active</span> <span class="status-icon status-check status-icon-inline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+                <button class="skills-popup-btn">VIEW RECORD</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== LOGOS ============== -->
+    <section id="proof" class="border-b border-slate-100 bg-white px-5 py-10 sm:px-8">
+      <div class="mx-auto max-w-7xl text-center">
+        <p class="text-sm font-semibold text-slate-500">Trusted by complex manufacturers</p>
+        <div class="mx-auto mt-8 grid max-w-4xl grid-cols-1 items-center gap-6 sm:grid-cols-3">
+          <div class="flex h-20 items-center justify-center rounded-2xl border border-slate-100 bg-white px-6 shadow-sm">
+            <img src="assets/customer-great-dane.svg" alt="Great Dane" style="height:40px; width:auto; max-width:100%;" />
+          </div>
+          <div class="flex h-20 items-center justify-center rounded-2xl border border-slate-100 bg-white px-6 shadow-sm">
+            <img src="assets/customer-mercury.svg" alt="Mercury Marine" style="height:40px; width:auto; max-width:100%;" />
+          </div>
+          <div class="flex h-20 items-center justify-center rounded-2xl border border-slate-100 bg-white px-6 shadow-sm">
+            <img src="assets/customer-mastercraft.svg" alt="MasterCraft" style="height:36px; width:auto; max-width:100%;" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== FEATURES ============== -->
+    <section id="features" class="bg-slate-50 px-5 py-20 sm:px-8">
+      <div class="mx-auto max-w-7xl">
+        <div class="mx-auto max-w-3xl text-center">
+          <div class="mb-4 inline-flex rounded-full bg-blue-100 px-4 py-2 text-sm font-bold text-blue-800">Manufacturing Skills Matrix</div>
+          <h2 class="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">Why manufacturers choose Covalent</h2>
+          <p class="mt-5 text-lg leading-8 text-slate-600">Make training records operational. Give supervisors the visibility they need to manage qualification, coverage, and risk in real time.</p>
+        </div>
+        <div class="mt-12 grid gap-6 md:grid-cols-3">
+          <!-- Card 1 -->
+          <div class="lift rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
+            <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
+              <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-slate-950">Live Skills Snapshot</h3>
+            <p class="mt-3 text-sm leading-6 text-slate-600">See who is qualified, in training, expiring, or ready to backfill — in real time.</p>
+          </div>
+          <!-- Card 2 -->
+          <div class="lift rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
+            <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 text-orange-600">
+              <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-slate-950">Coverage Alerts</h3>
+            <p class="mt-3 text-sm leading-6 text-slate-600">Spot risk by role, line, shift, or process before it disrupts production.</p>
+          </div>
+          <!-- Card 3 -->
+          <div class="lift rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
+            <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
+              <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><path d="m9 14 2 2 4-5"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-slate-950">Audit-Ready Workflows</h3>
+            <p class="mt-3 text-sm leading-6 text-slate-600">Digitize OJT, evaluations, sign-offs, and qualification history in one system.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== SPLIT: PROBLEM + COVERAGE PLAN ============== -->
+    <section class="bg-white px-5 py-20 sm:px-8">
+      <div class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+        <div>
+          <div class="mb-4 inline-flex rounded-full bg-orange-100 px-4 py-2 text-sm font-bold text-orange-700">From spreadsheets to workforce operations</div>
+          <h2 class="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">Most plants still make staffing decisions with incomplete skills data.</h2>
+          <p class="mt-5 text-lg leading-8 text-slate-600">Covalent turns fragmented training records into a live system of record for workforce capability, so teams can answer the questions that matter before the shift starts.</p>
+          <div class="mt-8 grid gap-4">
+            <div class="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-5"/></svg>
+              </div>
+              <p class="font-bold text-slate-900">Who is qualified right now?</p>
+            </div>
+            <div class="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              </div>
+              <p class="font-bold text-slate-900">Where are we short on coverage?</p>
+            </div>
+            <div class="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 15 2 2 4-5"/></svg>
+              </div>
+              <p class="font-bold text-slate-900">Can we prove training during an audit?</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coverage plan card -->
+        <div class="rounded-[2rem] bg-gradient-to-br from-slate-950 via-blue-950 to-blue-800 p-6 text-white shadow-2xl shadow-blue-950/25">
+          <div class="rounded-[1.5rem] border border-white/10 bg-white/10 p-5 backdrop-blur">
+            <div class="mb-5 flex items-center justify-between">
+              <div>
+                <p class="text-sm text-blue-100/70">Coverage plan</p>
+                <h3 class="text-2xl font-bold">Line 1 readiness</h3>
+              </div>
+              <span class="rounded-full bg-orange-500 px-3 py-1 text-xs font-bold">3 gaps</span>
+            </div>
+            <div class="space-y-3">
+              <div class="rounded-2xl bg-white p-4 text-slate-950">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="font-bold">Sub-Module 1B Assembly</p>
+                    <p class="text-sm text-slate-500">4 / 6 qualified</p>
+                  </div>
+                  <span class="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700">High</span>
+                </div>
+              </div>
+              <div class="rounded-2xl bg-white p-4 text-slate-950">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="font-bold">Module 1 QC Inspection</p>
+                    <p class="text-sm text-slate-500">3 / 5 qualified</p>
+                  </div>
+                  <span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">Medium</span>
+                </div>
+              </div>
+              <div class="rounded-2xl bg-white p-4 text-slate-950">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="font-bold">Packaging &amp; Shipping</p>
+                    <p class="text-sm text-slate-500">7 / 7 qualified</p>
+                  </div>
+                  <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">Ready</span>
+                </div>
+              </div>
+            </div>
+            <button class="mt-5 w-full rounded-2xl bg-orange-500 px-5 py-4 font-bold text-white hover:bg-orange-400 transition">Assign Training to Close Gaps</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== RESULTS / STATS ============== -->
+    <section id="results" class="bg-slate-50 px-5 py-20 sm:px-8">
+      <div class="mx-auto max-w-7xl rounded-[2rem] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-slate-50 p-8 shadow-sm sm:p-12">
+        <div class="text-center">
+          <h2 class="text-4xl font-bold tracking-tight text-slate-950">Turn training data into operational decisions</h2>
+          <p class="mx-auto mt-4 max-w-2xl text-lg leading-8 text-slate-600">Built to improve training efficiency, audit readiness, and workforce decision-making across complex manufacturing environments.</p>
+        </div>
+        <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
+              <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <p class="text-4xl font-bold text-slate-950">65%</p>
+            <p class="mt-2 text-sm font-medium leading-5 text-slate-600">reduction in training time</p>
+          </div>
+          <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
+              <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-5"/></svg>
+            </div>
+            <p class="text-4xl font-bold text-slate-950">1,000+</p>
+            <p class="mt-2 text-sm font-medium leading-5 text-slate-600">audits passed</p>
+          </div>
+          <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
+              <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 15 2 2 4-5"/></svg>
+            </div>
+            <p class="text-4xl font-bold text-slate-950">92%</p>
+            <p class="mt-2 text-sm font-medium leading-5 text-slate-600">of manual admin tasks digitized</p>
+          </div>
+          <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
+              <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+            </div>
+            <p class="text-4xl font-bold text-slate-950">5%</p>
+            <p class="mt-2 text-sm font-medium leading-5 text-slate-600">increase in line productivity</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== CTA BANNER ============== -->
+    <section id="demo" class="bg-white px-5 py-20 sm:px-8">
+      <div class="mx-auto max-w-7xl overflow-hidden rounded-[2rem] bg-gradient-to-r from-[#061c3c] via-[#073f90] to-[#061c3c] p-8 text-white shadow-2xl shadow-blue-950/20 sm:p-12">
+        <div class="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div class="flex gap-6">
+            <div class="hidden h-20 w-20 shrink-0 items-center justify-center rounded-3xl border border-white/20 bg-white/10 sm:flex">
+              <svg class="h-9 w-9 text-orange-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </div>
+            <div>
+              <h2 class="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">See how Covalent helps your team replace spreadsheets, standardize OJT, and make workforce readiness visible.</h2>
+              <p class="mt-4 max-w-2xl text-blue-50/75">Book a short demo and see how a live skills matrix can support qualification visibility, coverage planning, and audit-ready training records.</p>
+              <p class="mt-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-blue-50">
+                <svg class="h-4 w-4 text-orange-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8A2.5 2.5 0 1 1 12 6a2.5 2.5 0 1 1 4.5 2"/></svg>
+                Free Yeti Cooler for qualified demos*
+              </p>
+            </div>
+          </div>
+          <a href="https://calendly.com/d/cxtw-9kw-jv8/manufacturing-skills-matrix-overview" onclick="return openCalendly(event)" class="cursor-pointer inline-flex items-center justify-center gap-3 rounded-2xl bg-orange-500 px-8 py-4 text-base font-bold text-white shadow-xl shadow-orange-500/25 transition hover:-translate-y-0.5 hover:bg-orange-400">
+            Book a Demo
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== FOOTER ============== -->
+    <footer class="border-t border-slate-100 bg-white px-5 py-10 sm:px-8">
+      <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
+        <img src="assets/covalent-logo-blue.png" alt="Covalent" class="h-7 w-auto sm:h-8" />
+        <p class="text-sm text-slate-500">Workforce Operations Platform for complex manufacturing.</p>
+      </div>
+    </footer>
+  </main>
+
+  <!-- ============== VIDEO MODAL ============== -->
+  <div id="videoModal" style="display: none;" class="fixed inset-0 z-50 items-center justify-center bg-slate-950/80 px-4 py-8 backdrop-blur-sm" role="dialog" aria-modal="true">
+    <div class="relative w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/15 bg-slate-950 shadow-2xl shadow-black/40">
+      <button onclick="closeVideo()" class="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-2xl leading-none text-white transition hover:bg-white/20" aria-label="Close video">×</button>
+      <div class="aspect-video w-full">
+        <iframe id="videoFrame" class="h-full w-full" src="" title="Covalent video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Calendly popup =====
+    function openCalendly(e) {
+      if (e) e.preventDefault();
+      if (window.Calendly && typeof window.Calendly.initPopupWidget === 'function') {
+        window.Calendly.initPopupWidget({
+          url: 'https://calendly.com/d/cxtw-9kw-jv8/manufacturing-skills-matrix-overview'
+        });
+      } else {
+        // Fallback if the Calendly script hasn't loaded yet — open in a new tab
+        window.open('https://calendly.com/d/cxtw-9kw-jv8/manufacturing-skills-matrix-overview', '_blank', 'noopener');
+      }
+      return false;
+    }
+
+    // ===== Video modal =====
+    const videoUrl = "https://www.youtube.com/embed/h4BhDJfpv50?autoplay=1&rel=0";
+    function openVideo() {
+      document.getElementById('videoFrame').src = videoUrl;
+      document.getElementById('videoModal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+    function closeVideo() {
+      document.getElementById('videoFrame').src = '';
+      document.getElementById('videoModal').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    document.getElementById('videoModal').addEventListener('click', (e) => {
+      if (e.target.id === 'videoModal') closeVideo();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeVideo();
+    });
+  </script>
+</body>
+</html>
