@@ -24,11 +24,11 @@
 
     /* Hero gradient + grid background */
     .hero-bg {
-      background-color: #031329;
+      background-color: #02091a;
       background-image:
         radial-gradient(circle at 50% 10%, rgba(33,116,255,0.45), transparent 30%),
         radial-gradient(circle at 15% 40%, rgba(5,92,255,0.45), transparent 26%),
-        linear-gradient(180deg, #061c3c 0%, #073f90 64%, #061c3c 100%);
+        linear-gradient(180deg, #04132d 0%, #052f6e 64%, #04132d 100%);
     }
     .hero-grid {
       background-image:
@@ -123,6 +123,12 @@
     /* Smooth hover lift on feature cards */
     .lift { transition: transform .25s ease, box-shadow .25s ease; }
     .lift:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(0,26,80,0.18); }
+
+    /* Brand orange override — softer than Tailwind's orange-500 */
+    .bg-orange-500 { background-color: #e56420 !important; }
+    .hover\:bg-orange-400:hover { background-color: #f0793c !important; }
+    .shadow-orange-500\/25 { --tw-shadow-color: rgba(229, 100, 32, 0.25); }
+    .text-orange-300 { color: #f5a07a !important; }
     /* ======= Workflow stepper (Training Workflows section) ======= */
     /* Default: vertical stepper (used on desktop in the 2-col layout, and on all mobile) */
     .workflow-steps {
@@ -225,7 +231,7 @@
         <!-- Nav -->
         <nav class="flex items-center justify-between rounded-3xl border border-white/10 bg-white/[0.03] px-4 py-3 backdrop-blur-xl">
           <!-- Logo -->
-          <a href="#" class="flex items-center">
+          <a href="https://covalentnetworks.com" class="flex items-center">
             <img src="assets/covalent-logo-white.png" alt="Covalent" class="h-8 w-auto sm:h-9" />
           </a>
 
@@ -592,7 +598,9 @@
     <!-- ============== FOOTER ============== -->
     <footer class="border-t border-slate-100 bg-white px-5 py-10 sm:px-8">
       <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
-        <img src="assets/covalent-logo-blue.png" alt="Covalent" class="h-7 w-auto sm:h-8" />
+        <a href="https://covalentnetworks.com">
+          <img src="assets/covalent-logo-blue.png" alt="Covalent" class="h-7 w-auto sm:h-8" />
+        </a>
         <p class="text-sm text-slate-500">Workforce Operations Platform for complex manufacturing.</p>
       </div>
     </footer>
