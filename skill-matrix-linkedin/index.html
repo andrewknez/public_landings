@@ -92,6 +92,15 @@
       transform: translateZ(0);
       -webkit-transform: translateZ(0);
     }
+    /* Logo size tiers — mobile is +20%, desktop is +25% over original */
+    .logo-sm  { height: 36px; }
+    .logo-md  { height: 43px; }
+    .logo-lg  { height: 53px; }
+    @media (min-width: 641px) {
+      .logo-sm  { height: 38px; }
+      .logo-md  { height: 45px; }
+      .logo-lg  { height: 55px; }
+    }
     @keyframes logo-scroll {
       from { transform: translate3d(0, 0, 0); }
       to { transform: translate3d(-50%, 0, 0); }
@@ -275,19 +284,19 @@
         <div class="logo-marquee mt-8">
           <div class="logo-track">
             <!-- First set -->
-            <div class="logo-slide"><img src="assets/customer-great-dane.png" alt="Great Dane" style="height:36px;" /></div>
-            <div class="logo-slide"><img src="assets/customer-mercury.png" alt="Mercury Marine" style="height:36px;" /></div>
-            <div class="logo-slide"><img src="assets/customer-mastercraft.png" alt="MasterCraft" style="height:30px;" /></div>
-            <div class="logo-slide"><img src="assets/customer-milliken.png" alt="Milliken" style="height:44px;" /></div>
-            <div class="logo-slide"><img src="assets/customer-kimberly-clark.png" alt="Kimberly-Clark" style="height:30px;" /></div>
-            <div class="logo-slide"><img src="assets/customer-polaris.png" alt="Polaris" style="height:30px;" /></div>
+            <div class="logo-slide"><img src="assets/customer-great-dane.png" alt="Great Dane" class="logo-md" /></div>
+            <div class="logo-slide"><img src="assets/customer-mercury.png" alt="Mercury Marine" class="logo-md" /></div>
+            <div class="logo-slide"><img src="assets/customer-mastercraft.png" alt="MasterCraft" class="logo-sm" /></div>
+            <div class="logo-slide"><img src="assets/customer-milliken.png" alt="Milliken" class="logo-lg" /></div>
+            <div class="logo-slide"><img src="assets/customer-kimberly-clark.png" alt="Kimberly-Clark" class="logo-sm" /></div>
+            <div class="logo-slide"><img src="assets/customer-polaris.png" alt="Polaris" class="logo-sm" /></div>
             <!-- Duplicate set for seamless loop -->
-            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-great-dane.png" alt="" style="height:36px;" /></div>
-            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-mercury.png" alt="" style="height:36px;" /></div>
-            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-mastercraft.png" alt="" style="height:30px;" /></div>
-            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-milliken.png" alt="" style="height:44px;" /></div>
-            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-kimberly-clark.png" alt="" style="height:30px;" /></div>
-            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-polaris.png" alt="" style="height:30px;" /></div>
+            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-great-dane.png" alt="" class="logo-md" /></div>
+            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-mercury.png" alt="" class="logo-md" /></div>
+            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-mastercraft.png" alt="" class="logo-sm" /></div>
+            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-milliken.png" alt="" class="logo-lg" /></div>
+            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-kimberly-clark.png" alt="" class="logo-sm" /></div>
+            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-polaris.png" alt="" class="logo-sm" /></div>
           </div>
         </div>
       </div>
