@@ -117,272 +117,82 @@
     /* Smooth hover lift on feature cards */
     .lift { transition: transform .25s ease, box-shadow .25s ease; }
     .lift:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(0,26,80,0.18); }
-
-    /* ======= Skills Matrix Mockup ======= */
-    .skills-mockup {
-      position: relative;
-      background: #ffffff;
-      border-radius: 1.75rem;
-      overflow: hidden;
-      font-family: 'Inter', sans-serif;
-    }
-
-    /* Angled header strip */
-    .skills-headers {
-      position: relative;
-      height: 170px;
-      background: #0f3a7a;
-      padding-left: 200px;
-      overflow: hidden;
-    }
-    .skills-headers-inner {
-      display: flex;
-      height: 100%;
-      align-items: flex-end;
-      gap: 0;
-      padding-bottom: 8px;
-    }
-    .skills-objectives {
-      position: absolute;
-      left: 30px;
-      bottom: 30px;
-      color: #ffffff;
-      font-weight: 700;
-      font-size: 18px;
-      transform: rotate(-55deg);
-      transform-origin: left bottom;
-      letter-spacing: 0.02em;
-    }
-    .skills-tab {
-      width: 64px;
-      height: 100%;
-      flex: 0 0 auto;
-      position: relative;
-      transform: skewX(-35deg);
-      background: #0f3a7a;
-      border-right: 1px solid rgba(255,255,255,0.12);
-      display: flex;
-      align-items: flex-end;
-      justify-content: flex-start;
-      padding-bottom: 14px;
-    }
-    .skills-tab span {
-      transform: skewX(35deg) rotate(-55deg);
-      transform-origin: left bottom;
-      color: #ffffff;
-      font-size: 12px;
-      font-weight: 600;
-      white-space: nowrap;
-      position: absolute;
-      left: 18px;
-      bottom: 14px;
-    }
-    .skills-tab-highlight {
-      background: #4a5568;
-    }
-
-    /* Body */
-    .skills-body {
+    /* ======= Workflow stepper (Training Workflows section) ======= */
+    /* Default: vertical stepper (used on desktop in the 2-col layout, and on all mobile) */
+    .workflow-steps {
+      list-style: none;
+      padding: 0;
+      margin: 0;
       display: grid;
-      grid-template-columns: 200px 1fr;
+      grid-template-columns: 1fr;
+      gap: 4px;
+      position: relative;
     }
-    .skills-employees {
-      background: #0f3a7a;
-      color: #ffffff;
-      display: grid;
-      grid-template-rows: 45px repeat(6, 45px);
-    }
-    .skills-emp-header {
-      padding: 0 18px;
-      font-weight: 700;
-      font-size: 14px;
-      border-top: 1px solid rgba(255,255,255,0.15);
-      border-bottom: 1px solid rgba(255,255,255,0.15);
+    .workflow-step {
+      position: relative;
       display: flex;
+      flex-direction: row;
       align-items: center;
+      gap: 14px;
+      padding: 8px 4px;
+      text-align: left;
     }
-    .skills-emp-row {
-      padding: 0 18px;
-      font-size: 13px;
-      font-weight: 500;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-    }
-    .skills-emp-row-active {
-      background: #4a5568;
-    }
-
-    /* Status grid: 7 cols x 7 rows (1 empty header row + 6 data rows) */
-    .skills-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      grid-template-rows: 45px repeat(6, 45px);
-      background: #ffffff;
-    }
-    /* First row of grid is empty (aligns with Employee header) */
-    .skills-grid::before {
+    /* Vertical connector line between steps */
+    .workflow-step:not(:last-child)::after {
       content: '';
-      grid-column: 1 / -1;
-      grid-row: 1;
-      border-bottom: 1px solid #e5e7eb;
-      background: #ffffff;
+      position: absolute;
+      top: 36px;
+      bottom: -8px;
+      left: 17px;
+      width: 2px;
+      background: #e2e8f0;
+      z-index: 0;
     }
-    .skills-cell {
-      border-right: 1px solid #e5e7eb;
-      border-bottom: 1px solid #f1f5f9;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .skills-cell:nth-child(7n) { border-right: none; }
-    .skills-cell-active { background: rgba(255, 159, 64, 0.18); }
-
-    /* Status icons */
-    .status-icon {
-      width: 26px;
-      height: 26px;
+    .workflow-icon {
+      position: relative;
+      z-index: 1;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
+      background: #ffffff;
+    }
+    .workflow-icon-done {
+      background: #16a34a;
       color: #ffffff;
     }
-    .status-icon svg { width: 16px; height: 16px; }
-    .status-check { background: #16a34a; }
-    .status-clock { background: #2563eb; }
-    .status-refresh { background: #6d28d9; }
-    .status-icon-inline { display: inline-flex; vertical-align: middle; margin-left: 4px; }
-
-    /* Light tinted cell backgrounds (subtle) */
-    .skills-cell:has(.status-check) { background: rgba(34,197,94,0.06); }
-    .skills-cell:has(.status-clock) { background: rgba(59,130,246,0.06); }
-    .skills-cell:has(.status-refresh) { background: rgba(124,58,237,0.08); }
-    .skills-cell-active:has(.status-check) { background: rgba(255,159,64,0.18); }
-
-    /* Orange L-shape selection — two overlapping rectangles forming a clean L */
-    .skills-selection {
-      position: absolute;
-      pointer-events: none;
-      inset: 0;
-      z-index: 5;
-    }
-    /* Vertical part: covers column 1B from top down through selected row */
-    .skills-sel-vert {
-      position: absolute;
-      left: calc(200px + (100% - 200px) / 7 * 1);
-      width: calc((100% - 200px) / 7);
-      top: 0;
-      height: calc(170px + 45px * 4); /* through header + emp header + 3 emp rows */
-      border: 2.5px solid #f97316;
-      border-radius: 6px;
-      background: rgba(249, 115, 22, 0.05);
+    .workflow-icon-done svg { width: 18px; height: 18px; }
+    .workflow-icon-progress {
+      background: conic-gradient(#f59e0b 0% 75%, #ffffff 75% 100%);
+      border: 2px solid #f59e0b;
       box-sizing: border-box;
     }
-    /* Horizontal part: covers selected row from left edge through selected cell */
-    .skills-sel-horiz {
-      position: absolute;
-      top: calc(170px + 45px * 3); /* header + emp header + 2 emp rows */
-      height: 45px;
-      left: calc(-1 * (200px + (100% - 200px) / 7 * 1));
-      width: calc(200px + (100% - 200px) / 7 * 2);
-      border: 2.5px solid #f97316;
-      border-radius: 6px;
-      background: rgba(249, 115, 22, 0.05);
-      box-sizing: border-box;
-    }
-
-    /* Detail popup card */
-    .skills-popup {
-      position: absolute;
-      top: 32%;
-      right: 4%;
-      width: 320px;
+    .workflow-icon-pending {
+      border: 2px solid #cbd5e1;
       background: #ffffff;
-      border: 2px solid #1e293b;
-      border-radius: 12px;
-      padding: 18px 20px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
-      z-index: 30;
     }
-    .skills-popup-close {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      width: 22px;
-      height: 22px;
-      color: #64748b;
-      background: none;
-      border: none;
-      cursor: pointer;
-    }
-    .skills-popup-close svg { width: 18px; height: 18px; }
-    .skills-popup-row {
-      font-size: 13px;
-      color: #1e293b;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 4px;
-    }
-    .skills-popup-label {
+    .workflow-label {
+      font-size: 14px;
       font-weight: 700;
       color: #0f172a;
+      line-height: 1.3;
     }
-    .skills-popup-btn {
-      display: block;
-      width: 100%;
-      margin-top: 10px;
-      background: #0f3a7a;
-      color: #ffffff;
-      font-weight: 700;
-      font-size: 13px;
-      letter-spacing: 0.05em;
-      padding: 11px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
+    .workflow-label-pending { color: #94a3b8; }
+    .workflow-sublabel {
+      margin-top: 2px;
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.4;
     }
-
-    /* Donut for qualified percentage */
-    .donut {
-      background: conic-gradient(#10b981 0% 84%, #d1fae5 84% 100%);
+    /* Step text wraps in a container so label + sublabel sit together to the right of icon */
+    .workflow-step-content {
+      display: flex;
+      flex-direction: column;
     }
 
-    /* Responsive: scale the mockup down on small screens */
-    @media (max-width: 640px) {
-      .skills-headers { padding-left: 130px; height: 130px; }
-      .skills-objectives { left: 18px; bottom: 22px; font-size: 14px; }
-      .skills-tab { width: 48px; }
-      .skills-tab span { font-size: 10px; left: 14px; bottom: 12px; }
-      .skills-body { grid-template-columns: 130px 1fr; }
-      .skills-emp-header { padding: 0 12px; font-size: 12px; }
-      .skills-emp-row { padding: 0 12px; font-size: 11px; }
-      .skills-employees { grid-template-rows: 38px repeat(6, 38px); }
-      .skills-grid { grid-template-rows: 38px repeat(6, 38px); }
-      .status-icon { width: 22px; height: 22px; }
-      .status-icon svg { width: 13px; height: 13px; }
-      .skills-popup {
-        width: 240px;
-        padding: 14px;
-        right: 3%;
-      }
-      .skills-popup-row { font-size: 11px; }
-      .skills-popup-btn { font-size: 11px; padding: 9px; }
-      .skills-sel-vert {
-        left: calc(130px + (100% - 130px) / 7 * 1);
-        width: calc((100% - 130px) / 7);
-        height: calc(130px + 38px * 4);
-      }
-      .skills-sel-horiz {
-        top: calc(130px + 38px * 3);
-        height: 38px;
-        left: calc(-1 * (130px + (100% - 130px) / 7 * 1));
-        width: calc(130px + (100% - 130px) / 7 * 2);
-      }
-    }
   </style>
 
   <script>
@@ -427,7 +237,7 @@
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l5 3V9l5 3V5h4v16"/><path d="M9 17h1"/><path d="M14 17h1"/></svg>
             Built for complex manufacturing
           </div>
-          <h1 class="text-balance text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
+          <h1 class="text-balance text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             Staff every shift with confidence.
           </h1>
           <p class="mx-auto mt-6 max-w-3xl text-pretty text-lg leading-8 text-blue-50/80">
@@ -451,114 +261,12 @@
         </div>
 
         <!-- Product mockup -->
-        <div id="product" class="relative mx-auto mt-12 max-w-4xl px-4">
-          <!-- Mockup frame -->
-          <div class="relative overflow-visible rounded-[1.75rem] border border-white/20 bg-white p-0 shadow-[0_30px_90px_rgba(0,26,80,0.45)] ring-1 ring-blue-100/20">
-            <div class="skills-mockup">
-              <!-- Angled column headers strip -->
-              <div class="skills-headers">
-                <div class="skills-headers-inner">
-                  <div class="skills-objectives">Objectives</div>
-                  <div class="skills-tab"><span>Diffuser OJT</span></div>
-                  <div class="skills-tab skills-tab-highlight"><span>Sub-Module 1B Assembly</span></div>
-                  <div class="skills-tab"><span>Sub-Module 1C Assembly</span></div>
-                  <div class="skills-tab"><span>Module 1 Assembly</span></div>
-                  <div class="skills-tab"><span>Mod 1 QC Inspection</span></div>
-                  <div class="skills-tab"><span>Sub-Module 2A Assembly</span></div>
-                  <div class="skills-tab"><span>Sub-Module 2B Assembly</span></div>
-                </div>
-              </div>
-
-              <!-- Grid: employee column + status grid -->
-              <div class="skills-body">
-                <!-- Employee column -->
-                <div class="skills-employees">
-                  <div class="skills-emp-header">Employee</div>
-                  <div class="skills-emp-row">Christopher Richardson</div>
-                  <div class="skills-emp-row">Elizabeth Montgomery</div>
-                  <div class="skills-emp-row skills-emp-row-active">Benjamin Williamson</div>
-                  <div class="skills-emp-row">Katherine Henderson</div>
-                  <div class="skills-emp-row">Alexander Thompson</div>
-                  <div class="skills-emp-row">Stephanie Charleston</div>
-                </div>
-
-                <!-- Status grid -->
-                <div class="skills-grid">
-                  <!-- Row 1: Christopher -->
-                  <div class="skills-cell"><div class="status-icon status-clock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"><div class="status-icon status-clock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div></div>
-
-                  <!-- Row 2: Elizabeth -->
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"><div class="status-icon status-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div></div>
-
-                  <!-- Row 3: Benjamin (highlighted) -->
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell skills-cell-active"><div class="status-icon status-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-
-                  <!-- Row 4: Katherine -->
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"><div class="status-icon status-clock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div></div>
-
-                  <!-- Row 5: Alexander -->
-                  <div class="skills-cell"><div class="status-icon status-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div></div>
-                  <div class="skills-cell"><div class="status-icon status-clock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-
-                  <!-- Row 6: Stephanie -->
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"><div class="status-icon status-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div></div>
-                  <div class="skills-cell"></div>
-                  <div class="skills-cell"><div class="status-icon status-refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg></div></div>
-                  <div class="skills-cell"><div class="status-icon status-clock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div></div>
-                  <div class="skills-cell"></div>
-                </div>
-              </div>
-
-              <!-- Orange L-shape selection overlay -->
-              <div class="skills-selection">
-                <div class="skills-sel-vert"></div>
-                <div class="skills-sel-horiz"></div>
-              </div>
-
-              <!-- Detail popup card -->
-              <div class="skills-popup">
-                <button class="skills-popup-close" aria-label="Close">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                </button>
-                <div class="skills-popup-row"><span class="skills-popup-label">Employee Name:</span> <span>Benjamin Wilson</span></div>
-                <div class="skills-popup-row"><span class="skills-popup-label">Objective:</span> <span>Sub-Module 1B Assembly</span></div>
-                <div class="skills-popup-row"><span class="skills-popup-label">Active Date:</span> <span>11/11/2025</span></div>
-                <div class="skills-popup-row"><span class="skills-popup-label">Status:</span> <span>Active</span> <span class="status-icon status-check status-icon-inline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
-                <button class="skills-popup-btn">VIEW RECORD</button>
-              </div>
-            </div>
-          </div>
+        <div id="product" class="relative mx-auto mt-12 max-w-5xl px-4">
+          <img
+            src="assets/skills-matrix.svg"
+            alt="Covalent skills matrix showing employees, qualifications, and a selected record for Benjamin Wilson on Sub-Module 1B Assembly"
+            class="w-full h-auto drop-shadow-[0_30px_60px_rgba(0,26,80,0.45)]"
+          />
         </div>
       </div>
     </section>
@@ -602,24 +310,24 @@
             <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
               <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
-            <h3 class="text-xl font-bold text-slate-950">Live Skills Snapshot</h3>
-            <p class="mt-3 text-sm leading-6 text-slate-600">See who is qualified, in training, expiring, or ready to backfill — in real time.</p>
+            <h3 class="text-xl font-bold text-slate-950">Know who's ready now</h3>
+            <p class="mt-3 text-sm leading-6 text-slate-600">See who is qualified, in training, expired, or available to backfill by role, line, shift, or process.</p>
           </div>
           <!-- Card 2 -->
           <div class="lift rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
             <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 text-orange-600">
               <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             </div>
-            <h3 class="text-xl font-bold text-slate-950">Coverage Alerts</h3>
-            <p class="mt-3 text-sm leading-6 text-slate-600">Spot risk by role, line, shift, or process before it disrupts production.</p>
+            <h3 class="text-xl font-bold text-slate-950">Catch coverage gaps early</h3>
+            <p class="mt-3 text-sm leading-6 text-slate-600">Spot thin coverage before call-outs, demand changes, or expiring qualifications disrupt production.</p>
           </div>
           <!-- Card 3 -->
           <div class="lift rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
             <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
               <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><path d="m9 14 2 2 4-5"/></svg>
             </div>
-            <h3 class="text-xl font-bold text-slate-950">Audit-Ready Workflows</h3>
-            <p class="mt-3 text-sm leading-6 text-slate-600">Digitize OJT, evaluations, sign-offs, and qualification history in one system.</p>
+            <h3 class="text-xl font-bold text-slate-950">Prove every qualification</h3>
+            <p class="mt-3 text-sm leading-6 text-slate-600">Keep OJT tasks, evaluations, sign-offs, timestamps, and requalification history tied to each worker record.</p>
           </div>
         </div>
       </div>
@@ -694,6 +402,117 @@
               </div>
             </div>
             <button class="mt-5 w-full rounded-2xl bg-orange-500 px-5 py-4 font-bold text-white hover:bg-orange-400 transition">Assign Training to Close Gaps</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== TRAINING WORKFLOWS ============== -->
+    <section class="bg-white px-5 py-20 sm:px-8">
+      <div class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2 lg:items-center lg:gap-14">
+        <!-- LEFT: heading + feature cards -->
+        <div>
+          <div class="mb-4 inline-flex rounded-full bg-blue-100 px-4 py-2 text-sm font-bold text-blue-800">Configurable Training Workflows</div>
+          <h2 class="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">Build training workflows your way.</h2>
+          <p class="mt-5 text-lg leading-8 text-slate-600">Define the exact steps each skill requires. From OJT tasks and trainer sign-offs to evaluations, approvals, and requalification rules.</p>
+
+          <!-- Feature cards stacked -->
+          <div class="mt-8 grid gap-4">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div class="flex items-start gap-4">
+                <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-5"/></svg>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-slate-950">Capture proof at every step</h3>
+                  <p class="mt-1 text-sm leading-6 text-slate-600">Every action is tied to the worker, evaluator, timestamp, and requirement, so teams can prove who was qualified, when, and by whom.</p>
+                </div>
+              </div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div class="flex items-start gap-4">
+                <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-slate-950">Keep qualifications current</h3>
+                  <p class="mt-1 text-sm leading-6 text-slate-600">Trigger requalification when skills expire, processes change, or workers need refreshers — before gaps show up during production or an audit.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: workflow graphic (vertical stepper) -->
+        <div class="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-xl shadow-blue-950/10">
+          <!-- Header strip -->
+          <div class="border-b border-slate-200 bg-slate-50 px-6 py-5 sm:px-8 sm:py-6">
+            <div class="flex flex-col gap-4">
+              <div class="flex flex-wrap items-center gap-3">
+                <h3 class="text-2xl font-bold tracking-tight text-slate-950">Diffuser OJT</h3>
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700">
+                  <span class="h-2 w-2 rounded-full bg-orange-500"></span>
+                  In Progress
+                </span>
+                <span class="inline-block h-5 w-5 rounded-full" style="background: conic-gradient(#f59e0b 0% 75%, #cbd5e1 75% 100%);" aria-label="75% complete"></span>
+              </div>
+              <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p class="text-sm text-slate-600">Jonathan Washington <span class="text-slate-400">(ID #12345678)</span></p>
+                  <p class="mt-1 text-xs text-slate-500">Assigned: <span class="font-semibold text-slate-700">May 1st, 2023</span></p>
+                </div>
+                <div>
+                  <div class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700">
+                    Update 3 (Current)
+                    <svg class="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vertical Stepper -->
+          <div class="px-6 py-8 sm:px-10 sm:py-10">
+            <ol class="workflow-steps">
+              <li class="workflow-step">
+                <div class="workflow-icon workflow-icon-done">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                </div>
+                <div class="workflow-step-content">
+                  <p class="workflow-label">Assignment</p>
+                </div>
+              </li>
+              <li class="workflow-step">
+                <div class="workflow-icon workflow-icon-done">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                </div>
+                <div class="workflow-step-content">
+                  <p class="workflow-label">Initial Sign Off(s)</p>
+                  <p class="workflow-sublabel">2/2 Sign Off(s)</p>
+                </div>
+              </li>
+              <li class="workflow-step">
+                <div class="workflow-icon workflow-icon-progress"></div>
+                <div class="workflow-step-content">
+                  <p class="workflow-label">Training</p>
+                  <p class="workflow-sublabel">1/3 Task(s)</p>
+                </div>
+              </li>
+              <li class="workflow-step">
+                <div class="workflow-icon workflow-icon-pending"></div>
+                <div class="workflow-step-content">
+                  <p class="workflow-label workflow-label-pending">Evaluation(s)</p>
+                  <p class="workflow-sublabel">0/2 Evaluation(s)</p>
+                </div>
+              </li>
+              <li class="workflow-step">
+                <div class="workflow-icon workflow-icon-pending"></div>
+                <div class="workflow-step-content">
+                  <p class="workflow-label workflow-label-pending">Final Sign Off(s)</p>
+                  <p class="workflow-sublabel">0/2 Sign Off(s)</p>
+                </div>
+              </li>
+            </ol>
           </div>
         </div>
       </div>
