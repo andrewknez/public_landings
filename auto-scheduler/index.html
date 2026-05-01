@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Training Scheduling Optimization — Covalent Networks</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #F4F6F9; }
+  #root { min-height: 100vh; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useCallback, useEffect } = React;
+
+
+// ============================================================
+// DATA
+// ============================================================
+const OBJECTIVES = [
+  { id: "O1", name: "AWS D1.1 Structural Welding", group: "Welding", dur: "8h", h: 8, crit: "critical" },
+  { id: "O2", name: "Confined Space Entry", group: "Safety", dur: "4h", h: 4, crit: "critical" },
+  { id: "O3", name: "Overhead Crane Operation", group: "Equipment", dur: "6h", h: 6, crit: "high" },
+  { id: "O4", name: "GTAW (TIG) Welding - Pipe", group: "Welding", dur: "12h", h: 12, crit: "critical" },
+  { id: "O5", name: "Lock-Out/Tag-Out (LOTO)", group: "Safety", dur: "2h", h: 2, crit: "critical" },
+  { id: "O6", name: "CNC Lathe Operation", group: "Machining", dur: "16h", h: 16, crit: "high" },
+  { id: "O7", name: "Forklift Operation", group: "Equipment", dur: "4h", h: 4, crit: "high" },
+  { id: "O8", name: "Torque Wrench Calibration", group: "Assembly QC", dur: "3h", h: 3, crit: "medium" },
+  { id: "O9", name: "Blueprint Reading - Advanced", group: "Core Skills", dur: "6h", h: 6, crit: "medium" },
+  { id: "O10", name: "Hazmat Handling Level II", group: "Safety", dur: "8h", h: 8, crit: "critical" },
+  { id: "O11", name: "SMAW Welding - Structural", group: "Welding", dur: "10h", h: 10, crit: "high" },
+  { id: "O12", name: "First Aid / CPR / AED", group: "Safety", dur: "4h", h: 4, crit: "high" },
+];
+const AREAS = ["Assembly Line A", "Assembly Line B", "Turbine Machining", "Final Assembly", "Test Cell", "Fabrication Shop"];
+const TRAINERS = [
+  { id: "T1", name: "J. Kowalski", objs: ["O1","O4","O11"] },
+  { id: "T2", name: "D. Reeves", objs: ["O2","O5","O10"] },
+  { id: "T3", name: "C. Medina", objs: ["O3","O7"] },
+  { id: "T4", name: "P. Nair", objs: ["O6","O8","O9"] },
+  { id: "T5", name: "R. Kim", objs: ["O2","O5","O12"] },
+];
+const ROOMS = [
+  { id: "R1", name: "Training Center A - Rm 1", cap: 6 },
+  { id: "R2", name: "Welding Lab B", cap: 4 },
+  { id: "R3", name: "Safety Classroom C", cap: 8 },
+];
+const WORKERS = [
+  { id: "W01", name: "Maria Santos", role: "Welder II", area: "Fabrication Shop", shift: "Day" },
+  { id: "W02", name: "James Okafor", role: "Welder I", area: "Fabrication Shop", shift: "Day" },
+  { id: "W03", name: "Chen Wei", role: "Sr. Machinist", area: "Turbine Machining", shift: "Day" },
+  { id: "W04", name: "Sarah Mitchell", role: "Assembler III", area: "Assembly Line A", shift: "Swing" },
+  { id: "W05", name: "Robert Tran", role: "Assembler II", area: "Assembly Line A", shift: "Day" },
+  { id: "W06", name: "Aisha Patel", role: "Test Technician", area: "Test Cell", shift: "Day" },
+  { id: "W07", name: "Marcus Johnson", role: "Welder III", area: "Fabrication Shop", shift: "Swing" },
+  { id: "W08", name: "Elena Volkov", role: "Machinist II", area: "Turbine Machining", shift: "Night" },
+  { id: "W09", name: "David Park", role: "Material Handler", area: "Final Assembly", shift: "Day" },
+  { id: "W10", name: "Lisa Fernandez", role: "Assembler I", area: "Assembly Line B", shift: "Day" },
+  { id: "W11", name: "Tom Bradley", role: "Welder II", area: "Fabrication Shop", shift: "Night" },
+  { id: "W12", name: "Yuki Tanaka", role: "QC Inspector", area: "Final Assembly", shift: "Day" },
+  { id: "W13", name: "Andre Williams", role: "Crane Operator", area: "Assembly Line A", shift: "Day" },
+  { id: "W14", name: "Kathryn Bell", role: "Assembler II", area: "Assembly Line B", shift: "Swing" },
+  { id: "W15", name: "Omar Hassan", role: "Welder I", area: "Fabrication Shop", shift: "Day" },
+];
+
+const NOW = new Date(2026, 2, 20);
+const addD = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
+const fmtD = d => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const weekKey = d => { const s = new Date(d); s.setDate(s.getDate() - s.getDay() + 1); return s.toISOString().slice(0, 10); };
+
+function buildBacklog() {
+  const a = [
+    ["W01","O1",-5],["W01","O4",18],["
