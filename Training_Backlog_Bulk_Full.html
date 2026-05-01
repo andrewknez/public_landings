@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Covalent — Training Backlog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'IBM Plex Sans', sans-serif; }
+
+:root {
+  --bg-base:       #eef1f6;
+  --bg-surface:    #ffffff;
+  --bg-card:       #f6f8fb;
+  --bg-hover:      #edf1f8;
+  --bg-sel:        rgba(26,86,219,0.05);
+  --border:        #dde3ed;
+  --border-light:  #c5cfe0;
+  --text-primary:  #111827;
+  --text-secondary:#4b5563;
+  --text-dim:      #9ca3af;
+  --accent:        #1a56db;
+  --accent-dark:   #1345b5;
+  --accent-glow:   rgba(26,86,219,0.08);
+  --topbar-bg:     #1a3568;
+  --topbar-border: #163060;
+  --green:         #057a55;
+  --green-dim:     rgba(5,122,85,0.10);
+  --red:           #e02424;
+  --red-dim:       rgba(224,36,36,0.10);
+  --orange:        #c4520a;
+  --orange-dim:    rgba(196,82,10,0.10);
+  --amber:         #d97706;
+  --shadow:        0 2px 8px rgba(26,53,104,0.10);
+  --shadow-md:     0 4px 16px rgba(26,53,104,0.14);
+  --shadow-lg:     0 16px 48px rgba(26,53,104,0.18);
+  --radius:        6px;
+  --radius-lg:     10px;
+  --font-sans:     'IBM Plex Sans', sans-serif;
+  --font-mono:     'IBM Plex Mono', monospace;
+}
+
+body { background: var(--bg-base); color: var(--text-primary); }
+
+/* ── TOPBAR ────────────────────────────────────────────────────────────────── */
+.topbar {
+  height: 56px; display: flex; align-items: center; gap: 16px; padding: 0 28px;
+  background: var(--topbar-bg); border-bottom: 1px solid var(--topbar-border);
+  box-shadow: 0 2px 12px rgba(0,0,0,.2); position: sticky; top: 0; z-index: 50;
+}
+.tbar-logo { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: #fff; letter-spacing: .12em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+.tbar-dot  { width: 8px; height: 8px; background: #f6a623; border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.35} }
+.tbar-sep  { width: 1px; height: 22px; background: rgba(255,255,255,.15); }
+.tbar-mod  { font-size: 13px; color: rgba(255,255,255,.6); }
+.tbar-pill { display: flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15); font-size: 11px; color: rgba(255,255,255,.7); font-family: var(--font-mono); }
+.tbar-pill-dot { width: 5px; height: 5px; background: #f6a623; border-radius: 50%; }
+.tbar-spacer { flex: 1; }
+.tbar-user   { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgba(255,255,255,.7); }
+.tbar-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; font-family: var(--font-mono); background: rgba(246,166,35,.3); color: #f6a623; }
+
+/* ── PAGE ──────────────────────────────────────────────────────────────────── */
+.page { max-width: 1280px; margin: 0 auto; padding: 28px 28px 64px; }
+.page-hd    { margin-bottom: 22px; }
+.page-title { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+.page-sub   { font-size: 13px; color: var(--text-secondary); margin-top: 5px; line-height: 1.6; }
+
+/* ── CONTROLS ──────────────────────────────────────────────────────────────── */
+.controls { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+
+.scope-tabs { display: flex; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-surface); }
+.scope-tab  { padding: 6px 14px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; font-family: var(--font-sans); color: var(--text-secondary); background: transparent; transition: all .1s; white-space: nowrap; }
+.scope-tab + .scope-tab { border-left: 1px solid var(--border); }
+.scope-tab.active       { background: var(--accent); color: #fff; }
+.scope-tab:hover:not(.active) { background: var(--bg-hover); }
+
+.filter-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.fpill { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; font-family: var(--font-sans); transition: all .1s; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.fpill.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+.fpill:hover:not(.active) { border-color: var(--border-light); color: var(--text-primary); }
+.fpill-count { font-size: 10px; font-weight: 700; font-family: var(--font-mono); padding: 0 4px; min-width: 16px; height: 16px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; background: var(--bg-card); color: var(--text-dim); }
+.fpill.active .fpill-count { background: rgba(26,86,219,.12); color: var(--accent); }
+.fpill.alert .fpill-count  { background: var(--red-dim); color: var(--red); }
+
+.search-box { padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 12px; font-family: var(--font-sans); background: var(--bg-surface); color: var(--text-primary); outline: none; width: 210px; transition: border-color .15s; }
+.search-box:focus { border-color: var(--accent); }
+.search-box::placeholder { color: var(--text-dim); }
+
+.spacer { flex: 1; }
+.sel-all-btn { font-size: 11px; color: var(--text-dim); background: none; border: none; cursor: pointer; font-family: var(--font-sans); padding: 4px 6px; border-radius: var(--radius); }
+.sel-all-btn:hover { color: var(--accent); background: var(--accent-glow); }
+
+/* ── SELECTION BAR ─────────────────────────────────────────────────────────── */
+.sel-bar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--topbar-bg); border-radius: var(--radius); margin-bottom: 12px; animation: sIn .15s ease; }
+.sel-bar.hidden { display: none; }
+@keyframes sIn { from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)} }
+.sel-count  { font-size: 13px; font-weight: 600; color: #fff; }
+.sel-spacer { flex: 1; }
+.sel-btn { padding: 6px 16px; border-radius: var(--radius); font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--font-sans); border: 1px solid; transition: all .12s; }
+.btn-ghost { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.2); color: rgba(255,255,255,.8); }
+.btn-ghost:hover { background: rgba(255,255,255,.18); color: #fff; }
+.btn-amber { background: #f6a623; border-color: #f6a623; color: #1a3568; font-weight: 700; }
+.btn-amber:hover { background: #e8981a; }
+.btn-muted { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.12); color: rgba(255,255,255,.55); }
+
+/* ── TABLE ─────────────────────────────────────────────────────────────────── */
+.tbl-wrap  { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow); }
+.tbl-cap   { padding: 11px 16px; border-bottom: 1px solid var(--border); background: var(--bg-card); display: flex; align-items: center; gap: 10px; }
+.tbl-cap-label { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-dim); font-family: var(--font-mono); }
+
+table { width: 100%; border-collapse: collapse; }
+thead tr { background: var(--bg-card); }
+th {
+  padding: 9px 14px; font-size: 10px; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--text-dim); font-family: var(--font-mono);
+  text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap;
+  cursor: pointer; user-select: none; transition: color .1s;
+}
+th:hover { color: var(--text-secondary); }
+th.sorted { color: var(--accent); }
+th:first-child { width: 40px; padding-left: 16px; }
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; cursor: pointer; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg-hover); }
+tbody tr.sel-row { background: var(--bg-sel); }
+td { padding: 11px 14px; font-size: 13px; vertical-align: middle; }
+td:first-child { padding-left: 16px; }
+
+.worker-av { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; font-family: var(--font-mono); }
+.badge { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; border: 1px solid; font-family: var(--font-mono); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+.shift-chip { font-size: 9px; font-weight: 600; padding: 1px 6px; border-radius: 3px; font-family: var(--font-mono); background: rgba(107,114,128,.09); color: var(--text-secondary); border: 1px solid rgba(107,114,128,.2); }
+
+.urgency-wrap  { display: flex; align-items: center; gap: 8px; }
+.urgency-track { width: 44px; height: 5px; border-radius: 3px; background: var(--border); overflow: hidden; flex-shrink: 0; }
+.urgency-fill  { height: 100%; border-radius: 3px; }
+.urgency-lbl   { font-size: 12px; font-weight: 600; font-family: var(--font-mono); white-space: nowrap; }
+
+.sched-wrap  { display: flex; flex-direction: column; gap: 2px; }
+.sched-dates { font-size: 10px; color: var(--text-dim); font-family: var(--font-mono); }
+
+.empty-cell { padding: 52px 24px; text-align: center; }
+.empty-icon { font-size: 32px; opacity: .2; margin-bottom: 8px; }
+.empty-txt  { font-size: 13px; color: var(--text-dim); }
+
+/* ── SCHEDULE MODAL ────────────────────────────────────────────────────────── */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.42); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.overlay.hidden { display: none; }
+.modal { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: var(--radius-lg); width: 100%; max-width: 520px; display: flex; flex-direction: column; box-shadow: var(--shadow-lg); }
+
+.modal-hd { padding: 18px 24px 14px; border-bottom: 1px solid var(--border); background: var(--bg-card); display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.modal-title { font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+.modal-sub   { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+.modal-x { width: 28px; height: 28px; border: 1px solid var(--border); border-radius: var(--radius); background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 15px; flex-shrink: 0; }
+.modal-x:hover { background: var(--red-dim); color: var(--red); border-color: var(--red); }
+
+.modal-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+.field-row  { display: flex; flex-direction: column; gap: 5px; }
+.field-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .06em; font-family: var(--font-mono); }
+.field-input { padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; font-family: var(--font-sans); background: var(--bg-surface); color: var(--text-primary); outline: none; width: 100%; transition: border-color .15s; }
+.field-input:focus { border-color: var(--accent); }
+.field-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.dur-toggle  { display: flex; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.dur-btn { padding: 7px 14px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; font-family: var(--font-sans); background: transparent; color: var(--text-secondary); }
+.dur-btn.active { background: var(--accent); color: #fff; }
+.dur-btn + .dur-btn { border-left: 1px solid var(--border); }
+
+.trainer-opt { display: flex; justify-content: space-between; align-items: center; }
+.load-badge { font-size: 10px; font-family: var(--font-mono); font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+.load-green  { background: var(--green-dim); color: var(--green); }
+.load-orange { background: var(--orange-dim); color: var(--orange); }
+.load-red    { background: var(--red-dim); color: var(--red); }
+
+.window-summary { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.ws-row { display: flex; justify-content: space-between; font-size: 12px; }
+.ws-key { color: var(--text-secondary); }
+.ws-val { color: var(--text-primary); font-weight: 500; font-family: var(--font-mono); }
+
+.modal-ft { padding: 13px 24px; border-top: 1px solid var(--border); background: var(--bg-card); display: flex; align-items: center; gap: 10px; }
+.ft-spacer { flex: 1; }
+.btn-cancel-m { padding: 7px 16px; border-radius: var(--radius); border: 1px solid var(--border); background: transparent; color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--font-sans); }
+.btn-save   { padding: 7px 18px; border-radius: var(--radius); border: 1px solid var(--accent); background: var(--accent); color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--font-sans); }
+.btn-save:hover { background: var(--accent-dark); }
+.btn-save:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── TOAST ─────────────────────────────────────────────────────────────────── */
+.toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 300; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast { padding: 10px 16px; background: var(--topbar-bg); border-radius: var(--radius); font-size: 12px; font-weight: 500; color: #fff; box-shadow: var(--shadow-lg); animation: toastIn .2s ease; display: flex; align-items: center; gap: 8px; border-left: 3px solid #f6a623; }
+@keyframes toastIn { from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1} }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tbar-logo"><div class="tbar-dot"></div>COVALENT</div>
+  <div class="tbar-sep"></div>
+  <div class="tbar-mod">Workforce Intelligence Suite</div>
+  <div class="tbar-pill"><div class="tbar-pill-dot"></div>Training Scheduling</div>
+  <div class="tbar-spacer"></div>
+  <div class="tbar-user">
+    <div class="tbar-avatar">PN</div>
+    Priya Nanduri
+  </div>
+</div>
+
+<!-- PAGE -->
+<div class="page">
+  <div class="page-hd">
+    <div class="page-title">Training Backlog</div>
+    <div class="page-sub">Objective records requiring scheduling attention. Select records to bulk schedule.</div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="scope-tabs" id="scopeTabs"></div>
+    <div class="filter-pills" id="filterPills"></div>
+    <div class="spacer"></div>
+    <input type="text" class="search-box" id="searchBox" placeholder="Search trainee or objective…" oninput="render()"/>
+    <button class="sel-all-btn" id="selAllBtn" onclick="toggleSelectAll()">Select all</button>
+  </div>
+
+  <!-- SELECTION BAR -->
+  <div class="sel-bar hidden" id="selBar">
+    <span class="sel-count" id="selCount">0 selected</span>
+    <div class="sel-spacer"></div>
+    <button class="sel-btn btn-ghost" onclick="clearSel()">Clear</button>
+    <button class="sel-btn btn-muted" title="Coming soon">Tag Criticality</button>
+    <button class="sel-btn btn-muted" title="Coming soon">Defer</button>
+    <button class="sel-btn btn-amber" onclick="openBulkModal()">📅 Bulk Schedule</button>
+  </div>
+
+  <!-- TABLE -->
+  <div class="tbl-wrap">
+    <div class="tbl-cap">
+      <span class="tbl-cap-label" id="tblCapLabel">Objective Records</span>
+      <span class="badge" style="color:var(--text-dim);background:var(--bg-surface);border-color:var(--border)" id="tblCount">0</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th><input type="checkbox" id="headerCheckbox" onchange="toggleSelectAll()" style="accent-color:var(--accent);width:14px;height:14px;cursor:pointer"/></th>
+          <th onclick="setSort('trainee')">Trainee <span id="sortTrainee"></span></th>
+          <th onclick="setSort('objective')">Objective <span id="sortObjective"></span></th>
+          <th>Status</th>
+          <th>Scheduled</th>
+          <th onclick="setSort('urgency')">Urgency <span id="sortUrgency"></span></th>
+          <th onclick="setSort('criticality')">Criticality <span id="sortCriticality"></span></th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SCHEDULE MODAL -->
+<div class="overlay hidden" id="schedModal">
+  <div class="modal">
+    <div class="modal-hd">
+      <div>
+        <div class="modal-title" id="modalTitle">Schedule Training Window</div>
+        <div class="modal-sub" id="modalSub">—</div>
+      </div>
+      <button class="modal-x" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-row-2">
+        <div class="field-row">
+          <div class="field-label">Planned Start</div>
+          <input type="date" class="field-input" id="mStartDate" oninput="updateSummary()"/>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Duration</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="dur-toggle">
+              <button class="dur-btn active" id="durShiftsBtn" onclick="setDurMode('shifts')">Shifts</button>
+              <button class="dur-btn" id="durHoursBtn" onclick="setDurMode('hours')">Hours</button>
+            </div>
+            <input type="number" class="field-input" id="mDuration" style="width:70px" min="1" value="2" oninput="updateSummary()"/>
+          </div>
+        </div>
+      </div>
+      <div class="field-row" id="mEndRow">
+        <div class="field-label">Planned End (derived)</div>
+        <div class="field-input" id="mEndDate" style="color:var(--text-secondary);font-family:var(--font-mono)">—</div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Trainer</div>
+        <select class="field-input" id="mTrainer" onchange="updateSummary()">
+          <option value="">— Select trainer —</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Workstation</div>
+        <select class="field-input" id="mWorkstation" onchange="updateSummary()">
+          <option value="">— Select workstation —</option>
+        </select>
+      </div>
+      <div class="field-row-2">
+        <div class="field-row">
+          <div class="field-label">Shift</div>
+          <select class="field-input" id="mShift" onchange="updateSummary()">
+            <option value="Day">Day</option>
+            <option value="Night">Night</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">Comment</div>
+        <textarea class="field-input" id="mComment" rows="2" placeholder="Optional instructions for trainer…" style="resize:vertical"></textarea>
+      </div>
+      <div class="window-summary" id="windowSummary">
+        <div class="ws-row"><span class="ws-key">Trainee</span><span class="ws-val" id="wsTrainee">—</span></div>
+        <div class="ws-row"><span class="ws-key">Objective</span><span class="ws-val" id="wsObjective">—</span></div>
+        <div class="ws-row"><span class="ws-key">Window</span><span class="ws-val" id="wsWindow">—</span></div>
+        <div class="ws-row"><span class="ws-key">Trainer</span><span class="ws-val" id="wsTrainer">—</span></div>
+        <div class="ws-row"><span class="ws-key">Workstation</span><span class="ws-val" id="wsWorkstation">—</span></div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <div style="font-size:12px;color:var(--text-secondary)" id="mFooterMsg"></div>
+      <div class="ft-spacer"></div>
+      <button class="btn-cancel-m" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" id="mSaveBtn" onclick="saveWindow()">Open Window</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+const now  = new Date();
+const dS   = n => { const d=new Date(now); d.setDate(d.getDate()+n); d.setHours(0,0,0,0); return d; };
+const dE   = n => { const d=new Date(now); d.setDate(d.getDate()+n); d.setHours(23,59,59,999); return d; };
+
+const WORKERS = [
+  { id:"w1",  name:"Marcus Webb",    role:"Assembly Tech II",  shift:"Day",   color:"#4a9eff", canTrain:true,  trainingCapacity:3, certifiedObjectives:["o1","o2","o4"] },
+  { id:"w2",  name:"Layla Okonkwo",  role:"QA Specialist",     shift:"Day",   color:"#3fb950", canTrain:true,  trainingCapacity:3, certifiedObjectives:["o3","o5","o6"] },
+  { id:"w3",  name:"Dmitri Sorel",   role:"Assembly Tech I",   shift:"Night", color:"#f6a623", canTrain:false },
+  { id:"w4",  name:"Priya Nanduri",  role:"Assembly Tech III", shift:"Day",   color:"#db61a2", canTrain:true,  trainingCapacity:3, certifiedObjectives:["o1","o2","o3","o4"] },
+  { id:"w5",  name:"Carlos Ibarra",  role:"Assembly Tech III", shift:"Night", color:"#a371f7", canTrain:true,  trainingCapacity:3, certifiedObjectives:["o1","o2","o6"] },
+  { id:"w6",  name:"Yuki Tanaka",    role:"Maintenance Tech",  shift:"Day",   color:"#e3b341", canTrain:false },
+  { id:"w7",  name:"Jordan Kim",     role:"Assembly Tech I",   shift:"Day",   color:"#58a6ff", canTrain:false },
+  { id:"w8",  name:"Rosa Ferreira",  role:"Weld Technician",   shift:"Night", color:"#ffa657", canTrain:false },
+  { id:"w9",  name:"Amir Hassan",    role:"Quality Inspector", shift:"Day",   color:"#79c0ff", canTrain:false },
+  { id:"w10", name:"Tanya Osei",     role:"Assembly Tech II",  shift:"Night", color:"#56d364", canTrain:false },
+  { id:"w11", name:"Brendan Cole",   role:"Maintenance Tech",  shift:"Day",   color:"#ff7b72", canTrain:false },
+];
+const OBJECTIVES = [
+  { id:"o1", name:"Torque Wrench Calibration",  duration:2,  workstationIds:["ws1","ws4"] },
+  { id:"o2", name:"Engine Assembly Step 4",      duration:10, workstationIds:["ws1"] },
+  { id:"o3", name:"Safety Inspection Protocol",  duration:1,  workstationIds:["ws2","ws6"] },
+  { id:"o4", name:"Hydraulic System Check",      duration:5,  workstationIds:["ws3"] },
+  { id:"o5", name:"Component Quality Audit",     duration:3,  workstationIds:["ws2"] },
+  { id:"o6", name:"Machine Setup & Zero Point",  duration:7,  workstationIds:["ws5","ws1"] },
+];
+const WORKSTATIONS = [
+  { id:"ws1", name:"Station 4B",         zone:"Assembly Zone A" },
+  { id:"ws2", name:"Inspection Bay 1",   zone:"Quality Control" },
+  { id:"ws3", name:"Hydraulic Test Rig", zone:"Systems Lab" },
+  { id:"ws4", name:"Weld Cell 2",        zone:"Fabrication" },
+  { id:"ws5", name:"CNC Cell 1",         zone:"Machining" },
+  { id:"ws6", name:"Classroom A",        zone:"Training Center" },
+];
+const ASSIGNMENTS = [
+  { workerId:"w3",  objectiveId:"o1", status:"in_progress" },
+  { workerId:"w3",  objectiveId:"o2", status:"in_progress" },
+  { workerId:"w3",  objectiveId:"o4", status:"in_progress" },
+  { workerId:"w3",  objectiveId:"o5", status:"assigned" },
+  { workerId:"w6",  objectiveId:"o3", status:"assigned" },
+  { workerId:"w6",  objectiveId:"o6", status:"assigned" },
+  { workerId:"w1",  objectiveId:"o5", status:"assigned" },
+  { workerId:"w5",  objectiveId:"o1", status:"in_progress" },
+  { workerId:"w5",  objectiveId:"o2", status:"in_progress" },
+  { workerId:"w7",  objectiveId:"o1", status:"assigned" },
+  { workerId:"w7",  objectiveId:"o2", status:"assigned" },
+  { workerId:"w7",  objectiveId:"o3", status:"assigned" },
+  { workerId:"w8",  objectiveId:"o3", status:"assigned" },
+  { workerId:"w8",  objectiveId:"o4", status:"assigned" },
+  { workerId:"w9",  objectiveId:"o3", status:"in_progress" },
+  { workerId:"w9",  objectiveId:"o5", status:"assigned" },
+  { workerId:"w10", objectiveId:"o1", status:"assigned" },
+  { workerId:"w10", objectiveId:"o2", status:"assigned" },
+  { workerId:"w10", objectiveId:"o4", status:"assigned" },
+  { workerId:"w11", objectiveId:"o6", status:"assigned" },
+  { workerId:"w11", objectiveId:"o4", status:"assigned" },
+];
+
+// Mutable sessions — new windows added here
+let SESSIONS = [
+  { id:"s1",  traineeId:"w3", trainerId:"w1", objectiveId:"o1", workstationId:"ws1", start:dS(0),   end:dE(13),  shift:"Day",   status:"scheduled" },
+  { id:"s2",  traineeId:"w3", trainerId:"w4", objectiveId:"o2", workstationId:"ws1", start:dS(2),   end:dE(51),  shift:"Day",   status:"scheduled" },
+  { id:"s8",  traineeId:"w3", trainerId:"w2", objectiveId:"o5", workstationId:"ws2", start:dS(5),   end:dE(9),   shift:"Day",   status:"scheduled" },
+  { id:"s3",  traineeId:"w6", trainerId:"w2", objectiveId:"o6", workstationId:"ws5", start:dS(-5),  end:dE(4),   shift:"Day",   status:"overdue" },
+  { id:"s10", traineeId:"w6", trainerId:"w4", objectiveId:"o3", workstationId:"ws2", start:dS(-1),  end:dE(5),   shift:"Day",   status:"cancelled" },
+  { id:"s6",  traineeId:"w6", trainerId:"w4", objectiveId:"o3", workstationId:"ws2", start:dS(18),  end:dE(24),  shift:"Day",   status:"scheduled" },
+  { id:"s4",  traineeId:"w5", trainerId:"w1", objectiveId:"o2", workstationId:"ws1", start:dS(-10), end:dE(24),  shift:"Night", status:"scheduled" },
+  { id:"s9",  traineeId:"w5", trainerId:"w2", objectiveId:"o1", workstationId:"ws1", start:dS(3),   end:dE(16),  shift:"Night", status:"scheduled" },
+];
+
+const SCOPES = {
+  direct: { label:"Direct Reports", ids:["w3","w6","w7","w8","w9","w10","w11"] },
+  day:    { label:"Day Shift",       ids:["w1","w2","w4","w6","w7","w9","w11"] },
+  night:  { label:"Night Shift",     ids:["w3","w5","w8","w10"] },
+  all:    { label:"All Workers",     ids: WORKERS.map(w=>w.id) },
+};
+const CRIT_CFG = {
+  high:   { label:"High",   color:"#e02424", bg:"rgba(224,36,36,0.08)",  border:"rgba(224,36,36,0.25)" },
+  medium: { label:"Medium", color:"#c4520a", bg:"rgba(196,82,10,0.08)",  border:"rgba(196,82,10,0.25)" },
+  low:    { label:"Low",    color:"#057a55", bg:"rgba(5,122,85,0.08)",   border:"rgba(5,122,85,0.25)" },
+};
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let scope    = "direct";
+let filter   = "needs";
+let sortCol  = "criticality";
+let sortDir  = 1;
+let selected = new Set();
+let modalItem = null;
+let durMode  = "shifts";
+let _sid = 100;
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+const initials = n => n.split(" ").map(p=>p[0]).join("").slice(0,2).toUpperCase();
+const fmtDate  = d => new Date(d).toLocaleDateString("en-US",{month:"short",day:"numeric"});
+const fmtRange = (a,b) => `${fmtDate(a)} – ${fmtDate(b)}`;
+const addDays  = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+const isoDate  = d => d.toISOString().split("T")[0];
+const critRank = { high:0, medium:1, low:2 };
+
+function getCriticality(session, assignment) {
+  if(!session || session.status==="cancelled") return assignment.status==="in_progress" ? "high" : "medium";
+  if(session.status==="overdue") return "high";
+  const days = Math.ceil((new Date(session.end)-now)/86400000);
+  if(days<=7) return "high";
+  if(days<=14) return "medium";
+  return "low";
+}
+
+function buildItems() {
+  return ASSIGNMENTS
+    .filter(a => SCOPES[scope].ids.includes(a.workerId))
+    .map(a => {
+      const worker = WORKERS.find(w=>w.id===a.workerId);
+      const obj    = OBJECTIVES.find(o=>o.id===a.objectiveId);
+      if(!worker||!obj) return null;
+      const session = SESSIONS.find(s=>s.traineeId===a.workerId&&s.objectiveId===a.objectiveId&&s.status!=="cancelled"&&s.status!=="completed");
+      const daysLeft = session ? Math.ceil((new Date(session.end)-now)/86400000) : null;
+      const criticality = getCriticality(session, a);
+      return { id:`${a.workerId}-${a.objectiveId}`, worker, obj, assignment:a, session, daysLeft, criticality };
+    })
+    .filter(Boolean);
+}
+
+function filterItems(items) {
+  const q = document.getElementById("searchBox").value.toLowerCase();
+  let out = items;
+  if(filter==="needs") out = out.filter(i=>!i.session);
+  else if(filter==="overdue") out = out.filter(i=>i.session?.status==="overdue");
+  else if(filter==="high") out = out.filter(i=>i.criticality==="high");
+  if(q) out = out.filter(i=>i.worker.name.toLowerCase().includes(q)||i.obj.name.toLowerCase().includes(q));
+  return out;
+}
+
+function sortItems(items) {
+  return [...items].sort((a,b) => {
+    let av, bv;
+    if(sortCol==="trainee")     { av=a.worker.name; bv=b.worker.name; }
+    else if(sortCol==="objective")  { av=a.obj.name; bv=b.obj.name; }
+    else if(sortCol==="urgency")    { av=a.daysLeft??9999; bv=b.daysLeft??9999; }
+    else if(sortCol==="criticality"){ av=critRank[a.criticality]; bv=critRank[b.criticality]; }
+    else return 0;
+    if(av<bv) return -1*sortDir;
+    if(av>bv) return  1*sortDir;
+    return 0;
+  });
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render() {
+  const allItems = buildItems();
+  const overdueCount = allItems.filter(i=>i.session?.status==="overdue").length;
+  const needsCount   = allItems.filter(i=>!i.session).length;
+  const highCount    = allItems.filter(i=>i.criticality==="high").length;
+
+  // Scope tabs
+  const st = document.getElementById("scopeTabs");
+  st.innerHTML = Object.entries(SCOPES).map(([k,v])=>
+    `<button class="scope-tab${scope===k?" active":""}" onclick="setScope('${k}')">${v.label}</button>`
+  ).join("");
+
+  // Filter pills
+  const fp = document.getElementById("filterPills");
+  fp.innerHTML = [
+    { k:"needs",   label:"Needs Scheduling", count: needsCount },
+    { k:"overdue", label:"Overdue",          count: overdueCount, alert: overdueCount>0 },
+    { k:"high",    label:"High Priority",    count: highCount },
+    { k:"all",     label:"All",              count: allItems.length },
+  ].map(p=>`
+    <button class="fpill${filter===p.k?" active":""}${p.alert?" alert":""}" onclick="setFilter('${p.k}')">
+      ${p.label}
+      <span class="fpill-count">${p.count}</span>
+    </button>`).join("");
+
+  // Sort indicators
+  ["Trainee","Objective","Urgency","Criticality"].forEach(col => {
+    const el = document.getElementById(`sort${col}`);
+    if(!el) return;
+    const key = col.toLowerCase();
+    el.textContent = sortCol===key ? (sortDir===1?"↑":"↓") : "";
+  });
+  document.querySelectorAll("th").forEach(th => th.classList.remove("sorted"));
+  const cols = { trainee:1, objective:2, urgency:5, criticality:6 };
+  if(cols[sortCol] !== undefined) {
+    const ths = document.querySelectorAll("th");
+    if(ths[cols[sortCol]]) ths[cols[sortCol]].classList.add("sorted");
+  }
+
+  // Build + filter + sort items
+  const filtered = sortItems(filterItems(allItems));
+
+  // Table caption
+  document.getElementById("tblCapLabel").textContent = `${filtered.length} Record${filtered.length!==1?"s":""}`;
+  document.getElementById("tblCount").textContent = filtered.length;
+
+  // Selection bar
+  const hasSel = selected.size > 0;
+  document.getElementById("selBar").classList.toggle("hidden", !hasSel);
+  if(hasSel) document.getElementById("selCount").textContent = `${selected.size} selected`;
+  document.getElementById("selAllBtn").textContent = selected.size===filtered.length && filtered.length>0 ? "Deselect all" : "Select all";
+  document.getElementById("headerCheckbox").checked = selected.size===filtered.length && filtered.length>0;
+  document.getElementById("headerCheckbox").indeterminate = selected.size>0 && selected.size<filtered.length;
+
+  // Rows
+  const tbody = document.getElementById("tableBody");
+  if(filtered.length===0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-cell">
+      <div class="empty-icon">📋</div>
+      <div class="empty-txt">No records match the current filter</div>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(item => {
+    const { worker, obj, assignment, session, daysLeft, criticality } = item;
+    const crit = CRIT_CFG[criticality];
+    const isSel = selected.has(item.id);
+    const isIP = assignment.status === "in_progress";
+
+    // Scheduled badge
+    let schedHTML;
+    if(session) {
+      const isOv = session.status==="overdue";
+      const sc = isOv
+        ? {color:"#e02424",bg:"rgba(224,36,36,0.08)",border:"rgba(224,36,36,0.2)"}
+        : {color:"#1a56db",bg:"rgba(26,86,219,0.08)",border:"rgba(26,86,219,0.2)"};
+      schedHTML = `<div class="sched-wrap">
+        <span class="badge" style="color:${sc.color};background:${sc.bg};border-color:${sc.border}">${isOv?"Overdue":"Scheduled"}</span>
+        <span class="sched-dates">${fmtRange(session.start,session.end)}</span>
+      </div>`;
+    } else {
+      schedHTML = `<span style="font-size:11px;color:var(--text-dim);font-style:italic">Unscheduled</span>`;
+    }
+
+    // Urgency cell
+    let urgHTML;
+    if(!session) {
+      urgHTML = `<span style="font-size:11px;color:var(--text-dim);font-style:italic">Not scheduled</span>`;
+    } else if(session.status==="overdue") {
+      const dAgo = Math.abs(daysLeft);
+      urgHTML = `<div class="urgency-wrap"><div class="urgency-track"><div class="urgency-fill" style="width:100%;background:var(--red)"></div></div><span class="urgency-lbl" style="color:var(--red)">Overdue ${dAgo}d</span></div>`;
+    } else {
+      const total   = Math.max(1,Math.ceil((new Date(session.end)-new Date(session.start))/86400000));
+      const elapsed = total-Math.max(0,daysLeft);
+      const pct     = Math.min(100,Math.max(4,(elapsed/total)*100));
+      const color   = daysLeft<=7?"var(--red)":daysLeft<=14?"var(--amber)":"var(--green)";
+      urgHTML = `<div class="urgency-wrap"><div class="urgency-track"><div class="urgency-fill" style="width:${pct}%;background:${color}"></div></div><span class="urgency-lbl" style="color:${color}">${daysLeft}d left</span></div>`;
+    }
+
+    return `<tr class="${isSel?"sel-row":""}" onclick="toggleRow('${item.id}')">
+      <td onclick="event.stopPropagation()">
+        <input type="checkbox" ${isSel?"checked":""} onchange="toggleRow('${item.id}')" style="accent-color:var(--accent);width:14px;height:14px;cursor:pointer"/>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="worker-av" style="background:${worker.color}20;color:${worker.color}">${initials(worker.name)}</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text-primary)">${worker.name}</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:1px;display:flex;align-items:center;gap:5px">
+              ${worker.role} <span class="shift-chip">${worker.shift}</span>
+            </div>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div style="font-weight:500;color:var(--text-primary)">${obj.name}</div>
+        <div style="font-size:11px;color:var(--text-dim);font-family:var(--font-mono);margin-top:2px">${obj.duration} shift${obj.duration!==1?"s":""} est.</div>
+      </td>
+      <td>
+        <span class="badge" style="color:${isIP?"var(--accent)":"var(--text-secondary)"};background:${isIP?"rgba(26,86,219,0.08)":"rgba(107,114,128,0.08)"};border-color:${isIP?"rgba(26,86,219,0.2)":"rgba(107,114,128,0.2)"}">
+          ${isIP?"In Progress":"Assigned"}
+        </span>
+      </td>
+      <td>${schedHTML}</td>
+      <td>${urgHTML}</td>
+      <td><span class="badge" style="color:${crit.color};background:${crit.bg};border-color:${crit.border}">${crit.label}</span></td>
+      <td onclick="event.stopPropagation()">
+        <button onclick="openScheduleModal('${item.id}')"
+          style="padding:4px 10px;border-radius:var(--radius);border:1px solid var(--accent);background:var(--accent-glow);color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font-sans)">
+          ${session?"Edit":"Schedule"}
+        </button>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+// ─── CONTROLS ─────────────────────────────────────────────────────────────────
+function setScope(s)  { scope=s; selected.clear(); render(); }
+function setFilter(f) { filter=f; selected.clear(); render(); }
+function setSort(col) { if(sortCol===col){sortDir*=-1}else{sortCol=col;sortDir=1;} render(); }
+
+function toggleRow(id) {
+  if(selected.has(id)) selected.delete(id); else selected.add(id);
+  render();
+}
+function clearSel() { selected.clear(); render(); }
+function toggleSelectAll() {
+  const allItems = buildItems();
+  const filtered = sortItems(filterItems(allItems));
+  if(selected.size===filtered.length && filtered.length>0) {
+    selected.clear();
+  } else {
+    filtered.forEach(i=>selected.add(i.id));
+  }
+  render();
+}
+function openBulkModal() {
+  showToast(`📅 Bulk scheduling ${selected.size} window${selected.size!==1?"s":""} — full modal coming soon`);
+}
+
+// ─── SCHEDULE MODAL ───────────────────────────────────────────────────────────
+function openScheduleModal(itemId) {
+  const allItems = buildItems();
+  modalItem = allItems.find(i=>i.id===itemId);
+  if(!modalItem) return;
+
+  const { worker, obj, session } = modalItem;
+  document.getElementById("modalTitle").textContent = session ? "Edit Training Window" : "Schedule Training Window";
+  document.getElementById("modalSub").textContent = `${obj.name} · ${worker.name}`;
+
+  // Set defaults
+  const today = isoDate(new Date());
+  document.getElementById("mStartDate").value = session ? isoDate(new Date(session.start)) : today;
+  document.getElementById("mDuration").value = session ? Math.ceil((new Date(session.end)-new Date(session.start))/86400000) : obj.duration;
+  document.getElementById("mShift").value = session?.shift || worker.shift || "Day";
+
+  // Populate trainer dropdown
+  const trainerSel = document.getElementById("mTrainer");
+  trainerSel.innerHTML = '<option value="">— Select trainer —</option>';
+  WORKERS.filter(w=>w.canTrain && w.id!==worker.id && w.certifiedObjectives?.includes(obj.id)).forEach(t => {
+    const active = SESSIONS.filter(s=>s.trainerId===t.id&&s.status==="scheduled").length;
+    const cap    = t.trainingCapacity || 3;
+    const loadLabel = `${active}/${cap}`;
+    const opt = document.createElement("option");
+    opt.value = t.id;
+    opt.textContent = `${t.name}  [${loadLabel}]`;
+    if(session?.trainerId===t.id) opt.selected = true;
+    trainerSel.appendChild(opt);
+  });
+
+  // Populate workstation dropdown
+  const wsSel = document.getElementById("mWorkstation");
+  wsSel.innerHTML = '<option value="">— Select workstation —</option>';
+  WORKSTATIONS.filter(w=>(obj.workstationIds||[]).includes(w.id)).forEach(ws => {
+    const opt = document.createElement("option");
+    opt.value = ws.id;
+    opt.textContent = `${ws.name} (${ws.zone})`;
+    if(session?.workstationId===ws.id) opt.selected = true;
+    wsSel.appendChild(opt);
+  });
+
+  durMode = "shifts";
+  document.getElementById("durShiftsBtn").classList.add("active");
+  document.getElementById("durHoursBtn").classList.remove("active");
+
+  updateSummary();
+  document.getElementById("schedModal").classList.remove("hidden");
+}
+
+function closeModal() { document.getElementById("schedModal").classList.add("hidden"); modalItem=null; }
+
+function setDurMode(mode) {
+  durMode = mode;
+  document.getElementById("durShiftsBtn").classList.toggle("active", mode==="shifts");
+  document.getElementById("durHoursBtn").classList.toggle("active",  mode==="hours");
+  updateSummary();
+}
+
+function updateSummary() {
+  if(!modalItem) return;
+  const startVal = document.getElementById("mStartDate").value;
+  const dur      = parseInt(document.getElementById("mDuration").value) || 0;
+  const trainerId = document.getElementById("mTrainer").value;
+  const wsId      = document.getElementById("mWorkstation").value;
+
+  let endDate = "—";
+  if(startVal && dur>0) {
+    const end = addDays(new Date(startVal), dur);
+    endDate = fmtDate(end);
+  }
+  document.getElementById("mEndDate").textContent = endDate;
+
+  const trainer = WORKERS.find(w=>w.id===trainerId);
+  const ws      = WORKSTATIONS.find(w=>w.id===wsId);
+
+  document.getElementById("wsTrainee").textContent    = modalItem.worker.name;
+  document.getElementById("wsObjective").textContent  = modalItem.obj.name;
+  document.getElementById("wsWindow").textContent     = startVal ? `${fmtDate(new Date(startVal))} → ${endDate}` : "—";
+  document.getElementById("wsTrainer").textContent    = trainer?.name || "—";
+  document.getElementById("wsWorkstation").textContent= ws?.name || "—";
+
+  const valid = startVal && dur>0 && trainerId && wsId;
+  document.getElementById("mSaveBtn").disabled = !valid;
+  document.getElementById("mFooterMsg").textContent = valid ? "" : "Set all required fields to save";
+}
+
+function saveWindow() {
+  if(!modalItem) return;
+  const startVal   = document.getElementById("mStartDate").value;
+  const dur        = parseInt(document.getElementById("mDuration").value)||0;
+  const trainerId  = document.getElementById("mTrainer").value;
+  const wsId       = document.getElementById("mWorkstation").value;
+  const shift      = document.getElementById("mShift").value;
+  if(!startVal||!dur||!trainerId||!wsId) return;
+
+  const start = new Date(startVal);
+  const end   = addDays(start, dur-1);
+  end.setHours(23,59,59,999);
+
+  // Remove any existing non-cancelled session for this trainee+objective
+  SESSIONS = SESSIONS.filter(s=>!(s.traineeId===modalItem.worker.id&&s.objectiveId===modalItem.obj.id&&s.status!=="cancelled"));
+
+  SESSIONS.push({
+    id:`s${_sid++}`, traineeId:modalItem.worker.id, trainerId,
+    objectiveId:modalItem.obj.id, workstationId:wsId,
+    start, end, shift, status:"scheduled"
+  });
+
+  closeModal();
+  selected.clear();
+  showToast(`✓ Training window scheduled — ${modalItem.obj.name} for ${modalItem.worker.name}`);
+  render();
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const wrap = document.getElementById("toastWrap");
+  const div  = document.createElement("div");
+  div.className = "toast";
+  div.textContent = msg;
+  wrap.appendChild(div);
+  setTimeout(() => div.remove(), 3500);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
