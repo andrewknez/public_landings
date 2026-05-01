@@ -44,6 +44,76 @@
       -webkit-backdrop-filter: blur(12px);
     }
 
+    /* ======= Logo Carousel ======= */
+    .logo-marquee {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      /* Fade out edges so logos appear/disappear smoothly */
+      mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        black 80px,
+        black calc(100% - 80px),
+        transparent 100%
+      );
+      -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        black 80px,
+        black calc(100% - 80px),
+        transparent 100%
+      );
+    }
+    .logo-track {
+      display: flex;
+      width: max-content;
+      animation: logo-scroll 30s linear infinite;
+    }
+    .logo-track:hover {
+      animation-play-state: paused;
+    }
+    .logo-slide {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      padding: 0 32px;
+    }
+    .logo-slide img {
+      width: auto;
+      max-width: 100%;
+      display: block;
+    }
+    @keyframes logo-scroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+    @media (max-width: 640px) {
+      .logo-track { animation-duration: 22s; }
+      .logo-slide { padding: 0 20px; }
+      .logo-marquee {
+        mask-image: linear-gradient(
+          to right,
+          transparent 0,
+          black 30px,
+          black calc(100% - 30px),
+          transparent 100%
+        );
+        -webkit-mask-image: linear-gradient(
+          to right,
+          transparent 0,
+          black 30px,
+          black calc(100% - 30px),
+          transparent 100%
+        );
+      }
+    }
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .logo-track { animation: none; }
+    }
+
     /* Smooth hover lift on feature cards */
     .lift { transition: transform .25s ease, box-shadow .25s ease; }
     .lift:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(0,26,80,0.18); }
@@ -358,10 +428,10 @@
             Built for complex manufacturing
           </div>
           <h1 class="text-balance text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
-            Know who's qualified. Close coverage gaps. Staff the line with confidence.
+            Staff every shift with confidence.
           </h1>
           <p class="mx-auto mt-6 max-w-3xl text-pretty text-lg leading-8 text-blue-50/80">
-            Covalent helps manufacturers replace paper OJT and spreadsheets with real-time workforce visibility, so teams can see who's qualified, close coverage gaps, and keep audit-ready proof in one system.
+            Covalent replaces paper OJT and spreadsheets with real-time skills visibility, so teams know who's qualified, close coverage gaps, and stay audit-ready.
           </p>
           <div class="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <a href="https://calendly.com/d/cxtw-9kw-jv8/manufacturing-skills-matrix-overview" onclick="return openCalendly(event)" class="group cursor-pointer inline-flex items-center justify-center gap-3 rounded-2xl bg-orange-500 px-7 py-4 text-base font-bold text-white shadow-2xl shadow-orange-500/25 transition hover:-translate-y-0.5 hover:bg-orange-400">
@@ -494,18 +564,25 @@
     </section>
 
     <!-- ============== LOGOS ============== -->
-    <section id="proof" class="border-b border-slate-100 bg-white px-5 py-10 sm:px-8">
-      <div class="mx-auto max-w-7xl text-center">
-        <p class="text-sm font-semibold text-slate-500">Trusted by complex manufacturers</p>
-        <div class="mx-auto mt-8 grid max-w-4xl grid-cols-1 items-center gap-6 sm:grid-cols-3">
-          <div class="flex h-20 items-center justify-center rounded-2xl border border-slate-100 bg-white px-6 shadow-sm">
-            <img src="assets/customer-great-dane.svg" alt="Great Dane" style="height:40px; width:auto; max-width:100%;" />
-          </div>
-          <div class="flex h-20 items-center justify-center rounded-2xl border border-slate-100 bg-white px-6 shadow-sm">
-            <img src="assets/customer-mercury.svg" alt="Mercury Marine" style="height:40px; width:auto; max-width:100%;" />
-          </div>
-          <div class="flex h-20 items-center justify-center rounded-2xl border border-slate-100 bg-white px-6 shadow-sm">
-            <img src="assets/customer-mastercraft.svg" alt="MasterCraft" style="height:36px; width:auto; max-width:100%;" />
+    <section id="proof" class="border-b border-slate-100 bg-white px-0 py-10">
+      <div class="mx-auto max-w-7xl">
+        <p class="px-5 text-center text-sm font-semibold text-slate-500 sm:px-8">Trusted by complex manufacturers</p>
+        <div class="logo-marquee mt-8">
+          <div class="logo-track">
+            <!-- First set -->
+            <div class="logo-slide"><img src="assets/customer-great-dane.svg" alt="Great Dane" style="height:36px;" /></div>
+            <div class="logo-slide"><img src="assets/customer-mercury.svg" alt="Mercury Marine" style="height:36px;" /></div>
+            <div class="logo-slide"><img src="assets/customer-mastercraft.svg" alt="MasterCraft" style="height:30px;" /></div>
+            <div class="logo-slide"><img src="assets/customer-milliken.svg" alt="Milliken" style="height:44px;" /></div>
+            <div class="logo-slide"><img src="assets/customer-kimberly-clark.svg" alt="Kimberly-Clark" style="height:30px;" /></div>
+            <div class="logo-slide"><img src="assets/customer-polaris.svg" alt="Polaris" style="height:30px;" /></div>
+            <!-- Duplicate set for seamless loop -->
+            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-great-dane.svg" alt="" style="height:36px;" /></div>
+            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-mercury.svg" alt="" style="height:36px;" /></div>
+            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-mastercraft.svg" alt="" style="height:30px;" /></div>
+            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-milliken.svg" alt="" style="height:44px;" /></div>
+            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-kimberly-clark.svg" alt="" style="height:30px;" /></div>
+            <div class="logo-slide" aria-hidden="true"><img src="assets/customer-polaris.svg" alt="" style="height:30px;" /></div>
           </div>
         </div>
       </div>
@@ -671,8 +748,8 @@
               <svg class="h-9 w-9 text-orange-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             </div>
             <div>
-              <h2 class="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">See how Covalent helps your team replace spreadsheets, standardize OJT, and make workforce readiness visible.</h2>
-              <p class="mt-4 max-w-2xl text-blue-50/75">Book a short demo and see how a live skills matrix can support qualification visibility, coverage planning, and audit-ready training records.</p>
+              <h2 class="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">Ready to replace spreadsheets?</h2>
+              <p class="mt-4 max-w-2xl text-blue-50/75">See how Covalent gives your team a live skills matrix, coverage visibility, and audit-ready training records.</p>
               <p class="mt-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-blue-50">
                 <svg class="h-4 w-4 text-orange-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8A2.5 2.5 0 1 1 12 6a2.5 2.5 0 1 1 4.5 2"/></svg>
                 Free Yeti Cooler for qualified demos*
