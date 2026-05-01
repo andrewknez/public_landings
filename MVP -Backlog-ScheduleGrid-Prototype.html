@@ -1,0 +1,4572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q MVP Training Module — Covalent Networks</title>
+<style>
+  /* Page-level reset and loading state */
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #f8fafc;
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Loading state — visible until React mounts and replaces the root content */
+  .qmvp-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 70vh;
+    color: #475569;
+    font-family: 'IBM Plex Mono', Menlo, Consolas, monospace;
+    font-size: 14px;
+  }
+  .qmvp-loading-title {
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: #0f172a;
+    margin-bottom: 8px;
+  }
+  .qmvp-loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: qmvp-spin 0.8s linear infinite;
+    margin-top: 24px;
+  }
+  @keyframes qmvp-spin { to { transform: rotate(360deg); } }
+</style>
+
+<!-- IBM Plex fonts (used throughout the prototype) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- React 18 + Babel standalone (in-browser JSX transform) -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+</head>
+<body>
+<div id="root">
+  <div class="qmvp-loading">
+    <div class="qmvp-loading-title">Q MVP Training Module</div>
+    <div>Loading prototype…</div>
+    <div class="qmvp-loading-spinner"></div>
+  </div>
+</div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useRef, useEffect } = React;
+
+/* =============================================================================
+   Q MVP — Training v2 (Backlog + Schedule Grid, consolidated)
+   Covalent Networks · Workforce Intelligence Suite
+   -----------------------------------------------------------------------------
+   PRD §9.1 + §9.2 + §9.3 — Capabilities 1, 2, 3 in one prototype.
+
+   Tabs: [Backlog | Grid]
+   • Backlog tab: table of Objective Records, click to schedule/edit
+   • Grid tab:    worker-row Gantt with Day / Week / Month zoom
+
+   Modal flows:
+   • Click bar          → DetailPanel with Edit / Cancel / Complete actions
+   • Empty cell click   → EntryModal (pick existing assignment OR assign new objective)
+   • Click backlog row  → SchedulerModal (Create or Edit depending on row state)
+
+   Worker-rows only. Mode 2 (Objective rows) per PRD §I-C is supported by the
+   same rendering engine but deferred from this prototype for clarity.
+
+   Status mapping (Q MVP visual discipline):
+   • scheduled, overdue, extended, paused → blue (Scheduled colour)
+   • completed                            → green
+   • cancelled                            → excluded from grid entirely
+   ========================================================================== */
+
+/* ============================================================================
+   DATASET — anchored to TODAY = April 21, 2026
+   ========================================================================== */
+
+const TODAY = new Date(2026, 3, 21);
+
+function _d(year, month, day, hh, mm, ss) {
+  return new Date(year, month - 1, day, hh || 0, mm || 0, ss || 0, 0);
+}
+
+const CURRENT_USER = {
+  id: 'w4',
+  name: 'Priya Nanduri',
+  role: 'supervisor',
+  displayRole: 'Assembly Tech III',
+};
+
+const AVATARS = [
+  '#4a9eff', '#3fb950', '#f6a623', '#db61a2', '#a371f7',
+  '#e3b341', '#58a6ff', '#ffa657', '#79c0ff', '#56d364',
+  '#ff7b72', '#d2a8ff',
+];
+
+const WORKERS = [
+  { id: 'w1',  name: 'Marcus Webb',   role: 'Assembly Tech II',  shift: 'Day',   color: AVATARS[0],  canTrain: true,  trainingCapacity: 3, certifiedObjectives: ['o1', 'o2', 'o4'] },
+  { id: 'w2',  name: 'Layla Okonkwo', role: 'QA Specialist',     shift: 'Day',   color: AVATARS[1],  canTrain: true,  trainingCapacity: 3, certifiedObjectives: ['o3', 'o5', 'o6', 'o7'] },
+  { id: 'w3',  name: 'Dmitri Sorel',  role: 'Assembly Tech I',   shift: 'Night', color: AVATARS[2],  canTrain: false },
+  { id: 'w4',  name: 'Priya Nanduri', role: 'Assembly Tech III', shift: 'Day',   color: AVATARS[3],  canTrain: true,  trainingCapacity: 3, certifiedObjectives: ['o1', 'o2', 'o3', 'o4', 'o7'] },
+  { id: 'w5',  name: 'Carlos Ibarra', role: 'Assembly Tech III', shift: 'Night', color: AVATARS[4],  canTrain: true,  trainingCapacity: 3, certifiedObjectives: ['o1', 'o2', 'o6'] },
+  { id: 'w6',  name: 'Yuki Tanaka',   role: 'Maintenance Tech',  shift: 'Day',   color: AVATARS[5],  canTrain: false },
+  { id: 'w7',  name: 'Jordan Kim',    role: 'Assembly Tech I',   shift: 'Day',   color: AVATARS[6],  canTrain: false },
+  { id: 'w8',  name: 'Rosa Ferreira', role: 'Weld Technician',   shift: 'Night', color: AVATARS[7],  canTrain: false },
+  { id: 'w9',  name: 'Amir Hassan',   role: 'Quality Inspector', shift: 'Day',   color: AVATARS[8],  canTrain: false },
+  { id: 'w10', name: 'Tanya Osei',    role: 'Assembly Tech II',  shift: 'Night', color: AVATARS[9],  canTrain: false },
+  { id: 'w11', name: 'Brendan Cole',  role: 'Maintenance Tech',  shift: 'Day',   color: AVATARS[10], canTrain: false },
+];
+
+const OBJECTIVES = [
+  { id: 'o1', name: 'Torque Wrench Calibration',  duration: 2,  workstationIds: ['ws1', 'ws4'] },
+  { id: 'o2', name: 'Engine Assembly Step 4',     duration: 10, workstationIds: ['ws1'] },
+  { id: 'o3', name: 'Safety Inspection Protocol', duration: 1,  workstationIds: ['ws2', 'ws6'] },
+  { id: 'o4', name: 'Hydraulic System Check',     duration: 5,  workstationIds: ['ws3'] },
+  { id: 'o5', name: 'Component Quality Audit',    duration: 3,  workstationIds: ['ws2'] },
+  { id: 'o6', name: 'Machine Setup & Zero Point', duration: 7,  workstationIds: ['ws5', 'ws1'] },
+  { id: 'o7', name: 'FOD Awareness Refresher',    duration: 1,  workstationIds: ['ws6'] },
+];
+
+const WORKSTATIONS = [
+  { id: 'ws1', name: 'Station 4B',         zone: 'Assembly Zone A', maxConcurrentObjectives: 2 },
+  { id: 'ws2', name: 'Inspection Bay 1',   zone: 'Quality Control', maxConcurrentObjectives: 3 },
+  { id: 'ws3', name: 'Hydraulic Test Rig', zone: 'Systems Lab',     maxConcurrentObjectives: 2 },
+  { id: 'ws4', name: 'Weld Cell 2',        zone: 'Fabrication',     maxConcurrentObjectives: 1 },
+  { id: 'ws5', name: 'CNC Cell 1',         zone: 'Machining',       maxConcurrentObjectives: 2 },
+  { id: 'ws6', name: 'Classroom A',        zone: 'Training Center', maxConcurrentObjectives: 5 },
+];
+
+// Assignments. Note: these are now mutable state at the root level, but we seed
+// from this list. The Amir Hassan + Safety Inspection inconsistency from earlier
+// is fixed: he now has session s11 covering it.
+const INIT_ASSIGNMENTS = [
+  { workerId: 'w3',  objectiveId: 'o1', status: 'in_progress' },
+  { workerId: 'w3',  objectiveId: 'o2', status: 'in_progress' },
+  { workerId: 'w3',  objectiveId: 'o4', status: 'active' },
+  { workerId: 'w3',  objectiveId: 'o5', status: 'assigned' },
+  { workerId: 'w6',  objectiveId: 'o3', status: 'assigned' },
+  { workerId: 'w6',  objectiveId: 'o6', status: 'assigned' },
+  { workerId: 'w1',  objectiveId: 'o5', status: 'assigned' },
+  { workerId: 'w1',  objectiveId: 'o7', status: 'renewal' },
+  { workerId: 'w5',  objectiveId: 'o1', status: 'in_progress' },
+  { workerId: 'w5',  objectiveId: 'o2', status: 'in_progress' },
+  { workerId: 'w7',  objectiveId: 'o1', status: 'assigned' },
+  { workerId: 'w7',  objectiveId: 'o2', status: 'assigned' },
+  { workerId: 'w7',  objectiveId: 'o3', status: 'assigned' },
+  { workerId: 'w8',  objectiveId: 'o3', status: 'assigned' },
+  { workerId: 'w8',  objectiveId: 'o4', status: 'assigned' },
+  { workerId: 'w8',  objectiveId: 'o5', status: 'in_progress' },
+  { workerId: 'w9',  objectiveId: 'o3', status: 'in_progress' },
+  { workerId: 'w9',  objectiveId: 'o5', status: 'assigned' },
+  { workerId: 'w9',  objectiveId: 'o7', status: 'renewal' },
+  { workerId: 'w10', objectiveId: 'o1', status: 'assigned' },
+  { workerId: 'w10', objectiveId: 'o2', status: 'assigned' },
+  { workerId: 'w10', objectiveId: 'o4', status: 'assigned' },
+  { workerId: 'w11', objectiveId: 'o6', status: 'assigned' },
+  { workerId: 'w11', objectiveId: 'o4', status: 'assigned' },
+  { workerId: 'w11', objectiveId: 'o7', status: 'in_progress' },
+];
+
+// Sessions. Two new sessions added to test Day view:
+// - s11: Amir Hassan / Safety Inspection — 4-hour session today (Day view test)
+// - s12: Marcus Webb / FOD Refresher — 2-hour session tomorrow morning (sub-day)
+const INIT_SESSIONS = [
+  { id: 's1', traineeId: 'w3', trainerId: 'w1', objectiveId: 'o1', workstationId: 'ws1',
+    start: _d(2026, 4, 21, 0, 0, 0), end: _d(2026, 5, 4, 23, 59, 59),
+    shift: 'Day', status: 'scheduled' },
+  { id: 's2', traineeId: 'w3', trainerId: 'w4', objectiveId: 'o2', workstationId: 'ws1',
+    start: _d(2026, 4, 23, 0, 0, 0), end: _d(2026, 6, 11, 23, 59, 59),
+    shift: 'Day', status: 'scheduled' },
+  { id: 's8', traineeId: 'w3', trainerId: 'w2', objectiveId: 'o5', workstationId: 'ws2',
+    start: _d(2026, 4, 26, 0, 0, 0), end: _d(2026, 4, 30, 23, 59, 59),
+    shift: 'Day', status: 'scheduled' },
+  { id: 's5', traineeId: 'w3', trainerId: 'w2', objectiveId: 'o4', workstationId: 'ws3',
+    start: _d(2026, 4, 13, 0, 0, 0), end: _d(2026, 4, 23, 23, 59, 59),
+    shift: 'Day', status: 'completed' },
+  { id: 's3', traineeId: 'w6', trainerId: 'w2', objectiveId: 'o6', workstationId: 'ws5',
+    start: _d(2026, 4, 16, 0, 0, 0), end: _d(2026, 4, 25, 23, 59, 59),
+    shift: 'Day', status: 'overdue' },
+  { id: 's10', traineeId: 'w6', trainerId: 'w4', objectiveId: 'o3', workstationId: 'ws2',
+    start: _d(2026, 4, 20, 0, 0, 0), end: _d(2026, 4, 26, 23, 59, 59),
+    shift: 'Day', status: 'cancelled' },
+  { id: 's6', traineeId: 'w6', trainerId: 'w4', objectiveId: 'o3', workstationId: 'ws2',
+    start: _d(2026, 5, 9, 0, 0, 0), end: _d(2026, 5, 15, 23, 59, 59),
+    shift: 'Day', status: 'scheduled' },
+  { id: 's4', traineeId: 'w5', trainerId: 'w1', objectiveId: 'o2', workstationId: 'ws1',
+    start: _d(2026, 4, 11, 0, 0, 0), end: _d(2026, 5, 15, 23, 59, 59),
+    shift: 'Night', status: 'scheduled' },
+  { id: 's9', traineeId: 'w5', trainerId: 'w2', objectiveId: 'o1', workstationId: 'ws1',
+    start: _d(2026, 4, 24, 0, 0, 0), end: _d(2026, 5, 7, 23, 59, 59),
+    shift: 'Night', status: 'scheduled' },
+  { id: 's7', traineeId: 'w5', trainerId: 'w2', objectiveId: 'o1', workstationId: 'ws1',
+    start: _d(2026, 5, 8, 0, 0, 0), end: _d(2026, 5, 12, 23, 59, 59),
+    shift: 'Night', status: 'cancelled' },
+  // Sub-day sessions for Day-view demo
+  { id: 's11', traineeId: 'w9', trainerId: 'w4', objectiveId: 'o3', workstationId: 'ws6',
+    start: _d(2026, 4, 21, 9, 0, 0), end: _d(2026, 4, 21, 13, 0, 0),
+    shift: 'Day', status: 'scheduled', durationHours: 4, startTime: '09:00' },
+  { id: 's12', traineeId: 'w1', trainerId: 'w2', objectiveId: 'o7', workstationId: 'ws6',
+    start: _d(2026, 4, 22, 8, 0, 0), end: _d(2026, 4, 22, 10, 0, 0),
+    shift: 'Day', status: 'scheduled', durationHours: 2, startTime: '08:00' },
+  { id: 's13', traineeId: 'w7', trainerId: 'w4', objectiveId: 'o3', workstationId: 'ws6',
+    start: _d(2026, 4, 21, 14, 0, 0), end: _d(2026, 4, 21, 16, 0, 0),
+    shift: 'Day', status: 'scheduled', durationHours: 2, startTime: '14:00' },
+  // Stress test: Layla teaching Brendan on Apr 21 — pushes Layla's row to 4 concurrent
+  { id: 's14', traineeId: 'w11', trainerId: 'w2', objectiveId: 'o7', workstationId: 'ws3',
+    start: _d(2026, 4, 21, 10, 0, 0), end: _d(2026, 4, 21, 12, 0, 0),
+    shift: 'Day', status: 'scheduled', durationHours: 2, startTime: '10:00' },
+  { id: 's15', traineeId: 'w8', trainerId: 'w2', objectiveId: 'o5', workstationId: 'ws2',
+    start: _d(2026, 4, 21, 11, 0, 0), end: _d(2026, 4, 21, 13, 0, 0),
+    shift: 'Day', status: 'scheduled', durationHours: 2, startTime: '11:00' },
+];
+
+/* ============================================================================
+   STATUS NORMALIZATION
+   ========================================================================== */
+
+const ASSIGNMENT_LABEL = {
+  assigned: 'Assigned',
+  in_progress: 'In-Progress',
+  renewal: 'Renewal',
+  active: 'Active',
+};
+
+const SESSION_LABEL = {
+  scheduled: 'Scheduled',
+  overdue:   'Overdue',
+  extended:  'Extended',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  paused:    'Paused',
+};
+
+const ACTIVE_SESSION_STATUSES = new Set(['scheduled', 'overdue', 'extended', 'paused']);
+
+function findActiveSession(sessions, workerId, objectiveId) {
+  return sessions.find(
+    (s) => s.traineeId === workerId
+      && s.objectiveId === objectiveId
+      && ACTIVE_SESSION_STATUSES.has(s.status)
+  );
+}
+
+// Find the most recent completed session for a worker+objective pair.
+// Used to display completion date for "Active" (completed) assignments.
+function findCompletedSession(sessions, workerId, objectiveId) {
+  const matches = sessions.filter(
+    (s) => s.traineeId === workerId
+      && s.objectiveId === objectiveId
+      && s.status === 'completed'
+  );
+  if (matches.length === 0) return null;
+  // Sort by completedAt (if set) or end date, descending — return most recent.
+  return matches.sort((a, b) => {
+    const aT = (a.completedAt || a.end).getTime();
+    const bT = (b.completedAt || b.end).getTime();
+    return bT - aT;
+  })[0];
+}
+
+function deriveSchedulingStatus(sessions, workerId, objectiveId) {
+  if (findActiveSession(sessions, workerId, objectiveId)) return 'Scheduled';
+  return 'Unscheduled';
+}
+
+function barColourClass(status) {
+  if (status === 'completed') return 'qmvp-bar-completed';
+  return 'qmvp-bar-scheduled';
+}
+
+/* ============================================================================
+   DATE HELPERS
+   ========================================================================== */
+
+function addDays(d, n) {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
+}
+function addHours(d, h) {
+  const x = new Date(d);
+  x.setHours(x.getHours() + h);
+  return x;
+}
+function startOfDay(d) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+function endOfDay(d) {
+  const x = new Date(d);
+  x.setHours(23, 59, 59, 999);
+  return x;
+}
+function startOfWeek(d) {
+  const x = new Date(d);
+  x.setDate(x.getDate() - x.getDay());
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+function sameDay(a, b) {
+  return a.getFullYear() === b.getFullYear()
+    && a.getMonth() === b.getMonth()
+    && a.getDate() === b.getDate();
+}
+function dayIndex(date, frameStart) {
+  const a = new Date(date); a.setHours(0, 0, 0, 0);
+  const b = new Date(frameStart); b.setHours(0, 0, 0, 0);
+  return Math.round((a - b) / (1000 * 60 * 60 * 24));
+}
+function fmtDate(d) {
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+function fmtDateFull(d) {
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+}
+function fmtTime(d) {
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+/* Form input helpers (used by the scheduler modal) */
+function toInputDate(d) {
+  if (!d) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + day;
+}
+function parseInputDate(s) {
+  if (!s) return null;
+  const parts = s.split('-').map(Number);
+  return new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0, 0);
+}
+function addDaysEod(d, n) {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  x.setHours(23, 59, 59, 999);
+  return x;
+}
+
+/* Lane stacking: greedy assignment for overlapping windows */
+function assignLanes(windows) {
+  const sorted = [...windows].sort((a, b) => a.start - b.start);
+  const lanes = [];
+  const out = [];
+  sorted.forEach((w) => {
+    let placed = false;
+    for (let i = 0; i < lanes.length; i++) {
+      if (lanes[i] < w.start) {
+        lanes[i] = w.end;
+        out.push({ ...w, lane: i });
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) {
+      lanes.push(w.end);
+      out.push({ ...w, lane: lanes.length - 1 });
+    }
+  });
+  return out;
+}
+
+function initials(name) {
+  return name.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+}
+
+/* ============================================================================
+   CAPACITY HELPERS
+   ========================================================================== */
+
+function rangesOverlap(aStart, aEnd, bStart, bEnd) {
+  return aStart <= bEnd && bStart <= aEnd;
+}
+
+function trainerConcurrentLoad(sessions, trainerId, propStart, propEnd, excludeSessionId) {
+  if (!trainerId || !propStart || !propEnd) return 0;
+  return sessions.filter((s) => {
+    if (s.id === excludeSessionId) return false;
+    if (s.trainerId !== trainerId) return false;
+    if (!ACTIVE_SESSION_STATUSES.has(s.status)) return false;
+    return rangesOverlap(s.start, s.end, propStart, propEnd);
+  }).length;
+}
+
+function workstationConcurrentLoad(sessions, workstationId, propStart, propEnd, propObjectiveId, excludeSessionId) {
+  if (!workstationId || !propStart || !propEnd) return 0;
+  const overlapping = sessions.filter((s) => {
+    if (s.id === excludeSessionId) return false;
+    if (s.workstationId !== workstationId) return false;
+    if (!ACTIVE_SESSION_STATUSES.has(s.status)) return false;
+    return rangesOverlap(s.start, s.end, propStart, propEnd);
+  });
+  const distinctObjectives = new Set(overlapping.map((s) => s.objectiveId));
+  if (propObjectiveId) distinctObjectives.add(propObjectiveId);
+  return distinctObjectives.size;
+}
+
+function loadLevel(current, max) {
+  if (current < max) return 'green';
+  if (current === max) return 'amber';
+  return 'red';
+}
+
+/* ============================================================================
+   STYLES
+   Stacking strategy:
+     z-index 0 (default): grid cells
+     z-index 1:           per-row bars overlay (.qmvp-bars-overlay)
+     z-index 2:           individual bars inside the overlay (.qmvp-bar)
+     z-index 4:           sticky row headers (left column)
+     z-index 5:           concurrency row + column headers (top)
+     z-index 6:           grid corner (top-left)
+     z-index 100:         modal backdrops
+     z-index 200:         toast
+   ========================================================================== */
+
+const styles = `
+  :root {
+    --navy-900: #0b1929;
+    --navy-800: #12243a;
+    --navy-700: #1b3452;
+    --ink-900:  #0f172a;
+    --ink-700:  #334155;
+    --ink-500:  #64748b;
+    --ink-400:  #94a3b8;
+    --ink-300:  #cbd5e1;
+    --ink-200:  #e2e8f0;
+    --ink-100:  #f1f5f9;
+    --ink-50:   #f8fafc;
+    --accent:   #2563eb;
+    --accent-bg:#eff6ff;
+    --green:    #15803d;
+    --green-bg: #dcfce7;
+    --amber:    #b45309;
+    --amber-bg: #fef3c7;
+    --red:      #b91c1c;
+    --red-bg:   #fee2e2;
+    --today-bg: #f0f7ff;
+    --today-line: var(--accent);
+    --row-stripe: #fafbfc;
+    --concurrent-label-bg: #0f1f33;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .qmvp-root {
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--ink-900);
+    background: var(--ink-50);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Topbar with tabs */
+  .qmvp-topbar {
+    background: var(--navy-900);
+    color: white;
+    padding: 0 32px;
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid var(--navy-700);
+  }
+  .qmvp-topbar-logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    font-size: 13px;
+    color: var(--ink-200);
+    align-self: center;
+    margin-right: 24px;
+    padding: 14px 0;
+  }
+  .qmvp-tabs { display: flex; gap: 0; }
+  .qmvp-tab {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--ink-300);
+    padding: 14px 18px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 100ms ease;
+  }
+  .qmvp-tab:hover { color: white; }
+  .qmvp-tab.active { color: white; border-bottom-color: var(--accent); font-weight: 500; }
+  .qmvp-tab-count {
+    margin-left: 6px;
+    background: var(--navy-700);
+    color: var(--ink-300);
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .qmvp-tab.active .qmvp-tab-count { background: var(--accent); color: white; }
+  .qmvp-topbar-user {
+    margin-left: auto;
+    align-self: center;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--ink-300);
+  }
+  .qmvp-topbar-user-avatar {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .qmvp-scope-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    background: var(--navy-700);
+    color: var(--ink-200);
+    padding: 4px 10px;
+    border-radius: 3px;
+    letter-spacing: 0.03em;
+  }
+
+  /* Container */
+  .qmvp-container {
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 24px 32px;
+  }
+  .qmvp-page-header { margin-bottom: 16px; }
+  .qmvp-page-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.01em;
+  }
+  .qmvp-page-header .sub { font-size: 14px; color: var(--ink-500); margin: 0; }
+
+  /* Compact grid header — title + date inline, controls + legend right-aligned */
+  .qmvp-grid-page-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .qmvp-grid-page-title {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .qmvp-grid-page-title h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.01em;
+    color: var(--ink-900);
+  }
+  .qmvp-grid-page-title-date {
+    font-size: 13px;
+    color: var(--ink-500);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .qmvp-inline-legend {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-left: auto;
+    margin-right: 16px;
+    font-size: 11px;
+    color: var(--ink-500);
+    font-family: 'IBM Plex Sans', sans-serif;
+    flex-wrap: wrap;
+  }
+  .qmvp-inline-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .qmvp-inline-legend-swatch {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+  }
+  .qmvp-inline-legend-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+  .qmvp-inline-legend-divider {
+    width: 1px;
+    height: 14px;
+    background: var(--ink-200);
+    flex-shrink: 0;
+  }
+
+  /* ===== Backlog table ===== */
+  .qmvp-table-wrap {
+    background: white;
+    border: 1px solid var(--ink-200);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+  }
+  .qmvp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .qmvp-table thead th {
+    background: var(--ink-50);
+    border-bottom: 1px solid var(--ink-200);
+    padding: 12px 20px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-500);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .qmvp-table tbody tr {
+    border-bottom: 1px solid var(--ink-100);
+    transition: background 100ms ease;
+  }
+  .qmvp-table tbody tr:last-child { border-bottom: none; }
+  .qmvp-table tbody tr.clickable { cursor: pointer; }
+  .qmvp-table tbody tr.clickable:hover { background: var(--ink-50); }
+  .qmvp-table td { padding: 14px 20px; vertical-align: middle; }
+  .qmvp-trainee-cell { display: flex; align-items: center; gap: 12px; }
+  .qmvp-trainee-name { font-weight: 500; color: var(--ink-900); }
+  .qmvp-trainee-role { font-size: 12px; color: var(--ink-500); margin-top: 2px; }
+  .qmvp-shift-chip {
+    display: inline-block;
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--ink-100);
+    color: var(--ink-700);
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 6px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .qmvp-trainer-chip {
+    display: inline-block;
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    background: #f3e8ff;
+    color: #6b21a8;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 6px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .qmvp-objective-name { font-weight: 500; color: var(--ink-900); }
+  .qmvp-objective-dur {
+    display: block;
+    font-size: 12px;
+    color: var(--ink-500);
+    margin-top: 2px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .qmvp-tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+  .qmvp-tag-assigned    { background: var(--ink-100); color: var(--ink-700); }
+  .qmvp-tag-inprogress  { background: var(--accent-bg); color: var(--accent); }
+  .qmvp-tag-renewal     { background: #f3e8ff; color: #6b21a8; }
+  .qmvp-tag-active      { background: var(--green-bg); color: var(--green); }
+  .qmvp-tag-unscheduled {
+    background: transparent;
+    color: var(--amber);
+    border: 1px dashed var(--amber);
+  }
+  .qmvp-tag-scheduled   { background: var(--green-bg); color: var(--green); }
+  .qmvp-scheduling-cell { display: flex; flex-direction: column; gap: 4px; }
+  .qmvp-scheduling-meta {
+    font-size: 11px;
+    color: var(--ink-500);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .qmvp-row-hint {
+    font-size: 11px;
+    color: var(--ink-400);
+    font-family: 'IBM Plex Mono', monospace;
+    opacity: 0;
+    transition: opacity 100ms ease;
+  }
+  .qmvp-table tbody tr.clickable:hover .qmvp-row-hint { opacity: 1; }
+  .qmvp-footer-meta {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--ink-500);
+    font-family: 'IBM Plex Mono', monospace;
+    display: flex;
+    gap: 24px;
+  }
+
+  /* ===== Grid controls ===== */
+  .qmvp-controls {
+    background: white;
+    border: 1px solid var(--ink-200);
+    border-radius: 6px 6px 0 0;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 0;
+  }
+  .qmvp-control-group { display: flex; align-items: center; gap: 8px; }
+  .qmvp-control-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ink-500);
+    letter-spacing: 0.05em;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .qmvp-toggle {
+    display: inline-flex;
+    background: var(--ink-100);
+    border-radius: 5px;
+    padding: 2px;
+  }
+  .qmvp-toggle-btn {
+    border: none;
+    background: transparent;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    padding: 5px 14px;
+    border-radius: 3px;
+    cursor: pointer;
+    color: var(--ink-500);
+    font-weight: 500;
+    transition: all 100ms ease;
+  }
+  .qmvp-toggle-btn.active {
+    background: white;
+    color: var(--ink-900);
+    box-shadow: 0 1px 3px rgba(15,23,42,0.1);
+  }
+  .qmvp-frame-nav {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .qmvp-nav-btn {
+    background: white;
+    border: 1px solid var(--ink-200);
+    border-radius: 4px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-700);
+  }
+  .qmvp-nav-btn:hover { background: var(--ink-50); }
+  .qmvp-nav-btn-active {
+    background: var(--accent-bg);
+    border-color: #bfdbfe;
+    color: var(--accent);
+  }
+  .qmvp-nav-btn-active:hover { background: #dceaff; }
+  .qmvp-nav-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-900);
+    padding: 0 12px;
+    min-width: 220px;
+    text-align: center;
+  }
+
+  /* ===== Schedule grid =====
+     The grid is constructed as:
+       - One CSS-Grid 'header strip' (concurrency row + day headers)
+       - One CSS-Grid 'row strip' per worker, containing:
+         - row-header cell (sticky left)
+         - background cells (for visual columns + hover/today highlight)
+         - bars overlay (single absolutely-positioned layer per row, holds all bars)
+
+     The bars overlay is OUTSIDE individual cells, positioned absolutely against
+     the row-strip wrapper, so there's no DOM-stacking ambiguity. Bars always
+     paint above background cells; cells receive empty-cell clicks; bars receive
+     bar clicks. No magic, no stopPropagation tricks.
+  */
+  .qmvp-grid-wrap {
+    background: white;
+    border: 1px solid var(--ink-200);
+    border-radius: 6px;
+    overflow: auto;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+  }
+  .qmvp-grid-inner {
+    min-width: max-content;
+    position: relative;
+  }
+  .qmvp-grid-header-strip {
+    display: grid;
+    background: var(--ink-50);
+    border-bottom: 1px solid var(--ink-200);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  .qmvp-grid-corner {
+    background: var(--ink-50);
+    color: var(--ink-500);
+    padding: 12px 16px;
+    border-right: 1px solid var(--ink-200);
+    border-bottom: 1px solid var(--ink-200);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: sticky;
+    left: 0;
+    z-index: 6;
+    grid-row: 1;
+  }
+  .qmvp-grid-corner-count {
+    background: var(--ink-100);
+    color: var(--ink-700);
+    padding: 1px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  /* Unit-column header cell (row 1): "DAY"/"HOUR" + contextual sub-label */
+  .qmvp-unit-cell-r1 {
+    grid-row: 1;
+    background: white;
+    padding: 8px 10px;
+    border: 1px solid var(--ink-200);
+    border-right-width: 1px;
+    border-bottom: 1px solid var(--ink-200);
+    border-top: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: sticky;
+    left: 200px;
+    z-index: 5;
+    box-shadow: inset 0 0 0 1px var(--ink-100);
+  }
+  .qmvp-unit-cell-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    color: var(--ink-700);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .qmvp-unit-cell-context {
+    font-size: 10px;
+    color: var(--ink-400);
+    margin-top: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* Empty corner cell on row 2 (under EMPLOYEE column) */
+  .qmvp-corner-r2 {
+    grid-row: 2;
+    grid-column: 1;
+    background: var(--ink-50);
+    border-bottom: 1px solid var(--ink-200);
+    border-right: 1px solid var(--ink-200);
+    position: sticky;
+    left: 0;
+    z-index: 6;
+  }
+
+  /* Per-worker unit cell — shows active scheduled session count.
+     Typography matches the column concurrency counts so they read as the
+     same kind of object. */
+  .qmvp-row-unit-cell {
+    background: white;
+    border-right: 1px solid var(--ink-200);
+    border-bottom: 1px solid var(--ink-100);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: sticky;
+    left: 200px;
+    z-index: 3;
+  }
+  .qmvp-row-unit-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-700);
+    line-height: 1;
+    transition: color 100ms;
+  }
+  /* Zero-count gets dimmed to match how empty column cells behave */
+  .qmvp-row-unit-count.zero { color: var(--ink-300); font-weight: 500; }
+  /* Worker rows: unit cell follows alternating-row stripe */
+  .qmvp-row-strip:nth-child(even) .qmvp-row-unit-cell { background: var(--row-stripe); }
+
+  /* "Open Sessions" label cell (row 2, in unit column) — matches EMPLOYEE corner styling */
+  .qmvp-concurrent-label-cell {
+    background: var(--ink-50);
+    color: var(--ink-500);
+    padding: 4px 8px;
+    border-right: 1px solid var(--ink-200);
+    border-bottom: 1px solid var(--ink-200);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.15;
+    text-align: center;
+    position: sticky;
+    left: 200px;
+    z-index: 5;
+    grid-row: 2;
+  }
+
+  /* Concurrent count cells (row 2) — light treatment, typography matches per-worker counts */
+  .qmvp-grid-concurrency-cell {
+    background: var(--ink-50);
+    color: var(--ink-300);
+    padding: 6px 4px;
+    border-bottom: 1px solid var(--ink-200);
+    border-left: 1px solid var(--ink-100);
+    text-align: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    grid-row: 2;
+    transition: color 100ms, font-weight 100ms;
+  }
+  .qmvp-grid-concurrency-cell.active {
+    color: var(--ink-700);
+    font-weight: 600;
+  }
+  /* Hot column = elevated capacity. Soft accent treatment, not loud. */
+  .qmvp-grid-concurrency-cell.hot {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  /* Today's column highlight extends through the concurrent cell too */
+  .qmvp-grid-concurrency-cell.today { background: var(--today-bg); }
+  .qmvp-grid-col-header {
+    background: var(--ink-50);
+    padding: 10px 4px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--ink-700);
+    grid-row: 1;
+    border-bottom: 1px solid var(--ink-200);
+    border-left: 1px solid var(--ink-100);
+  }
+  .qmvp-grid-col-header.today {
+    background: var(--today-bg);
+    color: var(--ink-900);
+    font-weight: 600;
+    border-bottom: 2px solid var(--today-line);
+  }
+  .qmvp-col-header-dow {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-500);
+    font-weight: 500;
+  }
+  .qmvp-col-header-dom {
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 2px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .qmvp-col-header-hour {
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--ink-700);
+  }
+  .qmvp-grid-col-header.today .qmvp-col-header-dom { color: var(--today-line); }
+
+  /* Row strip — one per worker. Holds row-header + cells + bars overlay. */
+  .qmvp-row-strip {
+    display: grid;
+    border-bottom: 1px solid var(--ink-100);
+    position: relative;
+  }
+  .qmvp-row-header {
+    background: white;
+    border-right: 1px solid var(--ink-200);
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: sticky;
+    left: 0;
+    z-index: 4;
+  }
+  .qmvp-row-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    flex-shrink: 0;
+  }
+  .qmvp-row-meta { flex: 1; min-width: 0; }
+  .qmvp-row-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-900);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .qmvp-row-sub {
+    font-size: 11px;
+    color: var(--ink-500);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .qmvp-bg-cell {
+    background: white;
+    cursor: pointer;
+    transition: background 100ms;
+    border-right: 1px solid var(--ink-100);
+  }
+  .qmvp-bg-cell:hover { background: var(--ink-50); }
+  .qmvp-bg-cell.today { background: var(--today-bg); }
+  .qmvp-bg-cell.today:hover { background: #e3effc; }
+
+  /* Alternating row stripes (very subtle) */
+  .qmvp-row-strip:nth-child(even) .qmvp-bg-cell { background: var(--row-stripe); }
+  .qmvp-row-strip:nth-child(even) .qmvp-bg-cell:hover { background: var(--ink-50); }
+  .qmvp-row-strip:nth-child(even) .qmvp-bg-cell.today { background: var(--today-bg); }
+  .qmvp-row-strip:nth-child(even) .qmvp-row-header { background: var(--row-stripe); }
+  .qmvp-bg-cell-hint {
+    font-size: 10px;
+    color: var(--ink-400);
+    font-family: 'IBM Plex Mono', monospace;
+    text-align: center;
+    line-height: 100%;
+    padding-top: 4px;
+    opacity: 0;
+    transition: opacity 100ms;
+  }
+  .qmvp-bg-cell:hover .qmvp-bg-cell-hint { opacity: 0.8; }
+
+  /* Bars overlay — one per row, absolutely positioned. */
+  .qmvp-bars-overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    pointer-events: none; /* the layer itself is transparent to clicks */
+    z-index: 1;
+  }
+  .qmvp-bar {
+    position: absolute;
+    height: 20px;
+    border-radius: 3px;
+    padding: 0 8px 0 7px;
+    font-size: 11px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    overflow: hidden;
+    font-family: 'IBM Plex Sans', sans-serif;
+    transition: transform 100ms ease, box-shadow 100ms ease, background 100ms ease;
+    box-shadow: 0 1px 1px rgba(15,23,42,0.08);
+    pointer-events: auto;
+    z-index: 2;
+  }
+  .qmvp-bar:hover {
+    box-shadow: 0 2px 6px rgba(15,23,42,0.18);
+  }
+  .qmvp-bar-scheduled {
+    background: var(--accent);
+  }
+  .qmvp-bar-scheduled:hover { background: var(--accent-dk, #1d4ed8); }
+  .qmvp-bar-completed {
+    background: var(--green);
+    opacity: 0.78;
+  }
+  .qmvp-bar-completed:hover { opacity: 0.92; }
+
+  /* Trainer-mode bars — shown on a trainer's row when they're teaching a session.
+     Soft-fill variant of the same color: the bar is clearly "their session"
+     but visually distinct from sessions where the row's worker is being trained. */
+  .qmvp-bar.qmvp-bar-trainer-mode.qmvp-bar-scheduled {
+    background: var(--accent-bg);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent), 0 1px 1px rgba(15,23,42,0.06);
+  }
+  .qmvp-bar.qmvp-bar-trainer-mode.qmvp-bar-scheduled:hover {
+    background: #dceaff;
+    box-shadow: inset 0 0 0 1px var(--accent), 0 2px 6px rgba(15,23,42,0.18);
+  }
+  .qmvp-bar.qmvp-bar-trainer-mode.qmvp-bar-completed {
+    background: var(--green-bg);
+    color: var(--green);
+    opacity: 1;
+    box-shadow: inset 0 0 0 1px var(--green), 0 1px 1px rgba(15,23,42,0.06);
+  }
+  .qmvp-bar.qmvp-bar-trainer-mode.qmvp-bar-completed:hover {
+    background: #c4f1d0;
+  }
+  /* In trainer-mode, the dot, meta, and clip arrows pick up the bar's text color */
+  .qmvp-bar-trainer-mode .qmvp-bar-dot {
+    background: currentColor;
+    opacity: 0.85;
+  }
+  .qmvp-bar-trainer-mode .qmvp-bar-meta {
+    color: currentColor;
+    opacity: 0.7;
+  }
+  .qmvp-bar-trainer-mode .qmvp-clip-arrow {
+    color: currentColor;
+    opacity: 0.7;
+  }
+  .qmvp-bar-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: white;
+    flex-shrink: 0;
+    opacity: 0.9;
+  }
+  .qmvp-bar-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+  .qmvp-bar-meta {
+    font-size: 10px;
+    opacity: 0.78;
+    font-family: 'IBM Plex Mono', monospace;
+    white-space: nowrap;
+  }
+  .qmvp-clip-arrow {
+    flex-shrink: 0;
+    color: white;
+    opacity: 0.85;
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* Legend */
+  .qmvp-legend {
+    display: flex;
+    gap: 16px;
+    font-size: 11px;
+    color: var(--ink-500);
+    margin-top: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    flex-wrap: wrap;
+  }
+  .qmvp-legend-item { display: flex; align-items: center; gap: 6px; }
+  .qmvp-legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* ===== Modal & Detail panel ===== */
+  .qmvp-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(11,25,41,0.6);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(2px);
+    padding: 40px 20px;
+    overflow-y: auto;
+  }
+  .qmvp-modal {
+    background: white;
+    border-radius: 8px;
+    max-width: 640px;
+    width: 100%;
+    box-shadow: 0 20px 50px rgba(11,25,41,0.3);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 80px);
+  }
+  .qmvp-modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--ink-200);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .qmvp-modal-header h2 { margin: 0; font-size: 17px; font-weight: 600; }
+  .qmvp-modal-status-chip {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--accent-bg);
+    color: var(--accent);
+    padding: 3px 8px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .qmvp-modal-status-chip.overdue   { background: var(--red-bg); color: var(--red); }
+  .qmvp-modal-status-chip.extended  { background: var(--amber-bg); color: var(--amber); }
+  .qmvp-modal-status-chip.completed { background: var(--green-bg); color: var(--green); }
+  .qmvp-modal-status-chip.cancelled { background: var(--ink-100); color: var(--ink-500); }
+  .qmvp-modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+  .qmvp-modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--ink-200);
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    background: var(--ink-50);
+    border-radius: 0 0 8px 8px;
+  }
+  .qmvp-context-card {
+    background: var(--ink-50);
+    border: 1px solid var(--ink-200);
+    border-radius: 6px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .qmvp-context-text { flex: 1; font-size: 13px; }
+  .qmvp-context-line1 { font-weight: 500; color: var(--ink-900); }
+  .qmvp-context-line2 { color: var(--ink-500); margin-top: 2px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+
+  .qmvp-field { margin-bottom: 16px; }
+  .qmvp-field-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-700);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .qmvp-field-required::after { content: '*'; color: var(--red); margin-left: 3px; }
+  .qmvp-input, .qmvp-select, .qmvp-textarea {
+    width: 100%;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    padding: 8px 12px;
+    border: 1px solid var(--ink-300);
+    border-radius: 5px;
+    background: white;
+    color: var(--ink-900);
+    transition: border-color 100ms ease;
+  }
+  .qmvp-input:focus, .qmvp-select:focus, .qmvp-textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+  .qmvp-textarea { min-height: 64px; resize: vertical; }
+  .qmvp-row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .qmvp-derived-card {
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-radius: 5px;
+    padding: 10px 14px;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .qmvp-derived-label {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .qmvp-derived-val { font-weight: 600; color: var(--ink-900); }
+
+  .qmvp-load-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .qmvp-load-green { background: var(--green-bg); color: var(--green); }
+  .qmvp-load-amber { background: var(--amber-bg); color: var(--amber); }
+  .qmvp-load-red   { background: var(--red-bg); color: var(--red); }
+  .qmvp-select-with-badge { position: relative; }
+  .qmvp-select-with-badge .qmvp-load-badge {
+    position: absolute;
+    right: 32px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .qmvp-warn {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--amber-bg);
+    border: 1px solid #fde68a;
+    border-radius: 5px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--amber);
+    margin-bottom: 16px;
+  }
+  .qmvp-warn-icon { flex-shrink: 0; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+  .qmvp-warn strong { font-weight: 600; }
+  .qmvp-warn-sub { color: #92400e; margin-top: 2px; }
+
+  .qmvp-btn {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 100ms ease;
+  }
+  .qmvp-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+  .qmvp-btn-primary { background: var(--navy-900); color: white; }
+  .qmvp-btn-primary:hover:not(:disabled) { background: var(--navy-800); }
+  .qmvp-btn-secondary { background: white; color: var(--ink-700); border-color: var(--ink-200); }
+  .qmvp-btn-secondary:hover:not(:disabled) { background: var(--ink-50); }
+  .qmvp-btn-danger { background: white; color: var(--red); border-color: #fecaca; }
+  .qmvp-btn-danger:hover:not(:disabled) { background: var(--red-bg); }
+  .qmvp-btn-complete { background: var(--green); color: white; }
+  .qmvp-btn-complete:hover:not(:disabled) { background: #166534; }
+  .qmvp-btn-sm { font-size: 12px; padding: 6px 12px; }
+  .qmvp-footer-actions-left { display: flex; gap: 8px; }
+  .qmvp-footer-actions-right { display: flex; gap: 8px; }
+
+  /* Detail panel actions */
+  .qmvp-detail {
+    background: white;
+    border-radius: 8px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 20px 50px rgba(11,25,41,0.3);
+    overflow: hidden;
+  }
+  .qmvp-detail-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--ink-200);
+    background: var(--ink-50);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .qmvp-detail-header h2 { margin: 0; font-size: 15px; font-weight: 600; }
+  .qmvp-detail-status-chip {
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 3px 8px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+  .qmvp-detail-status-chip.scheduled { background: var(--accent-bg); color: var(--accent); }
+  .qmvp-detail-status-chip.completed { background: var(--green-bg); color: var(--green); }
+  .qmvp-detail-status-chip.overdue   { background: var(--red-bg); color: var(--red); }
+  .qmvp-detail-status-chip.extended  { background: var(--amber-bg); color: var(--amber); }
+  .qmvp-detail-status-chip.paused    { background: var(--ink-100); color: var(--ink-500); }
+  .qmvp-detail-body { padding: 20px; }
+  .qmvp-detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+    border-bottom: 1px dashed var(--ink-100);
+  }
+  .qmvp-detail-row:last-child { border-bottom: none; }
+  .qmvp-detail-label { color: var(--ink-500); }
+  .qmvp-detail-val { color: var(--ink-900); font-weight: 500; }
+  .qmvp-detail-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--ink-200);
+    background: var(--ink-50);
+  }
+  .qmvp-detail-actions-left { display: flex; gap: 8px; }
+  .qmvp-detail-actions-right { display: flex; gap: 8px; }
+  .qmvp-confirm-card {
+    margin: 16px 20px;
+    padding: 16px;
+    background: var(--amber-bg);
+    border: 1px solid #fde68a;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #92400e;
+  }
+  .qmvp-confirm-card strong { display: block; margin-bottom: 4px; color: var(--amber); }
+  .qmvp-confirm-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    justify-content: flex-end;
+  }
+  .qmvp-close-btn {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    color: var(--ink-500);
+    cursor: pointer;
+    padding: 0;
+    width: 24px; height: 24px;
+    line-height: 1;
+  }
+  .qmvp-close-btn:hover { color: var(--ink-900); }
+
+  /* Entry modal — picker + new objective */
+  .qmvp-entry-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--ink-200);
+    background: var(--ink-50);
+  }
+  .qmvp-entry-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 12px 16px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--ink-500);
+    transition: all 100ms ease;
+  }
+  .qmvp-entry-tab:hover { color: var(--ink-900); }
+  .qmvp-entry-tab.active {
+    color: var(--ink-900);
+    border-bottom-color: var(--accent);
+    background: white;
+    font-weight: 500;
+  }
+  .qmvp-entry-tab-count {
+    margin-left: 6px;
+    background: var(--ink-100);
+    color: var(--ink-700);
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .qmvp-entry-tab.active .qmvp-entry-tab-count {
+    background: var(--accent-bg); color: var(--accent);
+  }
+  .qmvp-picker-list {
+    padding: 8px;
+    max-height: 360px;
+    overflow-y: auto;
+  }
+  .qmvp-picker-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 100ms ease;
+  }
+  .qmvp-picker-item:hover {
+    background: var(--ink-50);
+    border-color: var(--ink-200);
+  }
+  .qmvp-picker-item-icon {
+    width: 32px; height: 32px;
+    border-radius: 4px;
+    background: var(--accent-bg);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    flex-shrink: 0;
+  }
+  .qmvp-picker-item-meta { flex: 1; }
+  .qmvp-picker-item-title { font-size: 14px; font-weight: 500; color: var(--ink-900); }
+  .qmvp-picker-item-sub { font-size: 12px; color: var(--ink-500); margin-top: 2px; font-family: 'IBM Plex Mono', monospace; }
+  .qmvp-picker-empty {
+    padding: 32px 20px;
+    text-align: center;
+    color: var(--ink-500);
+    font-size: 13px;
+  }
+
+  /* Toast */
+  .qmvp-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--navy-900);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    box-shadow: 0 8px 24px rgba(11,25,41,0.3);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 480px;
+  }
+  .qmvp-toast-dot {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ===== Profile side panel ===== */
+  .qmvp-panel-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 49;
+    pointer-events: auto;
+  }
+  .qmvp-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 460px;
+    max-width: 100vw;
+    background: white;
+    box-shadow: -8px 0 24px rgba(11,25,41,0.15);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .qmvp-panel-header {
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid var(--ink-200);
+    flex-shrink: 0;
+  }
+  .qmvp-panel-header-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+  .qmvp-panel-header-meta { flex: 1; min-width: 0; }
+  .qmvp-panel-header-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ink-900);
+    letter-spacing: -0.01em;
+    margin: 0 0 4px 0;
+    line-height: 1.2;
+  }
+  .qmvp-panel-header-role {
+    font-size: 13px;
+    color: var(--ink-500);
+  }
+  .qmvp-panel-header-badges {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .qmvp-panel-badge {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+  .qmvp-panel-badge-trainer { background: #f3e8ff; color: #6b21a8; }
+  .qmvp-panel-badge-shift   { background: var(--ink-100); color: var(--ink-700); font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px; }
+  .qmvp-panel-stats {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+  }
+  .qmvp-panel-stat {
+    flex: 1;
+  }
+  .qmvp-panel-stat-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--ink-500);
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .qmvp-panel-stat-val {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink-900);
+    margin-top: 2px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* Focus toggle pill */
+  .qmvp-focus-row {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--ink-50);
+    border: 1px solid var(--ink-200);
+    border-radius: 6px;
+  }
+  .qmvp-focus-row.active {
+    background: var(--accent-bg);
+    border-color: #bfdbfe;
+  }
+  .qmvp-focus-icon {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--ink-300);
+    flex-shrink: 0;
+    transition: all 100ms;
+  }
+  .qmvp-focus-row.active .qmvp-focus-icon {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .qmvp-focus-text {
+    flex: 1;
+    font-size: 13px;
+    color: var(--ink-700);
+  }
+  .qmvp-focus-row.active .qmvp-focus-text { color: var(--accent); font-weight: 500; }
+  .qmvp-focus-toggle-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--accent);
+    font-size: 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 500;
+    padding: 0;
+  }
+  .qmvp-focus-toggle-btn:hover { text-decoration: underline; }
+
+  /* Panel body and sections */
+  .qmvp-panel-body {
+    overflow-y: auto;
+    padding: 0 24px;
+    flex: 1;
+  }
+  .qmvp-panel-cta {
+    width: 100%;
+    margin: 16px 0 0 0;
+  }
+  .qmvp-panel-section { margin: 24px 0 0 0; }
+  .qmvp-panel-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .qmvp-panel-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-700);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .qmvp-panel-section-add {
+    background: transparent;
+    border: 1px solid var(--ink-200);
+    border-radius: 5px;
+    padding: 4px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    color: var(--ink-700);
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .qmvp-panel-section-add:hover { background: var(--ink-50); }
+
+  /* Mini table for assigned objectives */
+  .qmvp-mini-table {
+    width: 100%;
+    border: 1px solid var(--ink-200);
+    border-radius: 6px;
+    overflow: hidden;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .qmvp-mini-table th {
+    background: var(--ink-50);
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--ink-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--ink-200);
+  }
+  .qmvp-mini-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--ink-100);
+    vertical-align: middle;
+  }
+  .qmvp-mini-table tr:last-child td { border-bottom: none; }
+  .qmvp-mini-table tr.clickable { cursor: pointer; }
+  .qmvp-mini-table tr.clickable:hover { background: var(--ink-50); }
+  .qmvp-mini-table-empty {
+    padding: 24px 12px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-500);
+  }
+
+  /* Session card list (Scheduled Sessions sections) */
+  .qmvp-session-card {
+    border: 1px solid var(--ink-200);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 100ms;
+    background: white;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .qmvp-session-card:hover {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+  }
+  .qmvp-session-card-stripe {
+    width: 4px;
+    align-self: stretch;
+    border-radius: 2px;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .qmvp-session-card-stripe.completed { background: var(--green); }
+  .qmvp-session-card-stripe.overdue   { background: var(--red); }
+  .qmvp-session-card-stripe.extended  { background: var(--amber); }
+  .qmvp-session-card-meta { flex: 1; min-width: 0; }
+  .qmvp-session-card-title {
+    font-weight: 500;
+    color: var(--ink-900);
+    font-size: 13px;
+    line-height: 1.3;
+  }
+  .qmvp-session-card-sub {
+    font-size: 11px;
+    color: var(--ink-500);
+    margin-top: 2px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .qmvp-session-card-status {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .qmvp-session-card-status.scheduled { background: var(--accent-bg); color: var(--accent); }
+  .qmvp-session-card-status.completed { background: var(--green-bg); color: var(--green); }
+  .qmvp-session-card-status.overdue   { background: var(--red-bg); color: var(--red); }
+  .qmvp-session-card-status.extended  { background: var(--amber-bg); color: var(--amber); }
+
+  .qmvp-section-empty {
+    padding: 16px 12px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-500);
+    border: 1px dashed var(--ink-200);
+    border-radius: 6px;
+  }
+
+  /* Close button positioned at top-right of panel */
+  .qmvp-panel-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    color: var(--ink-500);
+    cursor: pointer;
+    padding: 0;
+    width: 28px; height: 28px;
+    line-height: 1;
+    border-radius: 4px;
+  }
+  .qmvp-panel-close:hover { background: var(--ink-100); color: var(--ink-900); }
+
+  /* Row header is clickable to open profile */
+  .qmvp-row-header.clickable { cursor: pointer; }
+  .qmvp-row-header.clickable:hover { background: var(--ink-50); }
+  .qmvp-row-header.focused {
+    background: var(--accent-bg);
+    border-right-color: var(--accent);
+  }
+
+  /* Focus chip in grid controls */
+  .qmvp-focus-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent-bg);
+    color: var(--accent);
+    border: 1px solid #bfdbfe;
+    padding: 4px 6px 4px 12px;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-left: 12px;
+  }
+  .qmvp-focus-chip-clear {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+  }
+  .qmvp-focus-chip-clear:hover { background: white; }
+
+  /* Dimmed bars in focus mode */
+  .qmvp-bar.dimmed {
+    opacity: 0.22;
+    transition: opacity 200ms ease;
+  }
+  .qmvp-bar.dimmed:hover {
+    opacity: 0.35;
+  }
+
+  /* Picker modal for "Assign Objective" — same as entry but lighter */
+  .qmvp-assign-modal {
+    background: white;
+    border-radius: 8px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 20px 50px rgba(11,25,41,0.3);
+    overflow: hidden;
+  }
+
+  /* ===== Filter drawer ===== */
+  .qmvp-filter-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 360px;
+    max-width: 100vw;
+    background: white;
+    box-shadow: -8px 0 24px rgba(11,25,41,0.15);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .qmvp-filter-drawer-header {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--ink-200);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .qmvp-filter-drawer-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--ink-900);
+  }
+  .qmvp-filter-clear-link {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+  .qmvp-filter-clear-link:hover { background: var(--accent-bg); }
+  .qmvp-filter-clear-link:disabled {
+    color: var(--ink-300);
+    cursor: not-allowed;
+  }
+  .qmvp-filter-drawer-body {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0 20px 20px;
+  }
+  .qmvp-filter-section {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--ink-100);
+  }
+  .qmvp-filter-section:last-child { border-bottom: none; }
+  .qmvp-filter-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .qmvp-filter-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-700);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .qmvp-filter-section-scope {
+    font-size: 9px;
+    color: var(--ink-400);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .qmvp-filter-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 80ms;
+    font-size: 13px;
+    color: var(--ink-900);
+  }
+  .qmvp-filter-checkbox:hover { background: var(--ink-50); }
+  .qmvp-filter-checkbox input[type="checkbox"] {
+    cursor: pointer;
+    accent-color: var(--accent);
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+    margin: 0;
+  }
+  .qmvp-filter-checkbox-meta {
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--ink-500);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ===== Filter button + chips strip ===== */
+  .qmvp-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: white;
+    border: 1px solid var(--ink-200);
+    border-radius: 4px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-700);
+  }
+  .qmvp-filter-btn:hover { background: var(--ink-50); }
+  .qmvp-filter-btn-active {
+    background: var(--accent-bg);
+    border-color: #bfdbfe;
+    color: var(--accent);
+  }
+  .qmvp-filter-btn-active:hover { background: #dceaff; }
+  .qmvp-filter-btn-count {
+    background: var(--accent);
+    color: white;
+    font-size: 10px;
+    padding: 0 6px;
+    border-radius: 8px;
+    line-height: 16px;
+    min-width: 16px;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .qmvp-filter-chips {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .qmvp-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 4px 2px 8px;
+    background: var(--accent-bg);
+    color: var(--accent);
+    border: 1px solid #bfdbfe;
+    border-radius: 12px;
+    font-size: 11px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 500;
+  }
+  .qmvp-filter-chip-clear {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    line-height: 1;
+    padding: 0;
+  }
+  .qmvp-filter-chip-clear:hover { background: white; }
+  .qmvp-filter-chips-more {
+    font-size: 11px;
+    color: var(--ink-500);
+    font-family: 'IBM Plex Mono', monospace;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 12px;
+    border: 1px dashed var(--ink-300);
+    background: transparent;
+  }
+  .qmvp-filter-chips-more:hover {
+    background: var(--ink-50);
+    color: var(--ink-700);
+  }
+
+  /* ===== Empty states ===== */
+  .qmvp-grid-empty,
+  .qmvp-table-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--ink-500);
+    font-size: 14px;
+  }
+  .qmvp-grid-empty-title,
+  .qmvp-table-empty-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink-700);
+    margin: 0 0 8px 0;
+  }
+  .qmvp-empty-clear-btn {
+    margin-top: 16px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+  }
+  .qmvp-empty-clear-btn:hover { background: var(--accent-dk, #1d4ed8); }
+`;
+
+/* ============================================================================
+   AVATAR
+   ========================================================================== */
+
+function Avatar({ worker, size }) {
+  const px = size || 32;
+  return (
+    <div
+      className="qmvp-row-avatar"
+      style={{
+        background: worker.color,
+        width: px,
+        height: px,
+        fontSize: Math.round(px * 0.34),
+      }}
+    >
+      {initials(worker.name)}
+    </div>
+  );
+}
+
+/* ============================================================================
+   GRID VIEW
+
+   Architecture (different from earlier prototypes — fixes the click bug):
+
+     <grid-wrap>                        ← scroll container
+       <grid-inner>                     ← position:relative wrapper
+         <header-strip grid>            ← concurrency + day-of-week + day-number
+         <row-strip grid> per worker:
+           <row-header>                 ← sticky left
+           <bg-cell> per column         ← clickable empty cells
+           <bars-overlay>               ← absolutely positioned, ONE per row
+             <bar> for each session     ← absolutely positioned, ONE per session
+                                          with KEY (fix for missing-key warning)
+
+   Why this works:
+   • Bars are NOT children of any single cell. They live in their own overlay
+     layer that spans the full row width.
+   • Bars overlay has pointer-events: none, so clicks pass through to cells.
+   • Bars themselves have pointer-events: auto, so clicks LAND on the bar
+     when you actually hit a bar.
+   • Z-index ordering: cells default 0, overlay 1, bars 2, row-header 4. No
+     stacking conflicts.
+   ========================================================================== */
+
+const HEADER_WIDTH = 200;
+const UNIT_COL_WIDTH = 80;
+
+function getFrameSpec(zoom, frameStart) {
+  // Returns { numCols, colWidth, totalDuration, getColLabel, getColTime }
+  // colWidth in px. totalDuration in ms — full extent of the visible frame.
+  if (zoom === 'day') {
+    return {
+      numCols: 24,
+      colWidth: 50,
+      totalMs: 24 * 60 * 60 * 1000,
+      frameEnd: addHours(startOfDay(frameStart), 24),
+      getColTime: (i) => addHours(startOfDay(frameStart), i),
+      isHourly: true,
+    };
+  }
+  if (zoom === 'week') {
+    return {
+      numCols: 7,
+      colWidth: 132,
+      totalMs: 7 * 24 * 60 * 60 * 1000,
+      frameEnd: addDays(startOfDay(frameStart), 7),
+      getColTime: (i) => addDays(startOfDay(frameStart), i),
+      isHourly: false,
+    };
+  }
+  // month
+  return {
+    numCols: 28,
+    colWidth: 40,
+    totalMs: 28 * 24 * 60 * 60 * 1000,
+    frameEnd: addDays(startOfDay(frameStart), 28),
+    getColTime: (i) => addDays(startOfDay(frameStart), i),
+    isHourly: false,
+  };
+}
+
+function GridView({ sessions, frameStart, zoom, focusedWorkerId, showCounts, workerFilterFn, sessionFilterFn, onBarClick, onCellClick, onRowHeaderClick, onClearFilters, filtersActive }) {
+  const spec = getFrameSpec(zoom, frameStart);
+  const { numCols, colWidth: baseColWidth, totalMs, frameEnd, getColTime, isHourly } = spec;
+  const frameStartMs = startOfDay(frameStart).getTime();
+
+  /* Responsive column width.
+     Day view: keep fixed (24 hour columns at 50px = 1200px is already wide; spreading
+     hour cells wider doesn't help readability — bars just look more sparse).
+     Week / Month: expand columns to fill the available container width.
+     We measure the wrap element via ResizeObserver and recompute colWidth so that
+     the grid fills the wrap. The minimum baseline (the `colWidth` from the spec)
+     guarantees readable columns on narrower viewports. */
+  const wrapRef = useRef(null);
+  const [wrapWidth, setWrapWidth] = useState(0);
+
+  useEffect(() => {
+    if (!wrapRef.current) return;
+    const el = wrapRef.current;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const w = entry.contentRect.width;
+        if (w > 0) setWrapWidth(w);
+      }
+    });
+    ro.observe(el);
+    // Initial measurement
+    setWrapWidth(el.getBoundingClientRect().width);
+    return () => ro.disconnect();
+  }, []);
+
+  // Effective unit column width — 0 when counts are hidden, normal otherwise.
+  // All grid math (template, responsive stretch, bar positioning, gridColumn indices)
+  // uses this so the column can be cleanly removed in one place.
+  const effectiveUnitColWidth = showCounts ? UNIT_COL_WIDTH : 0;
+
+  // For Week/Month: fill the wrap, but never below the baseline column width
+  let colWidth = baseColWidth;
+  if (!isHourly && wrapWidth > 0) {
+    const availableForCols = wrapWidth - HEADER_WIDTH - effectiveUnitColWidth;
+    const stretchedColWidth = availableForCols / numCols;
+    colWidth = Math.max(baseColWidth, stretchedColWidth);
+  }
+
+  const totalGridWidth = numCols * colWidth;
+
+  /* Sessions visible in the frame, with cancelled excluded.
+     For Day view, we want any session that overlaps the day in time.
+     For Week/Month view, sessions overlap on a date basis. The math is the
+     same: filter by overlap of [s.start, s.end] with [frameStart, frameEnd]. */
+  const framedSessions = useMemo(() => {
+    return sessions
+      .filter((s) => s.status !== 'cancelled')
+      .filter((s) => s.end >= frameStart && s.start <= frameEnd);
+  }, [sessions, frameStart, frameEnd]);
+
+  /* Lane height — used for both row sizing and bar vertical positioning */
+  const laneHeight = 26;
+  const ROW_MIN_HEIGHT = 56;  // Minimum row height (1-2 lanes plus padding)
+  const ROW_VPAD = 12;         // Vertical padding around bars within a row
+
+  /* Build worker rows.
+     A worker's row shows sessions where they are EITHER the trainee OR the trainer.
+     Each laned session is tagged with `roleOnRow` so bar rendering can distinguish
+     "I'm being trained" (trainee) vs "I'm teaching" (trainer).
+
+     Filtering is applied in two stages:
+     1. workerFilterFn (row-level): drops workers from the list entirely
+     2. sessionFilterFn (record-level): narrows which sessions appear on visible rows
+        — empty rows are preserved for cross-team context
+
+     Each row computes its OWN minHeight based on its peak lane count, so a worker
+     with 4 concurrent sessions gets a tall row while quieter rows stay compact. */
+  const rows = useMemo(() => {
+    return WORKERS
+      .filter((w) => !workerFilterFn || workerFilterFn(w))
+      .map((w) => {
+        const sessionsForRow = framedSessions
+          .filter((s) => s.traineeId === w.id || s.trainerId === w.id)
+          .filter((s) => !sessionFilterFn || sessionFilterFn(s))
+          .map((s) => ({
+            ...s,
+            roleOnRow: s.traineeId === w.id ? 'trainee' : 'trainer',
+          }));
+        const laned = assignLanes(sessionsForRow);
+        const peakLanes = Math.max(1, ...laned.map((w) => w.lane + 1));
+        const rowMinHeight = Math.max(ROW_MIN_HEIGHT, peakLanes * laneHeight + ROW_VPAD);
+        return {
+          id: w.id,
+          worker: w,
+          windows: laned,
+          rowMinHeight,
+        };
+      });
+  }, [framedSessions, workerFilterFn, sessionFilterFn]);
+
+  /* Column concurrency.
+     Day view: how many sessions are running at each hour-start moment?
+     Week/Month: how many are active during the day? */
+  /* Column concurrency.
+     Day view: counts sessions active at the column's hour-start moment.
+     Week/Month: counts distinct sessions that touch any part of that day. */
+  const columnConcurrency = useMemo(() => {
+    const counts = Array(numCols).fill(0);
+    // Sessions counted = framedSessions, narrowed by record-level filters.
+    // Note: filtered sessions also need to involve at least one visible worker
+    // for the count to be honest. We check trainee OR trainer is in the filtered worker set.
+    const visibleWorkerIds = new Set(WORKERS.filter((w) => !workerFilterFn || workerFilterFn(w)).map((w) => w.id));
+    const countedSessions = framedSessions.filter((s) => {
+      if (sessionFilterFn && !sessionFilterFn(s)) return false;
+      // Must involve a visible worker on either side
+      if (visibleWorkerIds.size < WORKERS.length) {
+        if (!visibleWorkerIds.has(s.traineeId) && !visibleWorkerIds.has(s.trainerId)) return false;
+      }
+      return true;
+    });
+
+    for (let c = 0; c < numCols; c++) {
+      const colTime = getColTime(c);
+
+      if (isHourly) {
+        // Day view: count sessions running at this exact hour
+        countedSessions.forEach((s) => {
+          if (s.status === 'completed') return;
+          if (s.start <= colTime && s.end > colTime) counts[c] += 1;
+        });
+      } else {
+        // Week/Month view: count distinct sessions that overlap this day at all
+        const dayStart = colTime;
+        const dayEnd = new Date(colTime.getTime() + 24 * 60 * 60 * 1000);
+        countedSessions.forEach((s) => {
+          if (s.status === 'completed') return;
+          // Session overlaps day if it starts before day-end AND ends after day-start
+          if (s.start < dayEnd && s.end > dayStart) counts[c] += 1;
+        });
+      }
+    }
+    return counts;
+  }, [framedSessions, numCols, getColTime, isHourly, workerFilterFn, sessionFilterFn]);
+
+  const maxConcurrency = Math.max(...columnConcurrency, 0);
+  const hotThreshold = Math.max(3, Math.ceil(maxConcurrency * 0.75));
+
+  /* Grid template for both header strip and each row strip.
+     When counts are hidden, the unit column track is dropped entirely. */
+  const gridTemplate = showCounts
+    ? HEADER_WIDTH + 'px ' + UNIT_COL_WIDTH + 'px repeat(' + numCols + ', ' + colWidth + 'px)'
+    : HEADER_WIDTH + 'px repeat(' + numCols + ', ' + colWidth + 'px)';
+
+  // gridColumn index for the first date column (CSS Grid is 1-based)
+  // When counts are shown: col 1 = employee, col 2 = unit, col 3+ = dates
+  // When counts are hidden: col 1 = employee, col 2+ = dates
+  const dateColStart = showCounts ? 3 : 2;
+
+  /* Contextual label for the unit cell (row 1) — sub-label below "DAY"/"HOUR" */
+  const unitContextLabel = (() => {
+    if (zoom === 'day') {
+      return frameStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+    if (zoom === 'week') {
+      return frameStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+    return frameStart.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  })();
+
+  /* Per-worker active scheduled session count — displayed in unit column for each row.
+     Includes sessions where the worker is EITHER the trainee or the trainer.
+     "Active" = scheduled / overdue / extended / paused (matches ACTIVE_SESSION_STATUSES). */
+  const workerActiveSessionCount = (workerId) =>
+    sessions.filter((s) =>
+      (s.traineeId === workerId || s.trainerId === workerId)
+      && ACTIVE_SESSION_STATUSES.has(s.status)
+    ).length;
+
+  /* Compute pixel position for a session bar.
+     Position is measured in ms-from-frameStart, scaled to pixels. */
+  function barRect(session) {
+    const startMs = Math.max(session.start.getTime(), frameStartMs);
+    const endMs   = Math.min(session.end.getTime(), frameStart.getTime() + totalMs);
+    const clipLeft  = session.start.getTime() < frameStartMs;
+    const clipRight = session.end.getTime()   > frameStart.getTime() + totalMs;
+    const leftPx = ((startMs - frameStartMs) / totalMs) * totalGridWidth;
+    const widthPx = ((endMs - startMs) / totalMs) * totalGridWidth;
+    return { leftPx, widthPx, clipLeft, clipRight };
+  }
+
+  return (
+    <div className="qmvp-grid-wrap" ref={wrapRef}>
+      <div className="qmvp-grid-inner" style={{ minWidth: HEADER_WIDTH + effectiveUnitColWidth + totalGridWidth }}>
+
+        {/* Header strip:
+            Row 1: corner ("EMPLOYEE 11") + (optional) unit cell ("DAY"/"HOUR") + day headers
+            Row 2 (only when showCounts): empty corner + Open Sessions label + count cells */}
+        <div
+          className="qmvp-grid-header-strip"
+          style={{
+            gridTemplateColumns: gridTemplate,
+            gridTemplateRows: showCounts ? 'auto 36px' : 'auto',
+          }}
+        >
+          {/* Row 1: corner cell with EMPLOYEE count */}
+          <div className="qmvp-grid-corner">
+            <span>Employee</span>
+            <span className="qmvp-grid-corner-count">{WORKERS.length}</span>
+          </div>
+
+          {/* Row 1: unit-label cell (DAY / HOUR) with contextual sub-label.
+             Only present when counts are shown — the column itself is dropped otherwise. */}
+          {showCounts && (
+            <div className="qmvp-unit-cell-r1">
+              <div className="qmvp-unit-cell-label">{isHourly ? 'Hour' : 'Day'}</div>
+              <div className="qmvp-unit-cell-context">{unitContextLabel}</div>
+            </div>
+          )}
+
+          {/* Row 1: column headers (day-of-week + day number) */}
+          {Array.from({ length: numCols }).map((_, i) => {
+            const t = getColTime(i);
+            const isToday = sameDay(t, TODAY);
+            return (
+              <div
+                key={'col-' + i}
+                className={'qmvp-grid-col-header' + (isToday && !isHourly ? ' today' : '')}
+                style={{ gridColumn: (i + dateColStart) }}
+              >
+                {isHourly ? (
+                  <div className="qmvp-col-header-hour">{t.getHours().toString().padStart(2, '0') + ':00'}</div>
+                ) : (
+                  <>
+                    <div className="qmvp-col-header-dow">
+                      {t.toLocaleDateString('en-US', { weekday: 'short' })}
+                    </div>
+                    <div className="qmvp-col-header-dom">{t.getDate()}</div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Row 2: only rendered when counts column is visible */}
+          {showCounts && (
+            <>
+              {/* Empty corner cell (under EMPLOYEE) */}
+              <div className="qmvp-corner-r2" />
+
+              {/* "Open Sessions" left-side label cell (in unit column) */}
+              <div className="qmvp-concurrent-label-cell">
+                <span>Open</span>
+                <span>Sessions</span>
+              </div>
+
+              {/* Concurrency count cells */}
+              {columnConcurrency.map((count, i) => {
+                const t = getColTime(i);
+                const isToday = !isHourly && sameDay(t, TODAY);
+                const isHot = count >= hotThreshold && count > 0;
+                const isActive = count > 0;
+                const cls = 'qmvp-grid-concurrency-cell'
+                  + (isActive ? ' active' : '')
+                  + (isHot ? ' hot' : '')
+                  + (isToday ? ' today' : '');
+                return (
+                  <div
+                    key={'conc-' + i}
+                    className={cls}
+                    style={{ gridColumn: (i + dateColStart) }}
+                    title={count + ' concurrent at ' + (isHourly ? fmtTime(t) : fmtDate(t))}
+                  >
+                    {count > 0 ? count : '0'}
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+
+        {/* Empty state when filters yield no rows */}
+        {rows.length === 0 && (
+          <div className="qmvp-grid-empty">
+            <p className="qmvp-grid-empty-title">No matching employees</p>
+            <p>No workers match the current row-level filters. Try removing some filters or clearing all.</p>
+            {onClearFilters && filtersActive && (
+              <button className="qmvp-empty-clear-btn" onClick={onClearFilters}>Clear all filters</button>
+            )}
+          </div>
+        )}
+
+        {/* Row strips */}
+        {rows.map((row) => (
+          <div
+            key={row.id}
+            className="qmvp-row-strip"
+            style={{
+              gridTemplateColumns: gridTemplate,
+              minHeight: row.rowMinHeight,
+            }}
+          >
+            {/* Row header (sticky left) — clickable to open profile panel */}
+            <div
+              className={
+                'qmvp-row-header clickable'
+                + (focusedWorkerId === row.id ? ' focused' : '')
+              }
+              style={{ minHeight: row.rowMinHeight }}
+              onClick={() => onRowHeaderClick(row.id)}
+            >
+              <Avatar worker={row.worker} />
+              <div className="qmvp-row-meta">
+                <div className="qmvp-row-name">
+                  {row.worker.name}
+                  <span className="qmvp-shift-chip">{row.worker.shift}</span>
+                  {row.worker.canTrain && (
+                    <span className="qmvp-trainer-chip">Trainer</span>
+                  )}
+                </div>
+                <div className="qmvp-row-sub">{row.worker.role}</div>
+              </div>
+            </div>
+
+            {/* Unit-column cell for this worker — shows their active scheduled session count.
+               Only rendered when the counts column is visible. */}
+            {showCounts && (
+              <div
+                className="qmvp-row-unit-cell"
+                style={{ minHeight: row.rowMinHeight }}
+                title="Open scheduled sessions"
+              >
+                {(() => {
+                  const count = workerActiveSessionCount(row.id);
+                  return (
+                    <div className={'qmvp-row-unit-count' + (count === 0 ? ' zero' : '')}>
+                      {count}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* Background cells (clickable for empty-cell scheduling) */}
+            {Array.from({ length: numCols }).map((_, i) => {
+              const t = getColTime(i);
+              const isToday = !isHourly && sameDay(t, TODAY);
+              return (
+                <div
+                  key={'bg-' + row.id + '-' + i}
+                  className={'qmvp-bg-cell' + (isToday ? ' today' : '')}
+                  style={{ gridColumn: (i + dateColStart), minHeight: row.rowMinHeight }}
+                  onClick={() => onCellClick(row.worker, t)}
+                />
+              );
+            })}
+
+            {/* Bars overlay — single layer per row, holds all bars for this worker */}
+            <div
+              className="qmvp-bars-overlay"
+              style={{
+                left: HEADER_WIDTH + effectiveUnitColWidth,
+                width: totalGridWidth,
+              }}
+            >
+              {row.windows.map((w) => {
+                const { leftPx, widthPx, clipLeft, clipRight } = barRect(w);
+                const top = 8 + w.lane * laneHeight;
+                const objective = OBJECTIVES.find((o) => o.id === w.objectiveId);
+                const trainer = WORKERS.find((x) => x.id === w.trainerId);
+                const trainee = WORKERS.find((x) => x.id === w.traineeId);
+
+                // The "other person" — shown as initials in the bar meta.
+                // On a trainee row, that's the trainer. On a trainer row, that's the trainee.
+                const counterpart = w.roleOnRow === 'trainer' ? trainee : trainer;
+                const counterpartInitials = counterpart ? initials(counterpart.name) : '';
+
+                // Bar label: objective name (worker is in row header).
+                // For sub-day sessions in Day view, prefix the time range.
+                let label = objective ? objective.name : '—';
+                if (isHourly && w.start.getDate() === frameStart.getDate() && w.end.getDate() === frameStart.getDate()) {
+                  label = fmtTime(w.start) + '–' + fmtTime(w.end) + ' · ' + label;
+                }
+
+                // Focus mode: dim bars not involving the focused worker.
+                // A bar is "in focus" if focused worker is trainee OR trainer.
+                const isInFocus = !focusedWorkerId
+                  || w.traineeId === focusedWorkerId
+                  || w.trainerId === focusedWorkerId;
+                const dimmedClass = !isInFocus ? ' dimmed' : '';
+
+                // Trainer-mode bars get a soft-fill variant so the role is visually distinct.
+                const trainerModeClass = w.roleOnRow === 'trainer' ? ' qmvp-bar-trainer-mode' : '';
+
+                return (
+                  <div
+                    key={w.id}
+                    className={'qmvp-bar ' + barColourClass(w.status) + trainerModeClass + dimmedClass}
+                    style={{
+                      left: leftPx + 2,
+                      width: Math.max(widthPx - 4, 12),
+                      top,
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onBarClick(w);
+                    }}
+                    title={
+                      (objective ? objective.name : '') +
+                      ' · ' + (w.roleOnRow === 'trainer'
+                        ? 'Teaching ' + (trainee ? trainee.name : '')
+                        : 'Trainer: ' + (trainer ? trainer.name : '')) +
+                      ' · ' + fmtDateFull(w.start) + (isHourly ? ' ' + fmtTime(w.start) : '')
+                    }
+                  >
+                    {clipLeft && <span className="qmvp-clip-arrow">◀</span>}
+                    {!clipLeft && <span className="qmvp-bar-dot" />}
+                    <span className="qmvp-bar-label">{label}</span>
+                    {widthPx > 100 && counterpartInitials && (
+                      <span className="qmvp-bar-meta">· {counterpartInitials}</span>
+                    )}
+                    {clipRight && <span className="qmvp-clip-arrow">▶</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================================
+   BACKLOG VIEW
+   ========================================================================== */
+
+function BacklogView({ assignments, sessions, filterFn, totalRowCount, onRowClick, onClearFilters }) {
+  const allRows = useMemo(() => {
+    return assignments.map((a, idx) => ({
+      key: a.workerId + '-' + a.objectiveId + '-' + idx,
+      assignment: a,
+      worker: WORKERS.find((w) => w.id === a.workerId),
+      objective: OBJECTIVES.find((o) => o.id === a.objectiveId),
+      schedulingStatus: deriveSchedulingStatus(sessions, a.workerId, a.objectiveId),
+      activeSession: findActiveSession(sessions, a.workerId, a.objectiveId),
+    })).filter((r) => r.worker && r.objective);
+  }, [assignments, sessions]);
+
+  // Apply filter (if provided)
+  const rows = filterFn ? allRows.filter(filterFn) : allRows;
+  const filtersActive = allRows.length !== rows.length;
+
+  const unscheduled = rows.filter((r) => r.schedulingStatus === 'Unscheduled' && r.assignment.status !== 'active').length;
+  const scheduled   = rows.filter((r) => r.schedulingStatus === 'Scheduled').length;
+  const completed   = rows.filter((r) => r.assignment.status === 'active').length;
+
+  const tagClassFor = (raw) => raw === 'in_progress' ? 'qmvp-tag-inprogress'
+    : raw === 'renewal' ? 'qmvp-tag-renewal'
+    : raw === 'active'  ? 'qmvp-tag-active'
+    : 'qmvp-tag-assigned';
+
+  const schedulingCellFor = (r) => {
+    // Active (completed) assignment — show "Completed Apr 23, 2026"
+    if (r.assignment.status === 'active') {
+      const completed = findCompletedSession(sessions, r.assignment.workerId, r.assignment.objectiveId);
+      const completedDate = completed ? (completed.completedAt || completed.end) : null;
+      return (
+        <div className="qmvp-scheduling-cell">
+          <span style={{ fontSize: 12, color: 'var(--green)', fontWeight: 500 }}>Completed</span>
+          {completedDate && (
+            <span className="qmvp-scheduling-meta">
+              {completedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          )}
+        </div>
+      );
+    }
+
+    // Scheduled — show tag + planned date range + trainer / workstation
+    if (r.schedulingStatus === 'Scheduled') {
+      const trainer = r.activeSession ? WORKERS.find((w) => w.id === r.activeSession.trainerId) : null;
+      const workstation = r.activeSession ? WORKSTATIONS.find((ws) => ws.id === r.activeSession.workstationId) : null;
+      return (
+        <div className="qmvp-scheduling-cell">
+          <span className="qmvp-tag qmvp-tag-scheduled">Scheduled</span>
+          {r.activeSession && (
+            <span className="qmvp-scheduling-meta">
+              {fmtDate(r.activeSession.start)} → {fmtDate(r.activeSession.end)}
+            </span>
+          )}
+          {(trainer || workstation) && (
+            <span className="qmvp-scheduling-meta" style={{ color: 'var(--ink-700)' }}>
+              {trainer && <>Trainer: {trainer.name}</>}
+              {trainer && workstation && ' · '}
+              {workstation && workstation.name}
+            </span>
+          )}
+        </div>
+      );
+    }
+
+    // Unscheduled — show dashed-outline tag
+    return (
+      <div className="qmvp-scheduling-cell">
+        <span className="qmvp-tag qmvp-tag-unscheduled">Unscheduled</span>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <div className="qmvp-page-header">
+        <h1>Training Backlog</h1>
+        <p className="sub">
+          All Objective Records in scope. Click an Unscheduled row to create a window,
+          or a Scheduled row to edit the existing one.
+        </p>
+      </div>
+
+      <div className="qmvp-table-wrap">
+        {rows.length === 0 ? (
+          <div className="qmvp-table-empty">
+            <p className="qmvp-table-empty-title">No matching records</p>
+            <p>No backlog records match the current filters. Try removing some filters or clearing all.</p>
+            {onClearFilters && (
+              <button className="qmvp-empty-clear-btn" onClick={onClearFilters}>Clear all filters</button>
+            )}
+          </div>
+        ) : (
+          <table className="qmvp-table">
+            <thead>
+              <tr>
+                <th style={{ width: '28%' }}>Trainee</th>
+                <th style={{ width: '24%' }}>Objective</th>
+                <th style={{ width: '14%' }}>Assignment Status</th>
+                <th style={{ width: '24%' }}>Scheduling Status</th>
+                <th style={{ width: '10%' }}></th>
+              </tr>
+            </thead>
+            <tbody>
+            {rows.map((r) => {
+              // Active (completed) assignments aren't clickable — nothing to schedule.
+              const clickable = r.assignment.status !== 'active';
+              return (
+                <tr
+                  key={r.key}
+                  className={clickable ? 'clickable' : ''}
+                  onClick={() => clickable && onRowClick(r.worker, r.objective, r.activeSession)}
+                >
+                  <td>
+                    <div className="qmvp-trainee-cell">
+                      <Avatar worker={r.worker} />
+                      <div>
+                        <div className="qmvp-trainee-name">
+                          {r.worker.name}
+                          <span className="qmvp-shift-chip">{r.worker.shift}</span>
+                          {r.worker.canTrain && (
+                            <span className="qmvp-trainer-chip">Trainer</span>
+                          )}
+                        </div>
+                        <div className="qmvp-trainee-role">{r.worker.role}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="qmvp-objective-name">{r.objective.name}</div>
+                    <span className="qmvp-objective-dur">
+                      {r.objective.duration} {r.objective.duration === 1 ? 'shift' : 'shifts'}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={'qmvp-tag ' + tagClassFor(r.assignment.status)}>
+                      {ASSIGNMENT_LABEL[r.assignment.status]}
+                    </span>
+                  </td>
+                  <td>
+                    {schedulingCellFor(r)}
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    {clickable && (
+                      <span className="qmvp-row-hint">
+                        {r.schedulingStatus === 'Unscheduled' ? 'Schedule →' : 'Edit →'}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        )}
+      </div>
+
+      {rows.length > 0 && (
+        <div className="qmvp-footer-meta">
+          <div>{rows.length} records{filtersActive && ' (filtered from ' + totalRowCount + ')'}</div>
+          <div>{unscheduled} unscheduled</div>
+          <div>{scheduled} scheduled</div>
+          {completed > 0 && <div>{completed} completed</div>}
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ============================================================================
+   DETAIL PANEL — opened from grid bar click
+   Has Edit / Cancel / Complete actions in the footer.
+   Cancel and Complete show a confirmation banner before committing.
+   ========================================================================== */
+
+function DetailPanel({ session, onClose, onEdit, onAction }) {
+  const [confirmAction, setConfirmAction] = useState(null);
+
+  if (!session) return null;
+  const worker = WORKERS.find((w) => w.id === session.traineeId);
+  const objective = OBJECTIVES.find((o) => o.id === session.objectiveId);
+  const trainer = WORKERS.find((w) => w.id === session.trainerId);
+  const workstation = WORKSTATIONS.find((ws) => ws.id === session.workstationId);
+
+  const durationMs = session.end - session.start;
+  const durationDays = Math.max(1, Math.round(durationMs / (1000 * 60 * 60 * 24)));
+  const isHourSession = Boolean(session.durationHours);
+  const statusLabel = SESSION_LABEL[session.status] || session.status;
+
+  const canTakeAction = ACTIVE_SESSION_STATUSES.has(session.status);
+
+  const confirmCopy = confirmAction === 'cancel' ? {
+    title: 'Cancel this training window?',
+    body: 'The window will be removed from the schedule. The underlying assignment returns to Unscheduled. The audit trail preserves the cancellation.',
+    confirmLabel: 'Yes, cancel window',
+    confirmClass: 'qmvp-btn-danger',
+  } : confirmAction === 'complete' ? {
+    title: 'Mark this window complete?',
+    body: 'The objective record moves to Active. Completion is recorded against the trainee. This cannot be undone in Q MVP.',
+    confirmLabel: 'Yes, mark complete',
+    confirmClass: 'qmvp-btn-complete',
+  } : null;
+
+  return (
+    <div className="qmvp-modal-backdrop" onClick={onClose}>
+      <div className="qmvp-detail" onClick={(e) => e.stopPropagation()}>
+        <div className="qmvp-detail-header">
+          <h2>Training Window</h2>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <span className={'qmvp-detail-status-chip ' + session.status}>{statusLabel}</span>
+            <button className="qmvp-close-btn" onClick={onClose}>×</button>
+          </div>
+        </div>
+
+        <div className="qmvp-detail-body">
+          <div className="qmvp-detail-row">
+            <span className="qmvp-detail-label">Objective</span>
+            <span className="qmvp-detail-val">{objective ? objective.name : ''}</span>
+          </div>
+          <div className="qmvp-detail-row">
+            <span className="qmvp-detail-label">Trainee</span>
+            <span className="qmvp-detail-val">{worker ? worker.name : ''}</span>
+          </div>
+          <div className="qmvp-detail-row">
+            <span className="qmvp-detail-label">Trainer</span>
+            <span className="qmvp-detail-val">{trainer ? trainer.name : ''}</span>
+          </div>
+          <div className="qmvp-detail-row">
+            <span className="qmvp-detail-label">Workstation</span>
+            <span className="qmvp-detail-val">{workstation ? workstation.name : ''}</span>
+          </div>
+          <div className="qmvp-detail-row">
+            <span className="qmvp-detail-label">Planned Start</span>
+            <span className="qmvp-detail-val">
+              {fmtDateFull(session.start)}
+              {isHourSession && ' · ' + fmtTime(session.start)}
+            </span>
+          </div>
+          <div className="qmvp-detail-row">
+            <span className="qmvp-detail-label">Planned End</span>
+            <span className="qmvp-detail-val">
+              {fmtDateFull(session.end)}
+              {isHourSession && ' · ' + fmtTime(session.end)}
+            </span>
+          </div>
+          <div className="qmvp-detail-row">
+            <span className="qmvp-detail-label">Duration</span>
+            <span className="qmvp-detail-val">
+              {isHourSession
+                ? session.durationHours + ' ' + (session.durationHours === 1 ? 'hour' : 'hours')
+                : durationDays + ' ' + (durationDays === 1 ? 'shift' : 'shifts')}
+            </span>
+          </div>
+          <div className="qmvp-detail-row">
+            <span className="qmvp-detail-label">Shift</span>
+            <span className="qmvp-detail-val">{session.shift}</span>
+          </div>
+        </div>
+
+        {confirmCopy ? (
+          <div className="qmvp-confirm-card">
+            <strong>{confirmCopy.title}</strong>
+            {confirmCopy.body}
+            <div className="qmvp-confirm-actions">
+              <button
+                className="qmvp-btn qmvp-btn-secondary qmvp-btn-sm"
+                onClick={() => setConfirmAction(null)}
+              >Keep window</button>
+              <button
+                className={'qmvp-btn qmvp-btn-sm ' + confirmCopy.confirmClass}
+                onClick={() => {
+                  onAction(confirmAction === 'cancel' ? 'cancelled' : 'completed', session);
+                  setConfirmAction(null);
+                }}
+              >{confirmCopy.confirmLabel}</button>
+            </div>
+          </div>
+        ) : (
+          <div className="qmvp-detail-actions">
+            <div className="qmvp-detail-actions-left">
+              {canTakeAction && (
+                <button
+                  className="qmvp-btn qmvp-btn-danger qmvp-btn-sm"
+                  onClick={() => setConfirmAction('cancel')}
+                >Cancel Window</button>
+              )}
+            </div>
+            <div className="qmvp-detail-actions-right">
+              {canTakeAction && (
+                <button
+                  className="qmvp-btn qmvp-btn-secondary qmvp-btn-sm"
+                  onClick={() => onEdit(session)}
+                >Edit</button>
+              )}
+              {canTakeAction && (
+                <button
+                  className="qmvp-btn qmvp-btn-complete qmvp-btn-sm"
+                  onClick={() => setConfirmAction('complete')}
+                >Mark Complete</button>
+              )}
+              {!canTakeAction && (
+                <button
+                  className="qmvp-btn qmvp-btn-secondary qmvp-btn-sm"
+                  onClick={onClose}
+                >Close</button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================================
+   ENTRY MODAL — opened from grid empty-cell click
+
+   Two tabs:
+   • "Existing assignments" — worker's unscheduled assignments
+   • "Assign new objective" — catalog filtered to objectives this worker
+                              doesn't already have
+
+   Picking from either tab routes to SchedulerModal with the (worker, objective,
+   date) context. The "Assign new" path also triggers an assignment write
+   (handled by parent via onAssignAndPick).
+   ========================================================================== */
+
+function EntryModal({ worker, date, assignments, sessions, onPick, onAssignAndPick, onClose }) {
+  // Existing unscheduled assignments for this worker
+  const myAssignments = assignments.filter((a) => a.workerId === worker.id);
+  const unscheduled = myAssignments
+    .map((a) => ({
+      assignment: a,
+      objective: OBJECTIVES.find((o) => o.id === a.objectiveId),
+      schedulingStatus: deriveSchedulingStatus(sessions, a.workerId, a.objectiveId),
+    }))
+    .filter((opt) => opt.objective && opt.schedulingStatus === 'Unscheduled');
+
+  // Objectives the worker doesn't have yet (any status)
+  const myObjectiveIds = new Set(myAssignments.map((a) => a.objectiveId));
+  const availableObjectives = OBJECTIVES.filter((o) => !myObjectiveIds.has(o.id));
+
+  const [tab, setTab] = useState(unscheduled.length > 0 ? 'existing' : 'new');
+
+  return (
+    <div className="qmvp-modal-backdrop" onClick={onClose}>
+      <div className="qmvp-detail" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
+        <div className="qmvp-detail-header">
+          <h2>Schedule training for {worker.name}</h2>
+          <button className="qmvp-close-btn" onClick={onClose}>×</button>
+        </div>
+
+        <div style={{ padding: '12px 20px 0', fontSize: 12, color: 'var(--ink-500)', fontFamily: 'IBM Plex Mono, monospace' }}>
+          {fmtDateFull(date)}
+        </div>
+
+        <div className="qmvp-entry-tabs" style={{ marginTop: 12 }}>
+          <button
+            className={'qmvp-entry-tab' + (tab === 'existing' ? ' active' : '')}
+            onClick={() => setTab('existing')}
+          >
+            Existing assignments
+            <span className="qmvp-entry-tab-count">{unscheduled.length}</span>
+          </button>
+          <button
+            className={'qmvp-entry-tab' + (tab === 'new' ? ' active' : '')}
+            onClick={() => setTab('new')}
+          >
+            Assign new objective
+            <span className="qmvp-entry-tab-count">{availableObjectives.length}</span>
+          </button>
+        </div>
+
+        <div className="qmvp-picker-list">
+          {tab === 'existing' && (
+            unscheduled.length === 0 ? (
+              <div className="qmvp-picker-empty">
+                {worker.name} has no unscheduled assignments.<br />
+                Switch to "Assign new objective" to add one.
+              </div>
+            ) : (
+              unscheduled.map((opt) => (
+                <div
+                  key={opt.objective.id}
+                  className="qmvp-picker-item"
+                  onClick={() => onPick(opt.objective)}
+                >
+                  <div className="qmvp-picker-item-icon">{opt.objective.id.toUpperCase()}</div>
+                  <div className="qmvp-picker-item-meta">
+                    <div className="qmvp-picker-item-title">{opt.objective.name}</div>
+                    <div className="qmvp-picker-item-sub">
+                      {opt.objective.duration} {opt.objective.duration === 1 ? 'shift' : 'shifts'}
+                      {' · '}{ASSIGNMENT_LABEL[opt.assignment.status]}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )
+          )}
+
+          {tab === 'new' && (
+            availableObjectives.length === 0 ? (
+              <div className="qmvp-picker-empty">
+                {worker.name} is already assigned to every objective in the catalog.
+              </div>
+            ) : (
+              availableObjectives.map((o) => (
+                <div
+                  key={o.id}
+                  className="qmvp-picker-item"
+                  onClick={() => onAssignAndPick(o)}
+                >
+                  <div className="qmvp-picker-item-icon" style={{ background: 'var(--amber-bg)', color: 'var(--amber)' }}>
+                    {o.id.toUpperCase()}
+                  </div>
+                  <div className="qmvp-picker-item-meta">
+                    <div className="qmvp-picker-item-title">{o.name}</div>
+                    <div className="qmvp-picker-item-sub">
+                      {o.duration} {o.duration === 1 ? 'shift' : 'shifts'}
+                      {' · Will be assigned + scheduled'}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )
+          )}
+        </div>
+
+        <div className="qmvp-detail-actions">
+          <div />
+          <div className="qmvp-detail-actions-right">
+            <button className="qmvp-btn qmvp-btn-secondary qmvp-btn-sm" onClick={onClose}>Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================================
+   SCHEDULER MODAL
+   Create / Edit / Cancel / Complete a Training Window. Receives `row` shape:
+     { worker, objective, activeSession }
+   onSave outcomes: 'scheduled' | 'saved' | 'cancelled' | 'completed'
+   ========================================================================== */
+
+function SchedulerModal({ row, sessions, onClose, onSave }) {
+  const { worker, objective, activeSession } = row;
+  const isEdit = Boolean(activeSession);
+
+  if (!worker || !objective) {
+    return (
+      <div className="qmvp-modal-backdrop" onClick={onClose}>
+        <div className="qmvp-modal" onClick={(e) => e.stopPropagation()} style={{ padding: 24 }}>
+          <h2 style={{ margin: '0 0 8px', fontSize: 16, color: 'var(--red)' }}>Seed data error</h2>
+          <p style={{ fontSize: 13, color: 'var(--ink-700)' }}>Worker or Objective lookup failed.</p>
+          <button className="qmvp-btn qmvp-btn-secondary" onClick={onClose}>Close</button>
+        </div>
+      </div>
+    );
+  }
+
+  const initialMode = activeSession?.durationHours
+    ? 'hours'
+    : (objective.duration === 1 ? 'hours' : 'shifts');
+
+  const initialDate = activeSession
+    ? toInputDate(activeSession.start)
+    : toInputDate(new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate() + 7));
+
+  const initialShifts = activeSession && !activeSession.durationHours
+    ? Math.max(1, Math.round((activeSession.end - activeSession.start) / (1000 * 60 * 60 * 24)))
+    : objective.duration;
+
+  const [durationMode, setDurationMode] = useState(initialMode);
+  const [startDate, setStartDate]       = useState(initialDate);
+  const [startTime, setStartTime]       = useState(activeSession?.startTime || '08:00');
+  const [durationShifts, setDurationShifts] = useState(initialShifts);
+  const [durationHours, setDurationHours]   = useState(activeSession?.durationHours || 4);
+  const [trainerId, setTrainerId]       = useState(activeSession?.trainerId || '');
+  const [workstationId, setWorkstationId] = useState(activeSession?.workstationId || '');
+  const [shift, setShift]               = useState(activeSession?.shift || worker.shift);
+  const [comment, setComment]           = useState('');
+
+  const plannedStartDateObj = startDate ? parseInputDate(startDate) : null;
+  const plannedEndDateObj = useMemo(() => {
+    if (!plannedStartDateObj) return null;
+    if (durationMode === 'hours') {
+      const parts = (startTime || '08:00').split(':').map(Number);
+      const start = new Date(plannedStartDateObj);
+      start.setHours(parts[0], parts[1], 0, 0);
+      return addHours(start, Number(durationHours) || 0);
+    }
+    return addDaysEod(plannedStartDateObj, (Number(durationShifts) || 1) - 1);
+  }, [plannedStartDateObj, durationMode, startTime, durationShifts, durationHours]);
+
+  const certifiedTrainers = useMemo(
+    () => WORKERS.filter((w) => w.canTrain && w.certifiedObjectives && w.certifiedObjectives.indexOf(objective.id) !== -1),
+    [objective.id]
+  );
+
+  const availableWorkstations = useMemo(
+    () => WORKSTATIONS.filter((ws) => objective.workstationIds.indexOf(ws.id) !== -1),
+    [objective]
+  );
+
+  const trainer = WORKERS.find((w) => w.id === trainerId);
+  const trainerLoad = trainer
+    ? trainerConcurrentLoad(sessions, trainerId, plannedStartDateObj, plannedEndDateObj, activeSession?.id)
+    : 0;
+  const trainerLevel = trainer ? loadLevel(trainerLoad, trainer.trainingCapacity) : null;
+
+  const workstation = WORKSTATIONS.find((ws) => ws.id === workstationId);
+  const wsLoad = workstation
+    ? workstationConcurrentLoad(sessions, workstationId, plannedStartDateObj, plannedEndDateObj, objective.id, activeSession?.id)
+    : 0;
+  const wsLevel = workstation ? loadLevel(wsLoad, workstation.maxConcurrentObjectives) : null;
+
+  const canSave = Boolean(startDate && trainerId && workstationId && (
+    durationMode === 'shifts' ? durationShifts > 0 : durationHours > 0
+  ));
+
+  const warnings = [];
+  if (trainerLevel === 'amber') warnings.push({ label: 'Trainer at capacity',     detail: trainer.name + ' will be at max (' + trainer.trainingCapacity + ') concurrent trainees.' });
+  if (trainerLevel === 'red')   warnings.push({ label: 'Trainer over capacity',   detail: trainer.name + ' will exceed max (' + trainer.trainingCapacity + ').' });
+  if (wsLevel === 'amber')      warnings.push({ label: 'Workstation at capacity', detail: workstation.name + ' will be at max (' + workstation.maxConcurrentObjectives + ') distinct objectives.' });
+  if (wsLevel === 'red')        warnings.push({ label: 'Workstation over capacity', detail: workstation.name + ' will exceed max (' + workstation.maxConcurrentObjectives + ').' });
+
+  const sessionStatusLabel = activeSession ? SESSION_LABEL[activeSession.status] : null;
+
+  return (
+    <div className="qmvp-modal-backdrop" onClick={onClose}>
+      <div className="qmvp-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="qmvp-modal-header">
+          <h2>{isEdit ? 'Edit Training Window' : 'Schedule Training Window'}</h2>
+          {isEdit && (
+            <span className={'qmvp-modal-status-chip ' + activeSession.status}>{sessionStatusLabel}</span>
+          )}
+        </div>
+
+        <div className="qmvp-modal-body">
+          <div className="qmvp-context-card">
+            <Avatar worker={worker} size={36} />
+            <div className="qmvp-context-text">
+              <div className="qmvp-context-line1">{worker.name} · {objective.name}</div>
+              <div className="qmvp-context-line2">
+                {worker.role} · {worker.shift} shift · Default duration {objective.duration} {objective.duration === 1 ? 'shift' : 'shifts'}
+              </div>
+            </div>
+          </div>
+
+          {warnings.map((w, i) => (
+            <div key={i} className="qmvp-warn">
+              <span className="qmvp-warn-icon">!</span>
+              <div>
+                <strong>{w.label}</strong>
+                <div className="qmvp-warn-sub">{w.detail}</div>
+              </div>
+            </div>
+          ))}
+
+          <div className="qmvp-field">
+            <label className="qmvp-field-label">Duration Mode</label>
+            <div className="qmvp-toggle">
+              <button
+                className={'qmvp-toggle-btn' + (durationMode === 'shifts' ? ' active' : '')}
+                onClick={() => setDurationMode('shifts')}
+              >Shifts (multi-day)</button>
+              <button
+                className={'qmvp-toggle-btn' + (durationMode === 'hours' ? ' active' : '')}
+                onClick={() => setDurationMode('hours')}
+              >Hours (single-day)</button>
+            </div>
+          </div>
+
+          <div className="qmvp-row-2col">
+            <div className="qmvp-field">
+              <label className="qmvp-field-label qmvp-field-required">Planned Start Date</label>
+              <input type="date" className="qmvp-input" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            </div>
+            {durationMode === 'hours' ? (
+              <div className="qmvp-field">
+                <label className="qmvp-field-label qmvp-field-required">Start Time</label>
+                <input type="time" className="qmvp-input" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+              </div>
+            ) : (
+              <div className="qmvp-field">
+                <label className="qmvp-field-label qmvp-field-required">Duration (shifts)</label>
+                <input type="number" min="1" className="qmvp-input" value={durationShifts} onChange={(e) => setDurationShifts(e.target.value)} />
+              </div>
+            )}
+          </div>
+
+          {durationMode === 'hours' && (
+            <div className="qmvp-field">
+              <label className="qmvp-field-label qmvp-field-required">Duration (hours)</label>
+              <input type="number" min="0.5" step="0.5" className="qmvp-input" value={durationHours} onChange={(e) => setDurationHours(e.target.value)} />
+            </div>
+          )}
+
+          <div className="qmvp-field">
+            <div className="qmvp-derived-card">
+              <span className="qmvp-derived-label">
+                {durationMode === 'hours' ? 'Planned End (Time)' : 'Planned End (Date)'}
+              </span>
+              <span className="qmvp-derived-val">
+                {durationMode === 'hours'
+                  ? (plannedEndDateObj ? plannedEndDateObj.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—')
+                  : (plannedEndDateObj ? plannedEndDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—')}
+              </span>
+            </div>
+          </div>
+
+          <div className="qmvp-field">
+            <label className="qmvp-field-label qmvp-field-required">Trainer</label>
+            <div className="qmvp-select-with-badge">
+              <select className="qmvp-select" value={trainerId} onChange={(e) => setTrainerId(e.target.value)}>
+                <option value="">Select certified trainer…</option>
+                {certifiedTrainers.map((t) => {
+                  const load = trainerConcurrentLoad(sessions, t.id, plannedStartDateObj, plannedEndDateObj, activeSession?.id);
+                  const level = loadLevel(load, t.trainingCapacity);
+                  const suffix = level === 'green' ? '' : level === 'amber' ? '(at cap)' : '(over)';
+                  return (
+                    <option key={t.id} value={t.id}>
+                      {t.name} — {load}/{t.trainingCapacity} {suffix}
+                    </option>
+                  );
+                })}
+              </select>
+              {trainer && (
+                <span className={'qmvp-load-badge qmvp-load-' + trainerLevel}>
+                  {trainerLoad}/{trainer.trainingCapacity}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="qmvp-field">
+            <label className="qmvp-field-label qmvp-field-required">Workstation</label>
+            <div className="qmvp-select-with-badge">
+              <select className="qmvp-select" value={workstationId} onChange={(e) => setWorkstationId(e.target.value)}>
+                <option value="">Select workstation…</option>
+                {availableWorkstations.map((ws) => {
+                  const load = workstationConcurrentLoad(sessions, ws.id, plannedStartDateObj, plannedEndDateObj, objective.id, activeSession?.id);
+                  const level = loadLevel(load, ws.maxConcurrentObjectives);
+                  const suffix = level === 'green' ? '' : level === 'amber' ? '(at cap)' : '(over)';
+                  return (
+                    <option key={ws.id} value={ws.id}>
+                      {ws.name} ({ws.zone}) — {load}/{ws.maxConcurrentObjectives} {suffix}
+                    </option>
+                  );
+                })}
+              </select>
+              {workstation && (
+                <span className={'qmvp-load-badge qmvp-load-' + wsLevel}>
+                  {wsLoad}/{workstation.maxConcurrentObjectives}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="qmvp-field">
+            <label className="qmvp-field-label qmvp-field-required">Shift</label>
+            <div className="qmvp-toggle">
+              <button
+                className={'qmvp-toggle-btn' + (shift === 'Day' ? ' active' : '')}
+                onClick={() => setShift('Day')}
+              >Day</button>
+              <button
+                className={'qmvp-toggle-btn' + (shift === 'Night' ? ' active' : '')}
+                onClick={() => setShift('Night')}
+              >Night</button>
+            </div>
+          </div>
+
+          <div className="qmvp-field">
+            <label className="qmvp-field-label">
+              {isEdit ? 'Add Comment (optional)' : 'Instructions / Comment'}
+            </label>
+            <textarea
+              className="qmvp-textarea"
+              placeholder={isEdit ? 'Append a note to the audit thread…' : 'Optional notes to the trainer and trainee…'}
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="qmvp-modal-footer">
+          <div className="qmvp-footer-actions-left">
+            {isEdit && activeSession.status === 'scheduled' && (
+              <button className="qmvp-btn qmvp-btn-danger" onClick={() => onSave('cancelled')}>
+                Cancel Window
+              </button>
+            )}
+          </div>
+          <div className="qmvp-footer-actions-right">
+            <button className="qmvp-btn qmvp-btn-secondary" onClick={onClose}>Close</button>
+            {isEdit && activeSession.status === 'scheduled' && (
+              <button className="qmvp-btn qmvp-btn-complete" onClick={() => onSave('completed')}>
+                Mark Complete
+              </button>
+            )}
+            <button
+              className="qmvp-btn qmvp-btn-primary"
+              disabled={!canSave}
+              onClick={() => onSave(isEdit ? 'saved' : 'scheduled')}
+            >
+              {isEdit ? 'Save Changes' : 'Schedule Window'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================================
+   FILTER DRAWER
+   Slide-out panel for filtering both Backlog and Grid views.
+   Filters split into two scopes:
+     - Row-level: Role, Employee, Shift (control which workers/rows appear)
+     - Record-level: Objective, Status (control which records/bars appear)
+   Live updates — no Apply button. Each toggle commits immediately.
+   ========================================================================== */
+
+function FilterDrawer({ filters, onChange, onClose, onClearAll, activeFilterCount }) {
+  // Toggle a value in a multi-select array. If present, remove; if absent, add.
+  const toggle = (key, value) => {
+    const current = filters[key] || [];
+    const next = current.indexOf(value) === -1
+      ? [...current, value]
+      : current.filter((v) => v !== value);
+    onChange({ ...filters, [key]: next });
+  };
+
+  const isChecked = (key, value) => (filters[key] || []).indexOf(value) !== -1;
+
+  // Available values for each filter
+  const allEmployees = WORKERS;
+  const allObjectives = OBJECTIVES;
+
+  return (
+    <>
+      <div className="qmvp-panel-overlay" onClick={onClose} />
+      <div className="qmvp-filter-drawer" onClick={(e) => e.stopPropagation()}>
+        <div className="qmvp-filter-drawer-header">
+          <h2 className="qmvp-filter-drawer-title">Filters</h2>
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            <button
+              className="qmvp-filter-clear-link"
+              onClick={onClearAll}
+              disabled={activeFilterCount === 0}
+            >Clear all</button>
+            <button className="qmvp-panel-close" onClick={onClose} aria-label="Close filters" style={{ position: 'static' }}>×</button>
+          </div>
+        </div>
+
+        <div className="qmvp-filter-drawer-body">
+          {/* Role — row-level */}
+          <div className="qmvp-filter-section">
+            <div className="qmvp-filter-section-header">
+              <span className="qmvp-filter-section-title">Role</span>
+              <span className="qmvp-filter-section-scope">Row filter</span>
+            </div>
+            <label className="qmvp-filter-checkbox">
+              <input
+                type="checkbox"
+                checked={isChecked('roles', 'trainer')}
+                onChange={() => toggle('roles', 'trainer')}
+              />
+              <span>Trainer</span>
+              <span className="qmvp-filter-checkbox-meta">{WORKERS.filter((w) => w.canTrain).length}</span>
+            </label>
+            <label className="qmvp-filter-checkbox">
+              <input
+                type="checkbox"
+                checked={isChecked('roles', 'trainee')}
+                onChange={() => toggle('roles', 'trainee')}
+              />
+              <span>Trainee</span>
+              <span className="qmvp-filter-checkbox-meta">{WORKERS.filter((w) => !w.canTrain).length}</span>
+            </label>
+          </div>
+
+          {/* Shift — row-level */}
+          <div className="qmvp-filter-section">
+            <div className="qmvp-filter-section-header">
+              <span className="qmvp-filter-section-title">Shift</span>
+              <span className="qmvp-filter-section-scope">Row filter</span>
+            </div>
+            <label className="qmvp-filter-checkbox">
+              <input
+                type="checkbox"
+                checked={isChecked('shifts', 'Day')}
+                onChange={() => toggle('shifts', 'Day')}
+              />
+              <span>Day</span>
+              <span className="qmvp-filter-checkbox-meta">{WORKERS.filter((w) => w.shift === 'Day').length}</span>
+            </label>
+            <label className="qmvp-filter-checkbox">
+              <input
+                type="checkbox"
+                checked={isChecked('shifts', 'Night')}
+                onChange={() => toggle('shifts', 'Night')}
+              />
+              <span>Night</span>
+              <span className="qmvp-filter-checkbox-meta">{WORKERS.filter((w) => w.shift === 'Night').length}</span>
+            </label>
+          </div>
+
+          {/* Employee — row-level */}
+          <div className="qmvp-filter-section">
+            <div className="qmvp-filter-section-header">
+              <span className="qmvp-filter-section-title">Employee</span>
+              <span className="qmvp-filter-section-scope">Row filter</span>
+            </div>
+            {allEmployees.map((w) => (
+              <label key={w.id} className="qmvp-filter-checkbox">
+                <input
+                  type="checkbox"
+                  checked={isChecked('employees', w.id)}
+                  onChange={() => toggle('employees', w.id)}
+                />
+                <span>{w.name}</span>
+                <span className="qmvp-filter-checkbox-meta">{w.shift}</span>
+              </label>
+            ))}
+          </div>
+
+          {/* Objective — record-level */}
+          <div className="qmvp-filter-section">
+            <div className="qmvp-filter-section-header">
+              <span className="qmvp-filter-section-title">Objective</span>
+              <span className="qmvp-filter-section-scope">Record filter</span>
+            </div>
+            {allObjectives.map((o) => (
+              <label key={o.id} className="qmvp-filter-checkbox">
+                <input
+                  type="checkbox"
+                  checked={isChecked('objectives', o.id)}
+                  onChange={() => toggle('objectives', o.id)}
+                />
+                <span>{o.name}</span>
+              </label>
+            ))}
+          </div>
+
+          {/* Status — record-level */}
+          <div className="qmvp-filter-section">
+            <div className="qmvp-filter-section-header">
+              <span className="qmvp-filter-section-title">Scheduling Status</span>
+              <span className="qmvp-filter-section-scope">Record filter</span>
+            </div>
+            <label className="qmvp-filter-checkbox">
+              <input
+                type="checkbox"
+                checked={isChecked('statuses', 'unscheduled')}
+                onChange={() => toggle('statuses', 'unscheduled')}
+              />
+              <span>Unscheduled</span>
+              <span className="qmvp-filter-checkbox-meta">Backlog only</span>
+            </label>
+            <label className="qmvp-filter-checkbox">
+              <input
+                type="checkbox"
+                checked={isChecked('statuses', 'scheduled')}
+                onChange={() => toggle('statuses', 'scheduled')}
+              />
+              <span>Scheduled</span>
+            </label>
+            <label className="qmvp-filter-checkbox">
+              <input
+                type="checkbox"
+                checked={isChecked('statuses', 'completed')}
+                onChange={() => toggle('statuses', 'completed')}
+              />
+              <span>Completed</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+
+/* ============================================================================
+   ASSIGN OBJECTIVE PICKER
+   Lighter-weight modal opened from "+ Assign Objective" in the profile panel.
+   Just lists objectives the worker doesn't have yet, click → assigned + toast.
+   No date / scheduling step — adds to backlog as Unscheduled.
+   ========================================================================== */
+
+function AssignObjectivePicker({ worker, assignments, onAssign, onClose }) {
+  const myObjectiveIds = new Set(
+    assignments.filter((a) => a.workerId === worker.id).map((a) => a.objectiveId)
+  );
+  const available = OBJECTIVES.filter((o) => !myObjectiveIds.has(o.id));
+
+  return (
+    <div className="qmvp-modal-backdrop" onClick={onClose}>
+      <div className="qmvp-assign-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="qmvp-detail-header">
+          <h2>Assign objective to {worker.name}</h2>
+          <button className="qmvp-close-btn" onClick={onClose}>×</button>
+        </div>
+
+        <div className="qmvp-picker-list">
+          {available.length === 0 ? (
+            <div className="qmvp-picker-empty">
+              {worker.name} is already assigned to every objective in the catalog.
+            </div>
+          ) : (
+            available.map((o) => (
+              <div
+                key={o.id}
+                className="qmvp-picker-item"
+                onClick={() => onAssign(o)}
+              >
+                <div className="qmvp-picker-item-icon" style={{ background: 'var(--amber-bg)', color: 'var(--amber)' }}>
+                  {o.id.toUpperCase()}
+                </div>
+                <div className="qmvp-picker-item-meta">
+                  <div className="qmvp-picker-item-title">{o.name}</div>
+                  <div className="qmvp-picker-item-sub">
+                    {o.duration} {o.duration === 1 ? 'shift' : 'shifts'}
+                    {' · Will be added as Unscheduled'}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="qmvp-detail-actions">
+          <div />
+          <div className="qmvp-detail-actions-right">
+            <button className="qmvp-btn qmvp-btn-secondary qmvp-btn-sm" onClick={onClose}>Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================================
+   PROFILE PANEL
+   Slide-out panel triggered by clicking a worker's row header.
+   Sections:
+     - Header: avatar, name, role, shift, badges
+     - Quick stats
+     - Focus toggle
+     - Schedule as Trainee CTA
+     - Assigned Objectives mini-table + "+ Assign Objective"
+     - Scheduled Sessions (as Trainee)
+     - Scheduled Sessions (as Trainer) — only if trainer
+   ========================================================================== */
+
+function ProfilePanel({
+  worker,
+  assignments,
+  sessions,
+  focusedWorkerId,
+  onClose,
+  onToggleFocus,
+  onScheduleAsTrainee,
+  onAssignObjective,
+  onObjectiveRowClick,
+  onSessionClick,
+}) {
+  if (!worker) return null;
+
+  const myAssignments = assignments.filter((a) => a.workerId === worker.id);
+  const assignedRows = myAssignments.map((a) => ({
+    assignment: a,
+    objective: OBJECTIVES.find((o) => o.id === a.objectiveId),
+    schedulingStatus: deriveSchedulingStatus(sessions, a.workerId, a.objectiveId),
+    activeSession: findActiveSession(sessions, a.workerId, a.objectiveId),
+  })).filter((r) => r.objective);
+
+  const traineeSessions = sessions.filter(
+    (s) => s.traineeId === worker.id && s.status !== 'cancelled'
+  ).sort((a, b) => a.start - b.start);
+
+  const trainerSessions = worker.canTrain
+    ? sessions.filter((s) => s.trainerId === worker.id && s.status !== 'cancelled').sort((a, b) => a.start - b.start)
+    : [];
+
+  // Open objectives = anything that isn't completed (active assignment status).
+  const openObjectives = assignedRows.filter((r) => r.assignment.status !== 'active').length;
+  const scheduledWindows = traineeSessions.filter((s) => ACTIVE_SESSION_STATUSES.has(s.status)).length;
+
+  const isFocused = focusedWorkerId === worker.id;
+
+  const tagClassFor = (raw) => raw === 'in_progress' ? 'qmvp-tag-inprogress'
+    : raw === 'renewal' ? 'qmvp-tag-renewal'
+    : raw === 'active'  ? 'qmvp-tag-active'
+    : 'qmvp-tag-assigned';
+
+  const schedulingCellFor = (r) => {
+    if (r.assignment.status === 'active') {
+      const completed = findCompletedSession(sessions, r.assignment.workerId, r.assignment.objectiveId);
+      const completedDate = completed ? (completed.completedAt || completed.end) : null;
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+          <span style={{ fontSize: 12, color: 'var(--green)', fontWeight: 500 }}>Completed</span>
+          {completedDate && (
+            <span style={{ fontSize: 10, color: 'var(--ink-500)', fontFamily: 'IBM Plex Mono, monospace' }}>
+              {completedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          )}
+        </div>
+      );
+    }
+    return r.schedulingStatus === 'Scheduled'
+      ? <span className="qmvp-tag qmvp-tag-scheduled">Scheduled</span>
+      : <span className="qmvp-tag qmvp-tag-unscheduled">Unscheduled</span>;
+  };
+
+  return (
+    <>
+      {/* Outside-click catcher (z-49). Modal backdrops sit at z-100 so when a
+          modal is open over the panel, this overlay does NOT intercept its clicks. */}
+      <div className="qmvp-panel-overlay" onClick={onClose} />
+
+      <div className="qmvp-panel" onClick={(e) => e.stopPropagation()}>
+        <button className="qmvp-panel-close" onClick={onClose} aria-label="Close panel">×</button>
+
+        <div className="qmvp-panel-header">
+          <div className="qmvp-panel-header-top">
+            <Avatar worker={worker} size={56} />
+            <div className="qmvp-panel-header-meta">
+              <h2 className="qmvp-panel-header-name">{worker.name}</h2>
+              <div className="qmvp-panel-header-role">{worker.role}</div>
+              <div className="qmvp-panel-header-badges">
+                <span className="qmvp-panel-badge qmvp-panel-badge-shift">{worker.shift} shift</span>
+                {worker.canTrain && (
+                  <span className="qmvp-panel-badge qmvp-panel-badge-trainer">Certified Trainer</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="qmvp-panel-stats">
+            <div className="qmvp-panel-stat">
+              <div className="qmvp-panel-stat-label">Open Obj</div>
+              <div className="qmvp-panel-stat-val">{openObjectives}</div>
+            </div>
+            <div className="qmvp-panel-stat">
+              <div className="qmvp-panel-stat-label">Windows</div>
+              <div className="qmvp-panel-stat-val">{scheduledWindows}</div>
+            </div>
+            {worker.canTrain && (
+              <div className="qmvp-panel-stat">
+                <div className="qmvp-panel-stat-label">As Trainer</div>
+                <div className="qmvp-panel-stat-val">{trainerSessions.filter((s) => ACTIVE_SESSION_STATUSES.has(s.status)).length}</div>
+              </div>
+            )}
+          </div>
+
+          {/* Focus toggle */}
+          <div className={'qmvp-focus-row' + (isFocused ? ' active' : '')}>
+            <div className="qmvp-focus-icon" />
+            <span className="qmvp-focus-text">
+              {isFocused ? 'Calendar focused on this employee' : 'Focus on calendar'}
+            </span>
+            <button className="qmvp-focus-toggle-btn" onClick={() => onToggleFocus(worker.id)}>
+              {isFocused ? 'Clear focus' : 'Focus'}
+            </button>
+          </div>
+
+          <button
+            className="qmvp-btn qmvp-btn-primary qmvp-panel-cta"
+            onClick={() => onScheduleAsTrainee(worker)}
+          >+ Schedule as Trainee</button>
+        </div>
+
+        <div className="qmvp-panel-body">
+          {/* Assigned Objectives */}
+          <div className="qmvp-panel-section">
+            <div className="qmvp-panel-section-header">
+              <span className="qmvp-panel-section-title">
+                Assigned Objectives ({assignedRows.length})
+              </span>
+              <button
+                className="qmvp-panel-section-add"
+                onClick={() => onAssignObjective(worker)}
+              >+ Assign Objective</button>
+            </div>
+            {assignedRows.length === 0 ? (
+              <div className="qmvp-mini-table-empty">No objectives assigned.</div>
+            ) : (
+              <table className="qmvp-mini-table">
+                <thead>
+                  <tr>
+                    <th>Objective</th>
+                    <th style={{ textAlign: 'right' }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {assignedRows.map((r) => {
+                    const clickable = r.assignment.status !== 'active';
+                    return (
+                      <tr
+                        key={r.objective.id}
+                        className={clickable ? 'clickable' : ''}
+                        onClick={() => clickable && onObjectiveRowClick(worker, r.objective, r.activeSession)}
+                      >
+                        <td>
+                          <div style={{ fontWeight: 500, color: 'var(--ink-900)' }}>{r.objective.name}</div>
+                          <div style={{ fontSize: 11, color: 'var(--ink-500)', marginTop: 2, fontFamily: 'IBM Plex Mono, monospace' }}>
+                            {r.objective.duration} {r.objective.duration === 1 ? 'shift' : 'shifts'}
+                            {' · '}
+                            <span className={'qmvp-tag ' + tagClassFor(r.assignment.status)} style={{ fontSize: 10, padding: '1px 6px' }}>
+                              {ASSIGNMENT_LABEL[r.assignment.status]}
+                            </span>
+                          </div>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          {schedulingCellFor(r)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          {/* Scheduled Sessions (as Trainee) */}
+          <div className="qmvp-panel-section">
+            <div className="qmvp-panel-section-header">
+              <span className="qmvp-panel-section-title">
+                Sessions as Trainee ({traineeSessions.length})
+              </span>
+            </div>
+            {traineeSessions.length === 0 ? (
+              <div className="qmvp-section-empty">No scheduled sessions as trainee.</div>
+            ) : (
+              traineeSessions.map((s) => {
+                const obj = OBJECTIVES.find((o) => o.id === s.objectiveId);
+                const trainer = WORKERS.find((w) => w.id === s.trainerId);
+                const workstation = WORKSTATIONS.find((ws) => ws.id === s.workstationId);
+                return (
+                  <div
+                    key={s.id}
+                    className="qmvp-session-card"
+                    onClick={() => onSessionClick(s)}
+                  >
+                    <div className={'qmvp-session-card-stripe ' + s.status} />
+                    <div className="qmvp-session-card-meta">
+                      <div className="qmvp-session-card-title">{obj ? obj.name : '—'}</div>
+                      <div className="qmvp-session-card-sub">
+                        {fmtDate(s.start)} → {fmtDate(s.end)}
+                        {trainer && ' · Trainer: ' + trainer.name}
+                        {workstation && ' · ' + workstation.name}
+                      </div>
+                    </div>
+                    <span className={'qmvp-session-card-status ' + s.status}>
+                      {SESSION_LABEL[s.status]}
+                    </span>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Scheduled Sessions (as Trainer) — only if trainer */}
+          {worker.canTrain && (
+            <div className="qmvp-panel-section" style={{ paddingBottom: 32 }}>
+              <div className="qmvp-panel-section-header">
+                <span className="qmvp-panel-section-title">
+                  Sessions as Trainer ({trainerSessions.length})
+                </span>
+              </div>
+              {trainerSessions.length === 0 ? (
+                <div className="qmvp-section-empty">Not currently teaching any sessions.</div>
+              ) : (
+                trainerSessions.map((s) => {
+                  const obj = OBJECTIVES.find((o) => o.id === s.objectiveId);
+                  const trainee = WORKERS.find((w) => w.id === s.traineeId);
+                  const workstation = WORKSTATIONS.find((ws) => ws.id === s.workstationId);
+                  return (
+                    <div
+                      key={s.id}
+                      className="qmvp-session-card"
+                      onClick={() => onSessionClick(s)}
+                    >
+                      <div className={'qmvp-session-card-stripe ' + s.status} />
+                      <div className="qmvp-session-card-meta">
+                        <div className="qmvp-session-card-title">{obj ? obj.name : '—'}</div>
+                        <div className="qmvp-session-card-sub">
+                          {fmtDate(s.start)} → {fmtDate(s.end)}
+                          {trainee && ' · Trainee: ' + trainee.name}
+                          {workstation && ' · ' + workstation.name}
+                        </div>
+                      </div>
+                      <span className={'qmvp-session-card-status ' + s.status}>
+                        {SESSION_LABEL[s.status]}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ============================================================================
+   ROOT
+   ========================================================================== */
+
+function QmvpTrainingV2() {
+  const [tab, setTab] = useState('grid'); // 'grid' | 'backlog'
+
+  // Mutable state
+  const [assignments, setAssignments] = useState(INIT_ASSIGNMENTS);
+  const [sessions, setSessions] = useState(INIT_SESSIONS);
+
+  // Grid frame controls
+  const [zoom, setZoom] = useState('week');
+  const [frameStart, setFrameStart] = useState(() => startOfWeek(TODAY));
+
+  // Modal & panel states (only one at a time)
+  const [detailSession, setDetailSession] = useState(null);
+  const [entryContext, setEntryContext] = useState(null);  // { worker, date }
+  const [modalRow, setModalRow] = useState(null);          // { worker, objective, activeSession }
+  const [toast, setToast] = useState(null);
+  const [profileWorkerId, setProfileWorkerId] = useState(null);  // worker shown in profile panel
+  const [focusedWorkerId, setFocusedWorkerId] = useState(null);  // worker with calendar focus
+  const [assignPickerWorker, setAssignPickerWorker] = useState(null); // worker to assign new obj to
+
+  // Filter state. Each is an array of selected values; empty array = no filter on that dimension.
+  // Row-level filters (control which workers/rows appear): employees, shifts, roles
+  // Record-level filters (control which records/bars appear within visible workers): objectives, statuses
+  // Persistence: localStorage if available (silently no-ops in sandboxed artifact environments).
+  const FILTER_STORAGE_KEY = 'qmvp-training-v2-filters-v2';
+  const FILTER_DEFAULTS = { employees: [], objectives: [], shifts: [], statuses: [], roles: [] };
+  const [filters, setFilters] = useState(() => {
+    try {
+      const stored = window.localStorage.getItem(FILTER_STORAGE_KEY);
+      if (stored) return { ...FILTER_DEFAULTS, ...JSON.parse(stored) };
+    } catch (e) { /* localStorage unavailable — ignore */ }
+    return FILTER_DEFAULTS;
+  });
+
+  // Persist filter changes when state mutates.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
+    } catch (e) { /* localStorage unavailable — ignore */ }
+  }, [filters]);
+
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Active filter count for the "Filters · N" button badge
+  const activeFilterCount =
+    filters.employees.length +
+    filters.objectives.length +
+    filters.shifts.length +
+    filters.statuses.length +
+    filters.roles.length;
+
+  // Open Sessions column visibility. Persisted to localStorage; defaults to true so
+  // the feature is discoverable and data is visible by default.
+  const COUNTS_STORAGE_KEY = 'qmvp-training-v2-show-counts';
+  const [showCounts, setShowCounts] = useState(() => {
+    try {
+      const stored = window.localStorage.getItem(COUNTS_STORAGE_KEY);
+      if (stored !== null) return stored === 'true';
+    } catch (e) { /* localStorage unavailable — ignore */ }
+    return true;
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(COUNTS_STORAGE_KEY, String(showCounts));
+    } catch (e) { /* localStorage unavailable — ignore */ }
+  }, [showCounts]);
+
+  /* ---------- Frame nav ---------- */
+
+  const numCols = zoom === 'day' ? 24 : zoom === 'week' ? 7 : 28;
+
+  const shiftFrame = (direction) => {
+    if (zoom === 'day') {
+      setFrameStart(addDays(frameStart, 1 * direction));
+    } else if (zoom === 'week') {
+      setFrameStart(addDays(frameStart, 7 * direction));
+    } else {
+      setFrameStart(addDays(frameStart, 28 * direction));
+    }
+  };
+
+  const handleZoomChange = (newZoom) => {
+    if (newZoom === 'day') {
+      setFrameStart(startOfDay(TODAY));
+    } else if (newZoom === 'week') {
+      setFrameStart(startOfWeek(TODAY));
+    } else {
+      setFrameStart(startOfDay(TODAY));
+    }
+    setZoom(newZoom);
+  };
+
+  const goToday = () => {
+    if (zoom === 'day') setFrameStart(startOfDay(TODAY));
+    else if (zoom === 'week') setFrameStart(startOfWeek(TODAY));
+    else setFrameStart(startOfDay(TODAY));
+  };
+
+  const frameLabel = useMemo(() => {
+    if (zoom === 'day') {
+      return frameStart.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    const end = addDays(frameStart, numCols - 1);
+    return fmtDate(frameStart) + ' – ' + fmtDate(end) + ', ' + frameStart.getFullYear();
+  }, [zoom, frameStart, numCols]);
+
+  /* ---------- Filter logic ----------
+     Two scopes:
+     - Row-level filters reduce which workers/rows appear: employees, shifts, roles
+     - Record-level filters reduce which records/bars appear within visible workers:
+       objectives, statuses
+
+     Empty array = no filter applied for that dimension. */
+
+  // Does this worker pass row-level filters?
+  const workerPassesRowFilters = (worker) => {
+    if (filters.employees.length > 0 && filters.employees.indexOf(worker.id) === -1) return false;
+    if (filters.shifts.length > 0 && filters.shifts.indexOf(worker.shift) === -1) return false;
+    if (filters.roles.length > 0) {
+      const isTrainer = !!worker.canTrain;
+      const wantsTrainer = filters.roles.indexOf('trainer') !== -1;
+      const wantsTrainee = filters.roles.indexOf('trainee') !== -1;
+      // Worker must match at least one selected role group.
+      if (isTrainer && !wantsTrainer) return false;
+      if (!isTrainer && !wantsTrainee) return false;
+    }
+    return true;
+  };
+
+  // Does this session pass record-level filters?
+  // statusForFilter: maps a session/assignment combination to the user-facing status filter buckets.
+  const sessionPassesRecordFilters = (session) => {
+    if (filters.objectives.length > 0 && filters.objectives.indexOf(session.objectiveId) === -1) return false;
+    if (filters.statuses.length > 0) {
+      // Status filter has 3 user-facing options: Unscheduled, Scheduled, Completed.
+      // Sessions are only Scheduled or Completed (or Cancelled, which we exclude from grid).
+      // Unscheduled sessions don't exist as session objects, so they can't pass record filters here.
+      const sessionBucket = session.status === 'completed' ? 'completed' : 'scheduled';
+      if (filters.statuses.indexOf(sessionBucket) === -1) return false;
+    }
+    return true;
+  };
+
+  // Does this backlog row pass all filters?
+  // Backlog rows have an assignment + optional active session, so we check both
+  // row-level (worker properties) and record-level (objective + scheduling status).
+  const backlogRowPassesFilters = (row) => {
+    if (!workerPassesRowFilters(row.worker)) return false;
+    if (filters.objectives.length > 0 && filters.objectives.indexOf(row.objective.id) === -1) return false;
+    if (filters.statuses.length > 0) {
+      // Backlog status mapping:
+      // - Unscheduled: row.schedulingStatus === 'Unscheduled' AND not active assignment
+      // - Scheduled: row.schedulingStatus === 'Scheduled'
+      // - Completed: row.assignment.status === 'active' (session was completed)
+      let bucket;
+      if (row.assignment.status === 'active') bucket = 'completed';
+      else if (row.schedulingStatus === 'Scheduled') bucket = 'scheduled';
+      else bucket = 'unscheduled';
+      if (filters.statuses.indexOf(bucket) === -1) return false;
+    }
+    return true;
+  };
+
+  /* ---------- Toast helper ---------- */
+
+  const showToast = (text) => {
+    setToast(text);
+    setTimeout(() => setToast(null), 2800);
+  };
+
+  /* ---------- Action handlers ---------- */
+
+  // Apply a change to a session and toast.
+  const applyOutcome = (outcome, targetSession, contextLabel) => {
+    if (outcome === 'cancelled') {
+      setSessions(sessions.map((s) =>
+        s.id === targetSession.id ? { ...s, status: 'cancelled' } : s
+      ));
+      showToast('Window cancelled — ' + contextLabel + ' is now unscheduled');
+    } else if (outcome === 'completed') {
+      setSessions(sessions.map((s) =>
+        s.id === targetSession.id ? { ...s, status: 'completed', completedAt: new Date() } : s
+      ));
+      // Completion of a session also moves the assignment to Active per PRD §A4.
+      setAssignments(assignments.map((a) =>
+        a.workerId === targetSession.traineeId && a.objectiveId === targetSession.objectiveId
+          ? { ...a, status: 'active' }
+          : a
+      ));
+      showToast('Window marked complete — ' + contextLabel);
+    } else if (outcome === 'saved') {
+      // Real impl writes form fields to the session.
+      showToast('Changes saved — ' + contextLabel);
+    }
+  };
+
+  // Detail panel quick action
+  const handlePanelAction = (outcome, sess) => {
+    const w = WORKERS.find((x) => x.id === sess.traineeId);
+    const o = OBJECTIVES.find((x) => x.id === sess.objectiveId);
+    const label = (w ? w.name : '?') + ' / ' + (o ? o.name : '?');
+    applyOutcome(outcome, sess, label);
+    setDetailSession(null);
+  };
+
+  // Detail panel "Edit" → close panel, open modal in edit mode
+  const handleEditFromDetail = (sess) => {
+    const w = WORKERS.find((x) => x.id === sess.traineeId);
+    const o = OBJECTIVES.find((x) => x.id === sess.objectiveId);
+    if (w && o) {
+      setDetailSession(null);
+      setModalRow({ worker: w, objective: o, activeSession: sess });
+    }
+  };
+
+  // Modal save dispatch
+  const handleModalSave = (outcome) => {
+    const row = modalRow;
+    if (!row) return;
+    const label = row.worker.name + ' / ' + row.objective.name;
+
+    if (row.activeSession) {
+      applyOutcome(outcome, row.activeSession, label);
+    } else if (outcome === 'scheduled') {
+      // Create new session — stub fields. Real impl reads form state.
+      const startMid = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate() + 7, 0, 0, 0);
+      const endMid   = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate() + 7 + row.objective.duration - 1, 23, 59, 59);
+      const trainerCandidate = WORKERS.find((w) =>
+        w.canTrain && w.certifiedObjectives && w.certifiedObjectives.indexOf(row.objective.id) !== -1
+      );
+      const newSession = {
+        id: 's' + (1000 + sessions.length),
+        traineeId: row.worker.id,
+        objectiveId: row.objective.id,
+        trainerId: trainerCandidate ? trainerCandidate.id : 'w1',
+        workstationId: row.objective.workstationIds[0],
+        start: startMid,
+        end: endMid,
+        shift: row.worker.shift,
+        status: 'scheduled',
+      };
+      setSessions([...sessions, newSession]);
+      showToast('Window scheduled — ' + label);
+    }
+
+    setModalRow(null);
+  };
+
+  /* ---------- Click routers ---------- */
+
+  // Backlog row click → open scheduler modal directly.
+  const handleBacklogRowClick = (worker, objective, activeSession) => {
+    setModalRow({ worker, objective, activeSession: activeSession || null });
+  };
+
+  // Grid empty cell click → open EntryModal.
+  const handleGridCellClick = (worker, date) => {
+    setEntryContext({ worker, date });
+  };
+
+  // EntryModal: pick existing assignment → SchedulerModal in Create mode
+  const handleEntryPick = (objective) => {
+    if (!entryContext) return;
+    const { worker } = entryContext;
+    setEntryContext(null);
+    setModalRow({ worker, objective, activeSession: null });
+  };
+
+  // EntryModal: assign new objective → write assignment, then SchedulerModal
+  const handleEntryAssignAndPick = (objective) => {
+    if (!entryContext) return;
+    const { worker } = entryContext;
+    setAssignments([
+      ...assignments,
+      { workerId: worker.id, objectiveId: objective.id, status: 'assigned' },
+    ]);
+    setEntryContext(null);
+    setModalRow({ worker, objective, activeSession: null });
+    showToast(objective.name + ' assigned to ' + worker.name);
+  };
+
+  /* ---------- Profile panel handlers ---------- */
+
+  // Toggle calendar focus on a worker. If already focused on them, clear focus.
+  const handleToggleFocus = (workerId) => {
+    if (focusedWorkerId === workerId) {
+      setFocusedWorkerId(null);
+    } else {
+      setFocusedWorkerId(workerId);
+    }
+  };
+
+  // "Schedule as Trainee" CTA inside the profile panel — opens EntryModal.
+  const handleScheduleAsTrainee = (worker) => {
+    setEntryContext({ worker, date: TODAY });
+  };
+
+  // "+ Assign Objective" inside the panel — opens lighter picker.
+  const handleAssignObjective = (worker) => {
+    setAssignPickerWorker(worker);
+  };
+
+  // Picker callback — write the assignment, toast, close.
+  const handleAssignPicked = (objective) => {
+    if (!assignPickerWorker) return;
+    setAssignments([
+      ...assignments,
+      { workerId: assignPickerWorker.id, objectiveId: objective.id, status: 'assigned' },
+    ]);
+    showToast(objective.name + ' assigned to ' + assignPickerWorker.name);
+    setAssignPickerWorker(null);
+  };
+
+  // Profile-panel objective row click → open scheduler modal in the right mode.
+  const handlePanelObjectiveClick = (worker, objective, activeSession) => {
+    setModalRow({ worker, objective, activeSession: activeSession || null });
+  };
+
+  // Profile-panel session card click → open detail panel for that session.
+  const handlePanelSessionClick = (session) => {
+    setDetailSession(session);
+  };
+
+  // Filter handlers
+  const handleOpenFilters = () => {
+    // Filters and profile panel are both right-side surfaces — only one at a time
+    setProfileWorkerId(null);
+    setFiltersOpen(true);
+  };
+
+  const handleClearAllFilters = () => {
+    setFilters(FILTER_DEFAULTS);
+  };
+
+  // Remove a single filter value (used by chips' × button)
+  const handleRemoveFilter = (key, value) => {
+    setFilters({
+      ...filters,
+      [key]: (filters[key] || []).filter((v) => v !== value),
+    });
+  };
+
+  // Active filter chips, with display labels and remove handles.
+  // Order: roles → shifts → employees → objectives → statuses (matches drawer order)
+  const activeFilterChips = useMemo(() => {
+    const chips = [];
+    filters.roles.forEach((r) => {
+      chips.push({
+        key: 'roles', value: r,
+        label: r === 'trainer' ? 'Trainers only' : 'Trainees only',
+      });
+    });
+    filters.shifts.forEach((s) => {
+      chips.push({ key: 'shifts', value: s, label: s + ' shift' });
+    });
+    filters.employees.forEach((id) => {
+      const w = WORKERS.find((x) => x.id === id);
+      chips.push({ key: 'employees', value: id, label: w ? w.name : id });
+    });
+    filters.objectives.forEach((id) => {
+      const o = OBJECTIVES.find((x) => x.id === id);
+      chips.push({ key: 'objectives', value: id, label: o ? o.name : id });
+    });
+    filters.statuses.forEach((s) => {
+      chips.push({
+        key: 'statuses', value: s,
+        label: s.charAt(0).toUpperCase() + s.slice(1),
+      });
+    });
+    return chips;
+  }, [filters]);
+
+  // Tab change clears focus (focus is grid-only).
+  const handleTabChange = (newTab) => {
+    if (newTab !== 'grid') setFocusedWorkerId(null);
+    setTab(newTab);
+  };
+
+  /* ---------- Counts for tab badges ---------- */
+
+  const unscheduledCount = useMemo(() => {
+    return assignments.filter((a) =>
+      deriveSchedulingStatus(sessions, a.workerId, a.objectiveId) === 'Unscheduled'
+    ).length;
+  }, [assignments, sessions]);
+
+  /* ---------- Render ---------- */
+
+  return (
+    <div className="qmvp-root">
+      <style>{styles}</style>
+
+      <div className="qmvp-topbar">
+        <div className="qmvp-topbar-logo">COVALENT</div>
+
+        <div className="qmvp-tabs">
+          <button
+            className={'qmvp-tab' + (tab === 'backlog' ? ' active' : '')}
+            onClick={() => handleTabChange('backlog')}
+          >
+            Backlog
+            <span className="qmvp-tab-count">{unscheduledCount}</span>
+          </button>
+          <button
+            className={'qmvp-tab' + (tab === 'grid' ? ' active' : '')}
+            onClick={() => handleTabChange('grid')}
+          >
+            Schedule Grid
+          </button>
+        </div>
+
+        <div className="qmvp-topbar-user">
+          <span className="qmvp-scope-tag">Q MVP · §9.1 + §9.2 + §9.3</span>
+          <div className="qmvp-topbar-user-avatar" style={{ background: AVATARS[3] }}>
+            {initials(CURRENT_USER.name)}
+          </div>
+          <span>{CURRENT_USER.name}</span>
+        </div>
+      </div>
+
+      <div className="qmvp-container">
+
+        {tab === 'backlog' && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+              <button
+                className={'qmvp-filter-btn' + (activeFilterCount > 0 ? ' qmvp-filter-btn-active' : '')}
+                onClick={handleOpenFilters}
+              >
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="qmvp-filter-btn-count">{activeFilterCount}</span>
+                )}
+              </button>
+
+              {activeFilterChips.length > 0 && (
+                <div className="qmvp-filter-chips">
+                  {activeFilterChips.slice(0, 3).map((chip) => (
+                    <span key={chip.key + ':' + chip.value} className="qmvp-filter-chip">
+                      {chip.label}
+                      <button
+                        className="qmvp-filter-chip-clear"
+                        onClick={() => handleRemoveFilter(chip.key, chip.value)}
+                        aria-label={'Remove ' + chip.label + ' filter'}
+                      >×</button>
+                    </span>
+                  ))}
+                  {activeFilterChips.length > 3 && (
+                    <button
+                      className="qmvp-filter-chips-more"
+                      onClick={handleOpenFilters}
+                    >+{activeFilterChips.length - 3} more</button>
+                  )}
+                  <button
+                    className="qmvp-filter-clear-link"
+                    onClick={handleClearAllFilters}
+                    style={{ marginLeft: 4 }}
+                  >Clear all</button>
+                </div>
+              )}
+            </div>
+
+            <BacklogView
+              assignments={assignments}
+              sessions={sessions}
+              filterFn={backlogRowPassesFilters}
+              totalRowCount={assignments.length}
+              onRowClick={handleBacklogRowClick}
+              onClearFilters={activeFilterCount > 0 ? handleClearAllFilters : null}
+            />
+          </>
+        )}
+
+        {tab === 'grid' && (
+          <>
+            <div className="qmvp-grid-page-header">
+              <div className="qmvp-grid-page-title">
+                <h1>Training Calendar</h1>
+                <span className="qmvp-grid-page-title-date">{frameLabel}</span>
+              </div>
+
+              <div className="qmvp-inline-legend">
+                <div className="qmvp-inline-legend-item">
+                  <span className="qmvp-inline-legend-swatch" style={{ background: '#2563eb' }} />
+                  Scheduled
+                </div>
+                <div className="qmvp-inline-legend-item">
+                  <span className="qmvp-inline-legend-swatch" style={{ background: '#15803d' }} />
+                  Completed
+                </div>
+                <span className="qmvp-inline-legend-divider" />
+                <div className="qmvp-inline-legend-item">
+                  <span className="qmvp-inline-legend-swatch" style={{ background: 'var(--ink-500)' }} />
+                  As trainee
+                </div>
+                <div className="qmvp-inline-legend-item">
+                  <span
+                    className="qmvp-inline-legend-swatch"
+                    style={{
+                      background: 'transparent',
+                      boxShadow: 'inset 0 0 0 1px var(--ink-500)',
+                    }}
+                  />
+                  As trainer
+                </div>
+                {zoom !== 'day' && (
+                  <>
+                    <span className="qmvp-inline-legend-divider" />
+                    <div className="qmvp-inline-legend-item">
+                      <span className="qmvp-inline-legend-swatch" style={{ background: 'var(--today-bg)', borderBottom: '2px solid var(--today-line)' }} />
+                      Today
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="qmvp-control-group">
+                <div className="qmvp-toggle">
+                  <button
+                    className={'qmvp-toggle-btn' + (zoom === 'day' ? ' active' : '')}
+                    onClick={() => handleZoomChange('day')}
+                  >Day</button>
+                  <button
+                    className={'qmvp-toggle-btn' + (zoom === 'week' ? ' active' : '')}
+                    onClick={() => handleZoomChange('week')}
+                  >Week</button>
+                  <button
+                    className={'qmvp-toggle-btn' + (zoom === 'month' ? ' active' : '')}
+                    onClick={() => handleZoomChange('month')}
+                  >Month</button>
+                </div>
+              </div>
+
+              <button
+                className={'qmvp-filter-btn' + (activeFilterCount > 0 ? ' qmvp-filter-btn-active' : '')}
+                onClick={handleOpenFilters}
+              >
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="qmvp-filter-btn-count">{activeFilterCount}</span>
+                )}
+              </button>
+
+              <button
+                className={'qmvp-nav-btn' + (showCounts ? ' qmvp-nav-btn-active' : '')}
+                onClick={() => setShowCounts(!showCounts)}
+                title={showCounts ? 'Hide Open Sessions counts' : 'Show Open Sessions counts'}
+              >
+                {showCounts ? '✓ Counts' : 'Counts'}
+              </button>
+
+              <div className="qmvp-frame-nav" style={{ marginLeft: 0 }}>
+                <button className="qmvp-nav-btn" onClick={() => shiftFrame(-1)}>← Prev</button>
+                <button className="qmvp-nav-btn" onClick={goToday}>Today</button>
+                <button className="qmvp-nav-btn" onClick={() => shiftFrame(1)}>Next →</button>
+              </div>
+            </div>
+
+            {/* Active filter chips strip — visible only when filters are active */}
+            {activeFilterChips.length > 0 && (
+              <div className="qmvp-filter-chips" style={{ marginBottom: 12 }}>
+                {activeFilterChips.slice(0, 3).map((chip) => (
+                  <span key={chip.key + ':' + chip.value} className="qmvp-filter-chip">
+                    {chip.label}
+                    <button
+                      className="qmvp-filter-chip-clear"
+                      onClick={() => handleRemoveFilter(chip.key, chip.value)}
+                      aria-label={'Remove ' + chip.label + ' filter'}
+                    >×</button>
+                  </span>
+                ))}
+                {activeFilterChips.length > 3 && (
+                  <button
+                    className="qmvp-filter-chips-more"
+                    onClick={handleOpenFilters}
+                  >+{activeFilterChips.length - 3} more</button>
+                )}
+                <button
+                  className="qmvp-filter-clear-link"
+                  onClick={handleClearAllFilters}
+                  style={{ marginLeft: 4 }}
+                >Clear all</button>
+              </div>
+            )}
+
+            <GridView
+              sessions={sessions}
+              frameStart={frameStart}
+              zoom={zoom}
+              focusedWorkerId={focusedWorkerId}
+              showCounts={showCounts}
+              workerFilterFn={workerPassesRowFilters}
+              sessionFilterFn={sessionPassesRecordFilters}
+              filtersActive={activeFilterCount > 0}
+              onBarClick={(s) => setDetailSession(s)}
+              onCellClick={handleGridCellClick}
+              onRowHeaderClick={(workerId) => { setFiltersOpen(false); setProfileWorkerId(workerId); }}
+              onClearFilters={activeFilterCount > 0 ? handleClearAllFilters : null}
+            />
+
+            {/* Footer status line: focus state + helpful tips */}
+            <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', fontSize: 11, color: 'var(--ink-500)', fontFamily: 'IBM Plex Mono, monospace' }}>
+              <span>Concurrent windows stack in rows</span>
+              <span>◀ ▶ Bar extends beyond this frame</span>
+              <span>Click row header to open profile</span>
+              {focusedWorkerId && (() => {
+                const fw = WORKERS.find((w) => w.id === focusedWorkerId);
+                return fw ? (
+                  <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span className="qmvp-focus-chip">
+                      Focused on {fw.name}
+                      <button
+                        className="qmvp-focus-chip-clear"
+                        onClick={() => setFocusedWorkerId(null)}
+                        aria-label="Exit focus"
+                      >×</button>
+                    </span>
+                  </span>
+                ) : null;
+              })()}
+            </div>
+          </>
+        )}
+      </div>
+
+      {profileWorkerId && (() => {
+        const worker = WORKERS.find((w) => w.id === profileWorkerId);
+        return worker ? (
+          <ProfilePanel
+            key={'panel-' + worker.id}
+            worker={worker}
+            assignments={assignments}
+            sessions={sessions}
+            focusedWorkerId={focusedWorkerId}
+            onClose={() => setProfileWorkerId(null)}
+            onToggleFocus={handleToggleFocus}
+            onScheduleAsTrainee={handleScheduleAsTrainee}
+            onAssignObjective={handleAssignObjective}
+            onObjectiveRowClick={handlePanelObjectiveClick}
+            onSessionClick={handlePanelSessionClick}
+          />
+        ) : null;
+      })()}
+
+      {filtersOpen && (
+        <FilterDrawer
+          filters={filters}
+          onChange={setFilters}
+          onClose={() => setFiltersOpen(false)}
+          onClearAll={handleClearAllFilters}
+          activeFilterCount={activeFilterCount}
+        />
+      )}
+
+      {assignPickerWorker && (
+        <AssignObjectivePicker
+          worker={assignPickerWorker}
+          assignments={assignments}
+          onAssign={handleAssignPicked}
+          onClose={() => setAssignPickerWorker(null)}
+        />
+      )}
+
+      {detailSession && (
+        <DetailPanel
+          session={detailSession}
+          onClose={() => setDetailSession(null)}
+          onEdit={handleEditFromDetail}
+          onAction={handlePanelAction}
+        />
+      )}
+
+      {entryContext && (
+        <EntryModal
+          worker={entryContext.worker}
+          date={entryContext.date}
+          assignments={assignments}
+          sessions={sessions}
+          onPick={handleEntryPick}
+          onAssignAndPick={handleEntryAssignAndPick}
+          onClose={() => setEntryContext(null)}
+        />
+      )}
+
+      {modalRow && (
+        <SchedulerModal
+          row={modalRow}
+          sessions={sessions}
+          onClose={() => setModalRow(null)}
+          onSave={handleModalSave}
+        />
+      )}
+
+      {toast && (
+        <div className="qmvp-toast">
+          <div className="qmvp-toast-dot" />
+          <span>{toast}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(QmvpTrainingV2));
+
+</script>
+</body>
+</html>
