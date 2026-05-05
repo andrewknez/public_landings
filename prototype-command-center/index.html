@@ -697,8 +697,8 @@
           <rect width="480" height="300" fill="url(#g3)"/>
           <rect width="480" height="300" fill="url(#grain3)"/>
 
-          <!-- Calendar card (rotated slightly for personality) -->
-          <g transform="translate(60, 50) rotate(-2)">
+          <!-- Calendar card -->
+          <g transform="translate(60, 50)">
             <rect width="360" height="200" rx="12" fill="#FFFFFF"/>
 
             <!-- Title row -->
@@ -814,8 +814,8 @@
           <rect width="480" height="300" fill="url(#g4)"/>
           <rect width="480" height="300" fill="url(#grain4)"/>
 
-          <!-- Calendar card (slight rotation other direction) -->
-          <g transform="translate(40, 30) rotate(2)">
+          <!-- Calendar card -->
+          <g transform="translate(40, 30)">
             <rect width="400" height="240" rx="12" fill="#FFFFFF"/>
 
             <!-- Title row -->
@@ -925,6 +925,125 @@
           </svg>
         </span>
         Multi-operator, multi-day capacity view
+      </div>
+    </a>
+
+    <!-- Card 5: Attendance Tracking -->
+    <a class="card" href="https://pages.covalentworkforce.com/attendance-tracking/" target="_blank" rel="noopener" data-category="scheduling" data-tags="attendance tracking roster present absent late">
+      <div class="card-thumb">
+        <svg viewBox="0 0 480 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="g5" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#FFE4E6"/>
+              <stop offset="100%" stop-color="#FECDD3"/>
+            </linearGradient>
+            <pattern id="grain5" width="2" height="2" patternUnits="userSpaceOnUse">
+              <rect width="2" height="2" fill="rgba(255,255,255,0)"/>
+              <circle cx="1" cy="1" r="0.3" fill="rgba(15,23,41,0.04)"/>
+            </pattern>
+          </defs>
+          <rect width="480" height="300" fill="url(#g5)"/>
+          <rect width="480" height="300" fill="url(#grain5)"/>
+
+          <!-- Title bar -->
+          <g transform="translate(40, 30)">
+            <text x="0" y="14" fill="#0F1729" font-family="Inter, sans-serif" font-weight="800" font-size="14">Attendance Roster</text>
+            <!-- Count pill -->
+            <rect x="138" y="2" width="22" height="16" rx="8" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1"/>
+            <text x="149" y="13" text-anchor="middle" fill="#2563EB" font-family="Inter, sans-serif" font-weight="700" font-size="9">6</text>
+            <!-- "All" toggle -->
+            <rect x="332" y="-2" width="32" height="22" rx="5" fill="#2563EB"/>
+            <text x="348" y="12" text-anchor="middle" fill="white" font-family="Inter, sans-serif" font-weight="700" font-size="9">All</text>
+          </g>
+
+          <!-- Roster card -->
+          <g transform="translate(50, 64)">
+            <rect width="370" height="200" rx="12" fill="#FFFFFF"/>
+
+            <!-- Header row -->
+            <rect x="12" y="12" width="346" height="22" rx="4" fill="#F8FAFC"/>
+            <text x="22" y="26" fill="#94A3B8" font-family="Inter, sans-serif" font-size="7" font-weight="700" letter-spacing="0.08em">#</text>
+            <text x="44" y="26" fill="#94A3B8" font-family="Inter, sans-serif" font-size="7" font-weight="700" letter-spacing="0.08em">TRAINEE</text>
+            <text x="158" y="26" fill="#94A3B8" font-family="Inter, sans-serif" font-size="7" font-weight="700" letter-spacing="0.08em">ATTENDANCE</text>
+
+            <!-- Row 1: Yuki Tanaka — Present (active green) -->
+            <line x1="12" y1="44" x2="358" y2="44" stroke="#F1F5F9" stroke-width="1"/>
+            <text x="22" y="64" fill="#94A3B8" font-family="Inter, sans-serif" font-size="9" font-weight="500">1</text>
+            <circle cx="44" cy="60" r="11" fill="#FEF3C7"/>
+            <text x="44" y="64" text-anchor="middle" fill="#D97706" font-family="Inter, sans-serif" font-weight="800" font-size="8">YT</text>
+            <rect x="62" y="52" width="58" height="6" rx="3" fill="#0F1729"/>
+            <rect x="62" y="62" width="68" height="4" rx="2" fill="#475569" opacity="0.6"/>
+            <!-- Status buttons -->
+            <rect x="158" y="50" width="44" height="20" rx="4" fill="#DCFCE7" stroke="#10B981" stroke-width="1"/>
+            <text x="180" y="63" text-anchor="middle" fill="#059669" font-family="Inter, sans-serif" font-weight="700" font-size="8">✓ Present</text>
+            <rect x="206" y="50" width="36" height="20" rx="4" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1"/>
+            <text x="224" y="63" text-anchor="middle" fill="#94A3B8" font-family="Inter, sans-serif" font-weight="500" font-size="8">Late</text>
+            <rect x="246" y="50" width="40" height="20" rx="4" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1"/>
+            <text x="266" y="63" text-anchor="middle" fill="#94A3B8" font-family="Inter, sans-serif" font-weight="500" font-size="8">Absent</text>
+            <rect x="290" y="50" width="58" height="20" rx="4" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1"/>
+            <text x="319" y="63" text-anchor="middle" fill="#94A3B8" font-family="Inter, sans-serif" font-weight="500" font-size="8">No-Show</text>
+
+            <!-- Row 2: Jordan Kim — Present (active green) -->
+            <line x1="12" y1="80" x2="358" y2="80" stroke="#F1F5F9" stroke-width="1"/>
+            <text x="22" y="100" fill="#94A3B8" font-family="Inter, sans-serif" font-size="9" font-weight="500">2</text>
+            <circle cx="44" cy="96" r="11" fill="#DBEAFE"/>
+            <text x="44" y="100" text-anchor="middle" fill="#2563EB" font-family="Inter, sans-serif" font-weight="800" font-size="8">JK</text>
+            <rect x="62" y="88" width="62" height="6" rx="3" fill="#0F1729"/>
+            <rect x="62" y="98" width="60" height="4" rx="2" fill="#475569" opacity="0.6"/>
+            <rect x="158" y="86" width="44" height="20" rx="4" fill="#DCFCE7" stroke="#10B981" stroke-width="1"/>
+            <text x="180" y="99" text-anchor="middle" fill="#059669" font-family="Inter, sans-serif" font-weight="700" font-size="8">✓ Present</text>
+            <rect x="206" y="86" width="36" height="20" rx="4" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1"/>
+            <text x="224" y="99" text-anchor="middle" fill="#94A3B8" font-family="Inter, sans-serif" font-weight="500" font-size="8">Late</text>
+            <rect x="246" y="86" width="40" height="20" rx="4" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1"/>
+            <text x="266" y="99" text-anchor="middle" fill="#94A3B8" font-family="Inter, sans-serif" font-weight="500" font-size="8">Absent</text>
+            <rect x="290" y="86" width="58" height="20" rx="4" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1"/>
+            <text x="319" y="99" text-anchor="middle" fill="#94A3B8" font-family="Inter, sans-serif" font-weight="500" font-size="8">No-Show</text>
+
+            <!-- Row 3: Rosa Ferreira — Absent (active red, tinted row bg) -->
+            <line x1="12" y1="116" x2="358" y2="116" stroke="#F1F5F9" stroke-width="1"/>
+            <rect x="12" y="116" width="346" height="36" rx="0" fill="#FFF1F2"/>
+            <text x="22" y="136" fill="#94A3B8" font-family="Inter, sans-serif" font-size="9" font-weight="500">3</text>
+            <circle cx="44" cy="132" r="11" fill="#FED7AA"/>
+            <text x="44" y="136" text-anchor="middle" fill="#EA580C" font-family="Inter, sans-serif" font-weight="800" font-size="8">RF</text>
+            <rect x="62" y="124" width="68" height="6" rx="3" fill="#0F1729"/>
+            <rect x="62" y="134" width="72" height="4" rx="2" fill="#475569" opacity="0.6"/>
+            <rect x="158" y="122" width="44" height="20" rx="4" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1"/>
+            <text x="180" y="135" text-anchor="middle" fill="#94A3B8" font-family="Inter, sans-serif" font-weight="500" font-size="8">Present</text>
+            <rect x="206" y="122" width="36" height="20" rx="4" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1"/>
+            <text x="224" y="135" text-anchor="middle" fill="#94A3B8" font-family="Inter, sans-serif" font-weight="500" font-size="8">Late</text>
+            <rect x="246" y="122" width="40" height="20" rx="4" fill="#FEE2E2" stroke="#EF4444" stroke-width="1"/>
+            <text x="266" y="135" text-anchor="middle" fill="#DC2626" font-family="Inter, sans-serif" font-weight="700" font-size="8">✕ Absent</text>
+            <rect x="290" y="122" width="58" height="20" rx="4" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1"/>
+            <text x="319" y="135" text-anchor="middle" fill="#94A3B8" font-family="Inter, sans-serif" font-weight="500" font-size="8">No-Show</text>
+
+            <!-- Row 4: peek of next row (no buttons, faded) -->
+            <line x1="12" y1="160" x2="358" y2="160" stroke="#F1F5F9" stroke-width="1"/>
+            <text x="22" y="180" fill="#94A3B8" font-family="Inter, sans-serif" font-size="9" font-weight="500">4</text>
+            <circle cx="44" cy="176" r="11" fill="#E0E7FF"/>
+            <text x="44" y="180" text-anchor="middle" fill="#4F46E5" font-family="Inter, sans-serif" font-weight="800" font-size="8">AP</text>
+            <rect x="62" y="168" width="56" height="6" rx="3" fill="#0F1729" opacity="0.5"/>
+            <rect x="62" y="178" width="64" height="4" rx="2" fill="#475569" opacity="0.4"/>
+          </g>
+        </svg>
+        <span class="card-tag">Scheduling</span>
+      </div>
+      <div class="card-title-row">
+        <h3 class="card-title">Attendance Tracking</h3>
+        <span class="card-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="7" y1="17" x2="17" y2="7"></line>
+            <polyline points="7 7 17 7 17 17"></polyline>
+          </svg>
+        </span>
+      </div>
+      <div class="card-meta">
+        <span class="card-meta-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 11l3 3L22 4"></path>
+            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+          </svg>
+        </span>
+        Real-time trainee roster & status
       </div>
     </a>
 
