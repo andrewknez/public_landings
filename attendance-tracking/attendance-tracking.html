@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Covalent — Attendance Tracking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'IBM Plex Sans', sans-serif; background: #eef1f6; color: #111827; }
+
+:root {
+  --navy:       #1a3568;
+  --navy-dark:  #163060;
+  --accent:     #1a56db;
+  --accent-dk:  #1345b5;
+  --accent-glow:rgba(26,86,219,.08);
+  --green:      #057a55;
+  --green-dim:  rgba(5,122,85,.10);
+  --green-mid:  rgba(5,122,85,.18);
+  --red:        #e02424;
+  --red-dim:    rgba(224,36,36,.10);
+  --amber:      #92400e;
+  --amber-dim:  rgba(146,64,14,.10);
+  --amber-mid:  rgba(146,64,14,.18);
+  --gray-dim:   rgba(107,114,128,.10);
+  --purple:     #5b21b6;
+  --purple-dim: rgba(91,33,182,.10);
+  --border:     #dde3ed;
+  --border-lt:  #c5cfe0;
+  --bg-card:    #ffffff;
+  --bg-base:    #eef1f6;
+  --bg-inner:   #f6f8fb;
+  --text-1:     #111827;
+  --text-2:     #4b5563;
+  --text-3:     #9ca3af;
+  --shadow:     0 2px 8px rgba(26,53,104,.10);
+  --shadow-md:  0 4px 16px rgba(26,53,104,.14);
+  --shadow-lg:  0 16px 48px rgba(26,53,104,.18);
+  --r:          6px;
+  --r-lg:       12px;
+  --mono:       'IBM Plex Mono', monospace;
+  --sans:       'IBM Plex Sans', sans-serif;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  height: 52px; display: flex; align-items: center; gap: 14px; padding: 0 24px;
+  background: var(--navy); border-bottom: 1px solid var(--navy-dark);
+  box-shadow: 0 2px 12px rgba(0,0,0,.2); position: sticky; top: 0; z-index: 50;
+}
+.tbar-logo { font-family: var(--mono); font-size: 13px; font-weight: 600; color: #fff; letter-spacing: .12em; display: flex; align-items: center; gap: 7px; }
+.logo-pulse { width: 7px; height: 7px; background: #f6a623; border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
+.tbar-sep { width: 1px; height: 20px; background: rgba(255,255,255,.15); }
+.tbar-crumb { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.tbar-crumb a { color: rgba(255,255,255,.5); text-decoration: none; cursor: pointer; }
+.tbar-crumb a:hover { color: rgba(255,255,255,.8); }
+.tbar-crumb span { color: rgba(255,255,255,.3); }
+.tbar-crumb strong { color: #fff; font-weight: 600; }
+.tbar-spacer { flex: 1; }
+.tbar-save-btn {
+  display: flex; align-items: center; gap: 7px; padding: 7px 16px;
+  background: #f6a623; border: none; border-radius: var(--r); cursor: pointer;
+  font-size: 12px; font-weight: 700; color: var(--navy); font-family: var(--sans);
+  transition: background .12s; box-shadow: 0 2px 8px rgba(246,166,35,.35);
+}
+.tbar-save-btn:hover { background: #e8981a; }
+.tbar-save-btn.saved { background: var(--green); color: #fff; box-shadow: 0 2px 8px rgba(5,122,85,.35); }
+.tbar-user { display: flex; align-items: center; gap: 7px; font-size: 12px; color: rgba(255,255,255,.65); }
+.tbar-av { width: 26px; height: 26px; border-radius: 50%; background: rgba(246,166,35,.25); color: #f6a623; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; font-family: var(--mono); }
+
+/* ── PAGE ── */
+.page { max-width: 1060px; margin: 0 auto; padding: 28px 24px 80px; }
+
+/* ── SESSION HEADER CARD ── */
+.session-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-lg);
+  overflow: hidden; box-shadow: var(--shadow-md); margin-bottom: 22px;
+}
+.session-card-top {
+  display: flex; align-items: flex-start; gap: 18px;
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+}
+.sess-icon { width: 48px; height: 48px; border-radius: var(--r); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; background: var(--accent-glow); border: 1px solid rgba(26,86,219,.2); }
+.sess-main { flex: 1; min-width: 0; }
+.sess-obj-name { font-size: 20px; font-weight: 700; color: var(--text-1); letter-spacing: -.02em; line-height: 1.2; }
+.sess-type-pill { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; padding: 3px 10px; background: rgba(91,33,182,.08); border: 1px solid rgba(91,33,182,.2); border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--purple); font-family: var(--mono); letter-spacing: .05em; text-transform: uppercase; }
+.sess-meta-row { display: flex; gap: 22px; margin-top: 12px; flex-wrap: wrap; }
+.meta-item { display: flex; flex-direction: column; gap: 2px; }
+.meta-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-3); font-family: var(--mono); }
+.meta-val { font-size: 13px; font-weight: 600; color: var(--text-1); }
+.meta-val.accent { color: var(--accent); }
+.trainer-chip { display: flex; align-items: center; gap: 7px; }
+.tc-av { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; font-family: var(--mono); flex-shrink: 0; }
+
+.sess-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+.sess-status-pill {
+  display: flex; align-items: center; gap: 6px; padding: 5px 12px;
+  border-radius: 20px; font-size: 11px; font-weight: 700; font-family: var(--mono);
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.status-active { background: rgba(26,86,219,.08); color: var(--accent); border: 1px solid rgba(26,86,219,.25); }
+.status-complete { background: var(--green-dim); color: var(--green); border: 1px solid rgba(5,122,85,.25); }
+
+/* Stats strip */
+.stats-strip {
+  display: flex; padding: 14px 24px; gap: 0; background: var(--bg-inner);
+}
+.stat-block { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 0 16px; }
+.stat-block + .stat-block { border-left: 1px solid var(--border); }
+.stat-block:first-child { padding-left: 0; }
+.stat-num { font-size: 26px; font-weight: 700; font-family: var(--mono); line-height: 1; }
+.stat-lbl { font-size: 11px; color: var(--text-3); font-weight: 500; }
+.stat-enrolled { color: var(--accent); }
+.stat-present  { color: var(--green); }
+.stat-absent   { color: var(--red); }
+.stat-pending  { color: var(--amber); }
+.stat-complete { color: var(--green); }
+
+/* Progress bar */
+.progress-wrap { padding: 10px 24px; background: var(--bg-inner); border-top: 1px solid var(--border); }
+.progress-track { height: 6px; border-radius: 3px; background: var(--border); overflow: visible; display: flex; gap: 2px; }
+.progress-seg { height: 100%; border-radius: 3px; transition: width .3s ease; }
+.progress-legend { display: flex; gap: 16px; margin-top: 6px; }
+.pl-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-3); }
+.pl-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+/* ── TOOLBAR ── */
+.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.toolbar-title { font-size: 13px; font-weight: 700; color: var(--text-1); }
+.toolbar-count { font-size: 11px; font-family: var(--mono); padding: 2px 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; color: var(--accent); }
+.toolbar-spacer { flex: 1; }
+.filter-seg { display: flex; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; background: var(--bg-card); }
+.f-btn { padding: 5px 12px; font-size: 11px; font-weight: 600; border: none; background: transparent; color: var(--text-2); cursor: pointer; font-family: var(--sans); transition: all .1s; white-space: nowrap; }
+.f-btn + .f-btn { border-left: 1px solid var(--border); }
+.f-btn.active { background: var(--accent); color: #fff; }
+.f-btn:hover:not(.active) { background: var(--bg-inner); }
+
+.bulk-btn {
+  display: flex; align-items: center; gap: 6px; padding: 6px 14px;
+  border-radius: var(--r); border: 1px solid var(--border); background: var(--bg-card);
+  color: var(--text-2); font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans);
+  transition: all .12s;
+}
+.bulk-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+.add-btn {
+  display: flex; align-items: center; gap: 6px; padding: 6px 14px;
+  border-radius: var(--r); border: 1px solid var(--accent); background: var(--accent-glow);
+  color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans);
+  transition: all .12s;
+}
+.add-btn:hover { background: rgba(26,86,219,.14); }
+
+/* ── ROSTER TABLE ── */
+.roster-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow); }
+.roster-wrap table { width: 100%; border-collapse: collapse; }
+thead tr { background: var(--bg-inner); border-bottom: 1px solid var(--border); }
+th { padding: 10px 16px; font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--text-3); font-family: var(--mono); text-align: left; white-space: nowrap; }
+th:first-child { width: 44px; padding-right: 0; }
+
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr.row-present  { background: rgba(5,122,85,.025); }
+tbody tr.row-absent   { background: rgba(224,36,36,.025); }
+tbody tr.row-late     { background: rgba(146,64,14,.025); }
+tbody tr.row-noshow   { background: rgba(224,36,36,.02); }
+tbody tr:hover { background: var(--bg-inner) !important; }
+
+td { padding: 11px 16px; vertical-align: middle; }
+td:first-child { padding-right: 0; width: 44px; }
+
+/* Row number */
+.row-num { font-size: 11px; font-family: var(--mono); color: var(--text-3); font-weight: 600; }
+
+/* Trainee info */
+.trainee-wrap { display: flex; align-items: center; gap: 10px; }
+.trainee-av { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+.trainee-name { font-size: 13px; font-weight: 600; color: var(--text-1); }
+.trainee-meta { font-size: 11px; color: var(--text-2); margin-top: 1px; }
+.auto-chip { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; background: rgba(91,33,182,.08); color: var(--purple); border: 1px solid rgba(91,33,182,.2); font-family: var(--mono); text-transform: uppercase; letter-spacing: .05em; margin-left: 5px; }
+
+/* Attendance toggle buttons */
+.att-toggle { display: flex; gap: 4px; }
+.att-btn {
+  width: 80px; padding: 5px 0; border-radius: var(--r); border: 1px solid var(--border);
+  background: var(--bg-inner); font-size: 11px; font-weight: 600; cursor: pointer;
+  font-family: var(--sans); color: var(--text-3); display: flex; align-items: center;
+  justify-content: center; gap: 5px; transition: all .12s; white-space: nowrap;
+}
+.att-btn:hover { border-color: var(--border-lt); color: var(--text-2); }
+.att-btn.active-present { background: var(--green-dim); border-color: rgba(5,122,85,.4); color: var(--green); }
+.att-btn.active-absent  { background: var(--red-dim);   border-color: rgba(224,36,36,.4); color: var(--red); }
+.att-btn.active-late    { background: var(--amber-dim);  border-color: rgba(146,64,14,.4); color: var(--amber); }
+.att-btn.active-noshow  { background: rgba(107,114,128,.1); border-color: rgba(107,114,128,.3); color: var(--text-2); }
+
+/* Completion status */
+.comp-select {
+  padding: 5px 10px; border: 1px solid var(--border); border-radius: var(--r);
+  background: var(--bg-inner); font-size: 11px; font-weight: 600; color: var(--text-2);
+  cursor: pointer; font-family: var(--sans); outline: none; transition: border-color .15s;
+  min-width: 150px;
+}
+.comp-select:focus { border-color: var(--accent); }
+.comp-select.comp-complete  { background: var(--green-dim); border-color: rgba(5,122,85,.35); color: var(--green); }
+.comp-select.comp-reattempt { background: var(--amber-dim);  border-color: rgba(146,64,14,.35); color: var(--amber); }
+
+/* Note field */
+.note-input {
+  width: 100%; padding: 5px 10px; border: 1px solid transparent; border-radius: var(--r);
+  background: transparent; font-size: 12px; color: var(--text-1); font-family: var(--sans);
+  outline: none; transition: all .15s; resize: none; height: 32px; min-height: 32px;
+}
+.note-input:hover { border-color: var(--border); background: var(--bg-inner); }
+.note-input:focus { border-color: var(--accent); background: var(--bg-card); height: 56px; }
+.note-input::placeholder { color: var(--text-3); }
+
+/* Timestamp */
+.ts-lbl { font-size: 10px; color: var(--text-3); font-family: var(--mono); white-space: nowrap; }
+
+/* ── ADD ATTENDEE MODAL ── */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.38); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.overlay.hidden { display: none !important; }
+.modal { background: var(--bg-card); border: 1px solid var(--border-lt); border-radius: var(--r-lg); width: 100%; max-width: 480px; box-shadow: var(--shadow-lg); overflow: hidden; }
+.modal-hd { padding: 16px 22px; border-bottom: 1px solid var(--border); background: var(--bg-inner); display: flex; align-items: center; justify-content: space-between; }
+.modal-title { font-size: 15px; font-weight: 700; }
+.modal-x { width: 26px; height: 26px; border: 1px solid var(--border); border-radius: var(--r); background: transparent; color: var(--text-2); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+.modal-x:hover { background: var(--red-dim); color: var(--red); border-color: var(--red); }
+.modal-body { padding: 16px 22px; }
+.modal-search { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--r); font-size: 13px; font-family: var(--sans); outline: none; margin-bottom: 12px; transition: border-color .15s; }
+.modal-search:focus { border-color: var(--accent); }
+.modal-list { max-height: 280px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--r); }
+.modal-list::-webkit-scrollbar { width: 4px; }
+.modal-list::-webkit-scrollbar-thumb { background: var(--border); }
+.modal-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background .1s; }
+.modal-row:last-child { border-bottom: none; }
+.modal-row:hover { background: var(--bg-inner); }
+.modal-row.enrolled { opacity: .45; cursor: not-allowed; }
+.modal-row-info { flex: 1; }
+.modal-row-name { font-size: 13px; font-weight: 500; }
+.modal-row-meta { font-size: 11px; color: var(--text-2); }
+.enrolled-tag { font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 3px; background: var(--green-dim); color: var(--green); border: 1px solid rgba(5,122,85,.2); font-family: var(--mono); text-transform: uppercase; }
+.modal-ft { padding: 12px 22px; border-top: 1px solid var(--border); background: var(--bg-inner); display: flex; justify-content: flex-end; gap: 8px; }
+.btn-cancel { padding: 7px 16px; border-radius: var(--r); border: 1px solid var(--border); background: transparent; color: var(--text-2); font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans); }
+.btn-add { padding: 7px 18px; border-radius: var(--r); background: var(--accent); border: 1px solid var(--accent); color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans); }
+.btn-add:hover { background: var(--accent-dk); }
+.btn-add:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── SUBMIT BANNER ── */
+.submit-banner {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+  background: var(--bg-card); border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 20px rgba(26,53,104,.1);
+  display: flex; align-items: center; gap: 16px; padding: 14px 32px;
+}
+.banner-info { font-size: 13px; color: var(--text-2); }
+.banner-info strong { color: var(--text-1); }
+.banner-warn { font-size: 12px; color: var(--amber); font-weight: 600; background: var(--amber-dim); border: 1px solid rgba(146,64,14,.2); border-radius: var(--r); padding: 4px 10px; }
+.banner-spacer { flex: 1; }
+.btn-submit {
+  padding: 9px 24px; border-radius: var(--r); background: var(--accent); border: none;
+  color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--sans);
+  box-shadow: 0 2px 8px rgba(26,86,219,.35); transition: all .12s;
+}
+.btn-submit:hover { background: var(--accent-dk); }
+.btn-submit:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+
+/* ── TOAST ── */
+.toast-wrap { position: fixed; bottom: 72px; right: 24px; z-index: 300; display: flex; flex-direction: column; gap: 7px; pointer-events: none; }
+.toast { padding: 9px 14px; background: var(--navy); border-radius: var(--r); font-size: 12px; font-weight: 500; color: #fff; box-shadow: var(--shadow-lg); animation: tIn .2s ease; display: flex; align-items: center; gap: 8px; border-left: 3px solid #f6a623; }
+@keyframes tIn { from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1} }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tbar-logo"><div class="logo-pulse"></div>COVALENT</div>
+  <div class="tbar-sep"></div>
+  <div class="tbar-crumb">
+    <a onclick="showToast('↩ Back to Training Calendar')">Training Calendar</a>
+    <span>/</span>
+    <a onclick="showToast('↩ Back to session detail')">Safety Inspection Protocol</a>
+    <span>/</span>
+    <strong>Attendance</strong>
+  </div>
+  <div class="tbar-spacer"></div>
+  <button class="tbar-save-btn" id="saveBtn" onclick="saveAttendance()">
+    <span>💾</span> Save Attendance
+  </button>
+  <div class="tbar-sep"></div>
+  <div class="tbar-user"><div class="tbar-av">LO</div>Layla Okonkwo</div>
+</div>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- SESSION HEADER -->
+  <div class="session-card">
+    <div class="session-card-top">
+      <div class="sess-icon">🔍</div>
+      <div class="sess-main">
+        <div class="sess-obj-name">Safety Inspection Protocol</div>
+        <div>
+          <span class="sess-type-pill">⊞ Group Session</span>
+        </div>
+        <div class="sess-meta-row">
+          <div class="meta-item">
+            <span class="meta-lbl">Date</span>
+            <span class="meta-val">May 5, 2026</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-lbl">Duration</span>
+            <span class="meta-val">1 Shift (Day)</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-lbl">Location</span>
+            <span class="meta-val">Cincinnati Engine Works</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-lbl">Room</span>
+            <span class="meta-val">Classroom A</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-lbl">Trainer</span>
+            <div class="trainer-chip">
+              <div class="tc-av" style="background:rgba(63,185,80,.2);color:#3fb950">LO</div>
+              <span class="meta-val">Layla Okonkwo</span>
+            </div>
+          </div>
+          <div class="meta-item">
+            <span class="meta-lbl">Capacity</span>
+            <span class="meta-val accent" id="capDisplay">0 / 8</span>
+          </div>
+        </div>
+      </div>
+      <div class="sess-actions">
+        <div class="sess-status-pill status-active" id="statusPill">⬤ In Progress</div>
+        <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);text-align:right" id="submittedAt"></div>
+      </div>
+    </div>
+
+    <!-- Stats strip -->
+    <div class="stats-strip">
+      <div class="stat-block">
+        <div class="stat-num stat-enrolled" id="statEnrolled">0</div>
+        <div class="stat-lbl">Enrolled</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-num stat-present" id="statPresent">0</div>
+        <div class="stat-lbl">Present</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-num stat-absent" id="statAbsent">0</div>
+        <div class="stat-lbl">Absent / No-Show</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-num stat-pending" id="statPending">0</div>
+        <div class="stat-lbl">Unmarked</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-num stat-complete" id="statComplete">0</div>
+        <div class="stat-lbl">Completed</div>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="progress-wrap">
+      <div class="progress-track" id="progressTrack">
+        <div class="progress-seg" id="progPresent" style="background:var(--green);width:0%"></div>
+        <div class="progress-seg" id="progAbsent"  style="background:var(--red);width:0%"></div>
+        <div class="progress-seg" id="progPending" style="background:var(--border);width:100%"></div>
+      </div>
+      <div class="progress-legend">
+        <div class="pl-item"><div class="pl-dot" style="background:var(--green)"></div>Present</div>
+        <div class="pl-item"><div class="pl-dot" style="background:var(--red)"></div>Absent / No-Show</div>
+        <div class="pl-item"><div class="pl-dot" style="background:var(--border)"></div>Unmarked</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROSTER TOOLBAR -->
+  <div class="toolbar">
+    <div class="toolbar-title">Attendance Roster</div>
+    <div class="toolbar-count" id="rosterCount">0</div>
+    <div class="toolbar-spacer"></div>
+    <div class="filter-seg">
+      <button class="f-btn active" id="fAll"     onclick="setFilter('all')">All</button>
+      <button class="f-btn"        id="fPresent" onclick="setFilter('present')">Present</button>
+      <button class="f-btn"        id="fAbsent"  onclick="setFilter('absent')">Absent</button>
+      <button class="f-btn"        id="fPending" onclick="setFilter('pending')">Unmarked</button>
+    </div>
+    <button class="bulk-btn" onclick="markAllPresent()">
+      ✓ Mark All Present
+    </button>
+    <button class="add-btn" onclick="openAddModal()">
+      ＋ Add Attendee
+    </button>
+  </div>
+
+  <!-- ROSTER TABLE -->
+  <div class="roster-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Trainee</th>
+          <th>Attendance</th>
+          <th style="min-width:160px">Completion</th>
+          <th>Notes</th>
+          <th style="min-width:100px">Marked at</th>
+        </tr>
+      </thead>
+      <tbody id="rosterBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- SUBMIT BANNER -->
+<div class="submit-banner">
+  <div class="banner-info" id="bannerInfo">—</div>
+  <div class="banner-warn hidden" id="bannerWarn">⚠ Some trainees are still unmarked</div>
+  <div class="banner-spacer"></div>
+  <button class="btn-submit" id="submitBtn" onclick="submitAttendance()">Submit Attendance →</button>
+</div>
+
+<!-- ADD ATTENDEE MODAL -->
+<div class="overlay hidden" id="addModal">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title">Add Attendee</div>
+      <button class="modal-x" onclick="closeAddModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="text" class="modal-search" placeholder="Search by name or role…" oninput="renderModalList(this.value)" id="modalSearch"/>
+      <div class="modal-list" id="modalList"></div>
+    </div>
+    <div class="modal-ft">
+      <div style="font-size:12px;color:var(--text-3)" id="modalSelCount">No selection</div>
+      <div class="banner-spacer"></div>
+      <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-add" id="modalAddBtn" onclick="confirmAddAttendees()" disabled>Add Selected</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const WORKERS = [
+  { id:"w1",  name:"Marcus Webb",    role:"Assembly Tech II",  shift:"Day",   color:"#4a9eff" },
+  { id:"w2",  name:"Layla Okonkwo",  role:"QA Specialist",     shift:"Day",   color:"#3fb950" },
+  { id:"w3",  name:"Dmitri Sorel",   role:"Assembly Tech I",   shift:"Night", color:"#f6a623" },
+  { id:"w5",  name:"Carlos Ibarra",  role:"Assembly Tech III", shift:"Night", color:"#a371f7" },
+  { id:"w6",  name:"Yuki Tanaka",    role:"Maintenance Tech",  shift:"Day",   color:"#e3b341" },
+  { id:"w7",  name:"Jordan Kim",     role:"Assembly Tech I",   shift:"Day",   color:"#58a6ff" },
+  { id:"w8",  name:"Rosa Ferreira",  role:"Weld Technician",   shift:"Night", color:"#ffa657" },
+  { id:"w9",  name:"Amir Hassan",    role:"Quality Inspector", shift:"Day",   color:"#79c0ff" },
+  { id:"w10", name:"Tanya Osei",     role:"Assembly Tech II",  shift:"Night", color:"#56d364" },
+  { id:"w11", name:"Brendan Cole",   role:"Maintenance Tech",  shift:"Day",   color:"#ff7b72" },
+  { id:"w4",  name:"Priya Nanduri",  role:"Assembly Tech III", shift:"Day",   color:"#db61a2" },
+];
+
+const MAX_CAP = 8;
+
+// Enrollments — mutable
+let enrollments = [
+  { id:"e1", workerId:"w6",  attStatus:"present", compStatus:"complete",   note:"Completed all steps. Strong performance.", markedAt:"09:14", autoAssigned:false },
+  { id:"e2", workerId:"w7",  attStatus:"present", compStatus:"pending",    note:"",                                          markedAt:"09:14", autoAssigned:false },
+  { id:"e3", workerId:"w8",  attStatus:"absent",  compStatus:"pending",    note:"Called in sick — reschedule required.",     markedAt:"09:22", autoAssigned:false },
+  { id:"e4", workerId:"w9",  attStatus:"present", compStatus:"pending",    note:"",                                          markedAt:"09:14", autoAssigned:false },
+  { id:"e5", workerId:"w10", attStatus:"",        compStatus:"pending",    note:"",                                          markedAt:"",      autoAssigned:true  },
+  { id:"e6", workerId:"w3",  attStatus:"late",    compStatus:"pending",    note:"Arrived 30 min late — missed section 1.",   markedAt:"09:47", autoAssigned:true  },
+];
+
+let activeFilter = "all";
+let pendingModalSel = new Set();
+let submitted = false;
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+const initials = n => n.split(" ").map(p=>p[0]).join("").slice(0,2).toUpperCase();
+const now = () => { const d=new Date(); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+function updateStats() {
+  const total   = enrollments.length;
+  const present = enrollments.filter(e=>e.attStatus==="present"||e.attStatus==="late").length;
+  const absent  = enrollments.filter(e=>e.attStatus==="absent"||e.attStatus==="noshow").length;
+  const pending = enrollments.filter(e=>!e.attStatus).length;
+  const complete= enrollments.filter(e=>e.compStatus==="complete").length;
+
+  document.getElementById("statEnrolled").textContent = total;
+  document.getElementById("statPresent").textContent  = present;
+  document.getElementById("statAbsent").textContent   = absent;
+  document.getElementById("statPending").textContent  = pending;
+  document.getElementById("statComplete").textContent = complete;
+  document.getElementById("capDisplay").textContent   = `${total} / ${MAX_CAP}`;
+  document.getElementById("rosterCount").textContent  = total;
+
+  // Progress bar
+  const pp = total>0 ? present/total*100 : 0;
+  const ap = total>0 ? absent/total*100  : 0;
+  const np = total>0 ? pending/total*100 : 100;
+  document.getElementById("progPresent").style.width = pp + "%";
+  document.getElementById("progAbsent").style.width  = ap + "%";
+  document.getElementById("progPending").style.width = np + "%";
+
+  // Banner
+  document.getElementById("bannerInfo").innerHTML =
+    `<strong>${present}</strong> of <strong>${total}</strong> trainees marked present · <strong>${complete}</strong> completed`;
+  const warn = document.getElementById("bannerWarn");
+  warn.classList.toggle("hidden", pending===0);
+  document.getElementById("submitBtn").disabled = submitted;
+}
+
+// ── RENDER ROSTER ─────────────────────────────────────────────────────────────
+function renderRoster() {
+  updateStats();
+  const body = document.getElementById("rosterBody");
+  let rows = [...enrollments];
+  if(activeFilter==="present") rows = rows.filter(e=>e.attStatus==="present"||e.attStatus==="late");
+  else if(activeFilter==="absent") rows = rows.filter(e=>e.attStatus==="absent"||e.attStatus==="noshow");
+  else if(activeFilter==="pending") rows = rows.filter(e=>!e.attStatus);
+
+  body.innerHTML = rows.map((e,i)=>{
+    const w  = WORKERS.find(x=>x.id===e.workerId);
+    if(!w) return "";
+    const rowCls = e.attStatus==="present"?"row-present":e.attStatus==="absent"?"row-absent":e.attStatus==="late"?"row-late":e.attStatus==="noshow"?"row-noshow":"";
+    const compCls = e.compStatus==="complete"?"comp-complete":e.compStatus==="reattempt"?"comp-reattempt":"";
+    const compOptions = [
+      {v:"pending",   l:"— Pending"},
+      {v:"complete",  l:"✓ Completed"},
+      {v:"reattempt", l:"↩ Needs Re-attempt"},
+    ];
+    return `<tr class="${rowCls}" id="erow-${e.id}">
+      <td><div class="row-num">${i+1}</div></td>
+      <td>
+        <div class="trainee-wrap">
+          <div class="trainee-av" style="background:${w.color}22;color:${w.color}">${initials(w.name)}</div>
+          <div>
+            <div class="trainee-name">${w.name}${e.autoAssigned?`<span class="auto-chip">auto</span>`:""}</div>
+            <div class="trainee-meta">${w.role} · ${w.shift}</div>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="att-toggle">
+          <button class="att-btn${e.attStatus==="present"?" active-present":""}" onclick="setAtt('${e.id}','present')">✓ Present</button>
+          <button class="att-btn${e.attStatus==="late"   ?" active-late":""}"    onclick="setAtt('${e.id}','late')">⏱ Late</button>
+          <button class="att-btn${e.attStatus==="absent" ?" active-absent":""}"  onclick="setAtt('${e.id}','absent')">✕ Absent</button>
+          <button class="att-btn${e.attStatus==="noshow" ?" active-noshow":""}"  onclick="setAtt('${e.id}','noshow')">— No-Show</button>
+        </div>
+      </td>
+      <td>
+        <select class="comp-select ${compCls}" onchange="setComp('${e.id}',this.value)">
+          ${compOptions.map(o=>`<option value="${o.v}" ${e.compStatus===o.v?"selected":""}>${o.l}</option>`).join("")}
+        </select>
+      </td>
+      <td style="min-width:200px">
+        <textarea class="note-input" placeholder="Add a note…" rows="1"
+          onchange="setNote('${e.id}',this.value)">${e.note}</textarea>
+      </td>
+      <td>
+        <div class="ts-lbl">${e.markedAt?e.markedAt:"—"}</div>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+// ── ACTIONS ──────────────────────────────────────────────────────────────────
+function setAtt(eid, val) {
+  const e = enrollments.find(x=>x.id===eid); if(!e) return;
+  e.attStatus = e.attStatus===val ? "" : val; // toggle off if clicking same
+  e.markedAt  = e.attStatus ? now() : "";
+  // Auto-set completion for absent/noshow
+  if(val==="absent"||val==="noshow") e.compStatus="pending";
+  renderRoster();
+}
+
+function setComp(eid, val) {
+  const e = enrollments.find(x=>x.id===eid); if(!e) return;
+  e.compStatus = val;
+  renderRoster();
+}
+
+function setNote(eid, val) {
+  const e = enrollments.find(x=>x.id===eid); if(!e) return;
+  e.note = val;
+}
+
+function setFilter(f) {
+  activeFilter = f;
+  ["All","Present","Absent","Pending"].forEach(l=>{
+    document.getElementById(`f${l}`).classList.toggle("active", f===l.toLowerCase()||(f==="all"&&l==="All"));
+  });
+  renderRoster();
+}
+
+function markAllPresent() {
+  enrollments.forEach(e=>{
+    if(!e.attStatus) { e.attStatus="present"; e.markedAt=now(); }
+  });
+  showToast("✓ All unmarked trainees marked present");
+  renderRoster();
+}
+
+function saveAttendance() {
+  const btn = document.getElementById("saveBtn");
+  btn.classList.add("saved");
+  btn.innerHTML = "<span>✓</span> Saved";
+  showToast("✓ Attendance saved");
+  setTimeout(()=>{
+    btn.classList.remove("saved");
+    btn.innerHTML = "<span>💾</span> Save Attendance";
+  }, 2500);
+}
+
+function submitAttendance() {
+  const pending = enrollments.filter(e=>!e.attStatus).length;
+  if(pending > 0) {
+    if(!confirm(`${pending} trainee${pending!==1?"s are":" is"} still unmarked. Submit anyway?`)) return;
+  }
+  submitted = true;
+  document.getElementById("submitBtn").disabled = true;
+  document.getElementById("statusPill").className = "sess-status-pill status-complete";
+  document.getElementById("statusPill").textContent = "✓ Submitted";
+  document.getElementById("submittedAt").textContent = `Submitted at ${now()}`;
+  showToast(`✓ Attendance submitted — ${enrollments.filter(e=>e.compStatus==="complete").length} completed, ${enrollments.filter(e=>e.compStatus==="reattempt").length} need re-attempt`);
+  renderRoster();
+}
+
+// ── ADD MODAL ─────────────────────────────────────────────────────────────────
+function openAddModal() {
+  pendingModalSel.clear();
+  document.getElementById("modalSearch").value = "";
+  renderModalList("");
+  document.getElementById("addModal").classList.remove("hidden");
+}
+
+function closeAddModal() {
+  document.getElementById("addModal").classList.add("hidden");
+  pendingModalSel.clear();
+}
+
+function renderModalList(q="") {
+  const enrolled = new Set(enrollments.map(e=>e.workerId));
+  const trainer  = "w2"; // Layla is the trainer
+  const list = WORKERS
+    .filter(w=>w.id!==trainer)
+    .filter(w=>!q||w.name.toLowerCase().includes(q.toLowerCase())||w.role.toLowerCase().includes(q.toLowerCase()));
+
+  document.getElementById("modalList").innerHTML = list.map(w=>{
+    const isEnr  = enrolled.has(w.id);
+    const isSel  = pendingModalSel.has(w.id);
+    return `<div class="modal-row${isEnr?" enrolled":""}" onclick="${isEnr?"":"toggleModalSel('"+w.id+"')"}">
+      <div class="trainee-av" style="background:${w.color}22;color:${w.color};width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:var(--mono);flex-shrink:0">${initials(w.name)}</div>
+      <div class="modal-row-info">
+        <div class="modal-row-name">${w.name}</div>
+        <div class="modal-row-meta">${w.role} · ${w.shift}</div>
+      </div>
+      ${isEnr?`<span class="enrolled-tag">Enrolled</span>`
+        :isSel?`<span style="font-size:12px;color:var(--accent);font-weight:700">✓</span>`:""}
+    </div>`;
+  }).join("");
+
+  const selCount = pendingModalSel.size;
+  document.getElementById("modalSelCount").textContent = selCount===0?"No selection":`${selCount} selected`;
+  document.getElementById("modalAddBtn").disabled = selCount===0;
+}
+
+function toggleModalSel(wid) {
+  if(pendingModalSel.has(wid)) pendingModalSel.delete(wid);
+  else pendingModalSel.add(wid);
+  renderModalList(document.getElementById("modalSearch").value);
+}
+
+function confirmAddAttendees() {
+  let added = 0;
+  pendingModalSel.forEach(wid=>{
+    const already = enrollments.some(e=>e.workerId===wid);
+    if(!already && enrollments.length < MAX_CAP) {
+      enrollments.push({ id:`e${Date.now()}-${wid}`, workerId:wid, attStatus:"", compStatus:"pending", note:"", markedAt:"", autoAssigned:true });
+      added++;
+    }
+  });
+  closeAddModal();
+  showToast(`＋ ${added} attendee${added!==1?"s":""} added${added<pendingModalSel.size?" — some skipped (at capacity)":""}`);
+  renderRoster();
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const wrap = document.getElementById("toastWrap");
+  const div  = document.createElement("div");
+  div.className = "toast"; div.textContent = msg;
+  wrap.appendChild(div);
+  setTimeout(()=>div.remove(), 3500);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderRoster();
+</script>
+</body>
+</html>
