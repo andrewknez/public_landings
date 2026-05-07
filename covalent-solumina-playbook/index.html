@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Covalent + Solumina: Workforce Operations Playbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  :root {
+    --accent: #06448E;
+    --navy: #051B42;
+    --orange: #FF9B36;
+    --bg: #F6F6F6;
+    --white: #FFFFFF;
+    --border: #E4E4E4;
+    --text: #1A1A1A;
+    --muted: #5A6378;
+    --soft: #EEF2F7;
+    --solumina: #4A5568;
+    --success: #2E7D5B;
+    --warn: #C56A1A;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.55;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.2;
+    margin: 0;
+  }
+  p { margin: 0 0 1em 0; }
+  a { color: var(--accent); text-decoration: none; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
+  .narrow { max-width: 820px; }
+
+  /* Hero */
+  .hero {
+    background: var(--navy);
+    color: var(--white);
+    padding: 64px 0 80px 0;
+    border-bottom: 4px solid var(--orange);
+  }
+  .hero-logos {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    margin-bottom: 40px;
+  }
+  .hero-logo-covalent {
+    height: 36px;
+    width: auto;
+    display: block;
+  }
+  .hero-logo-ibaset {
+    height: 32px;
+    width: auto;
+    display: block;
+  }
+  .hero-divider {
+    display: block;
+    width: 1px;
+    height: 32px;
+    background: rgba(255,255,255,0.25);
+  }
+  .hero h1 {
+    color: var(--white);
+    font-size: 44px;
+    line-height: 1.15;
+    margin-bottom: 20px;
+    max-width: 880px;
+  }
+  .hero-sub {
+    font-size: 19px;
+    line-height: 1.55;
+    color: rgba(255,255,255,0.82);
+    max-width: 760px;
+    margin: 0;
+    font-weight: 300;
+  }
+
+  /* Section */
+  section { padding: 80px 0; }
+  section.tight { padding: 56px 0; }
+  section.alt { background: var(--white); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .section-eyebrow {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-size: 32px;
+    margin-bottom: 16px;
+  }
+  .section-lede {
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 720px;
+    margin-bottom: 40px;
+    line-height: 1.6;
+  }
+
+  /* Thesis */
+  .thesis-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-top: 8px;
+  }
+  .thesis-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 28px;
+    position: relative;
+  }
+  .thesis-card.accent { border-left: 3px solid var(--accent); }
+  .thesis-card.navy { border-left: 3px solid var(--navy); }
+  .thesis-card.orange { border-left: 3px solid var(--orange); }
+  .thesis-card .label {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .thesis-card h3 {
+    font-size: 19px;
+    margin-bottom: 10px;
+  }
+  .thesis-card p {
+    font-size: 15px;
+    color: var(--text);
+    margin: 0;
+    line-height: 1.55;
+  }
+
+  /* Why grid */
+  .why-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .why-item {
+    background: var(--white);
+    padding: 22px 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .why-num {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 600;
+    min-width: 28px;
+  }
+  .why-text {
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+
+  /* Timeline */
+  .timeline-wrap {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    margin-top: 8px;
+  }
+  .hphase-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+  .hphase {
+    background: var(--soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 14px;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .hphase:hover {
+    background: #E6EBF2;
+    border-color: #CFD7E2;
+  }
+  .hphase.active {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: var(--white);
+  }
+  .hphase-name {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+    opacity: 0.7;
+  }
+  .hphase.active .hphase-name {
+    color: var(--orange);
+    opacity: 1;
+  }
+  .hphase-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy);
+    line-height: 1.3;
+  }
+  .hphase.active .hphase-label {
+    color: var(--white);
+  }
+  .hphase-months {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+    margin-top: 2px;
+  }
+  .hphase.active .hphase-months {
+    color: rgba(255,255,255,0.65);
+  }
+  .timeline-detail-wide {
+    border-left: 3px solid var(--accent);
+    padding: 4px 0 4px 24px;
+  }
+  .detail-eyebrow {
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 36px;
+    align-items: start;
+  }
+  .detail-title {
+    font-size: 26px;
+    margin-bottom: 14px;
+  }
+  .detail-desc {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .detail-right {
+    background: var(--soft);
+    border-radius: 8px;
+    padding: 18px 20px;
+  }
+  .detail-deliverables-label {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .detail-deliverables-text {
+    font-size: 15px;
+    color: var(--text);
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  /* Stepper */
+  .stepper-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 32px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    min-height: 560px;
+  }
+  .stepper-nav {
+    background: var(--soft);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+  }
+  .stepper-nav button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background: transparent;
+    border: none;
+    text-align: left;
+    padding: 14px 24px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--muted);
+    border-left: 3px solid transparent;
+    transition: all 0.15s ease;
+    line-height: 1.35;
+  }
+  .stepper-nav button:hover { background: rgba(6,68,142,0.04); color: var(--text); }
+  .stepper-nav button.active {
+    background: var(--white);
+    color: var(--navy);
+    border-left-color: var(--orange);
+    font-weight: 600;
+  }
+  .stepper-nav .step-num {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 12px;
+    color: var(--accent);
+    margin-right: 12px;
+    font-weight: 600;
+    min-width: 22px;
+  }
+  .stepper-nav button.active .step-num { color: var(--orange); }
+  .stepper-content {
+    padding: 36px 40px;
+  }
+  .stepper-content .step-eyebrow {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+  .stepper-content h3 {
+    font-size: 26px;
+    margin-bottom: 20px;
+  }
+  .stepper-content .step-desc {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  .step-block {
+    margin-bottom: 22px;
+  }
+  .step-block-title {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--navy);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .step-block ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 24px;
+  }
+  .step-block ul.single { grid-template-columns: 1fr; }
+  .step-block li {
+    font-size: 14px;
+    color: var(--text);
+    padding-left: 14px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .step-block li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 9px;
+    width: 5px;
+    height: 5px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+  .step-block.deferred li::before { background: var(--muted); }
+  .step-block.avoid li::before { background: var(--warn); }
+  .step-pager {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .step-pager button {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .step-pager button:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .step-pager button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .step-pager .progress {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* System of record diagram */
+  .sor-wrap {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 36px;
+    margin-top: 8px;
+  }
+  .sor-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sor-tabs button {
+    background: transparent;
+    border: none;
+    padding: 14px 22px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    font-weight: 500;
+    transition: all 0.15s ease;
+  }
+  .sor-tabs button:hover { color: var(--text); }
+  .sor-tabs button.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: 600;
+  }
+  .sor-tabs .phase-num {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 11px;
+    color: var(--muted);
+    margin-right: 8px;
+  }
+  .sor-tabs button.active .phase-num { color: var(--accent); }
+  .sor-diagram {
+    display: grid;
+    grid-template-columns: 1fr 120px 1fr;
+    gap: 0;
+    align-items: stretch;
+    min-height: 300px;
+  }
+  .sor-side {
+    border-radius: 10px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+  }
+  .sor-side.solumina {
+    background: #F0F2F6;
+    border: 1px solid #D6DBE3;
+  }
+  .sor-side.covalent {
+    background: #EAF1FA;
+    border: 1px solid #C8DAEF;
+  }
+  .sor-side .sor-name {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .sor-side.solumina .sor-name { color: var(--solumina); }
+  .sor-side.covalent .sor-name { color: var(--accent); }
+  .sor-side h4 {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  .sor-side ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sor-side li {
+    font-size: 14px;
+    color: var(--text);
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    line-height: 1.4;
+  }
+  .sor-side li:last-child { border-bottom: none; }
+  .sor-flow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 0 8px;
+  }
+  .sor-arrow {
+    width: 100%;
+    background: var(--soft);
+    border-radius: 6px;
+    padding: 10px 8px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.3;
+    transition: all 0.25s ease;
+    border: 1px solid var(--border);
+  }
+  .sor-arrow.active {
+    background: var(--accent);
+    color: var(--white);
+    border-color: var(--accent);
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(6,68,142,0.18);
+  }
+  .sor-arrow .arrow-icon {
+    display: block;
+    margin-bottom: 4px;
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 14px;
+  }
+  .sor-caption {
+    margin-top: 24px;
+    padding: 18px 22px;
+    background: var(--soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.55;
+  }
+
+  /* Gating workflow animation */
+  .gating-wrap {
+    background: var(--navy);
+    border-radius: 12px;
+    padding: 40px;
+    margin-top: 8px;
+    color: var(--white);
+  }
+  .gating-wrap .section-eyebrow { color: var(--orange); }
+  .gating-wrap h3 { color: var(--white); font-size: 22px; margin-bottom: 8px; }
+  .gating-wrap .gating-sub {
+    color: rgba(255,255,255,0.7);
+    font-size: 14px;
+    margin-bottom: 28px;
+  }
+  .gating-stages {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    position: relative;
+  }
+  .gating-stage {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 18px 14px;
+    transition: all 0.4s ease;
+    position: relative;
+  }
+  .gating-stage.active {
+    background: var(--orange);
+    border-color: var(--orange);
+    transform: translateY(-4px);
+  }
+  .gating-stage.complete {
+    background: rgba(255,155,54,0.15);
+    border-color: rgba(255,155,54,0.4);
+  }
+  .gating-stage .stage-num {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  .gating-stage.active .stage-num { color: rgba(0,0,0,0.5); }
+  .gating-stage .stage-name {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--white);
+  }
+  .gating-stage.active .stage-name { color: var(--navy); }
+  .gating-stage .stage-system {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 8px;
+    letter-spacing: 0.5px;
+  }
+  .gating-stage.active .stage-system { color: rgba(0,0,0,0.5); }
+  .gating-controls {
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .gating-controls button {
+    background: var(--orange);
+    color: var(--navy);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+  }
+  .gating-controls button:hover { filter: brightness(1.08); }
+  .gating-controls button.secondary {
+    background: transparent;
+    color: rgba(255,255,255,0.8);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .gating-status {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 1px;
+  }
+
+  /* KPI grid */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 8px;
+  }
+  .kpi-col {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+  }
+  .kpi-col .kpi-label {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+  .kpi-col h4 {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  .kpi-col ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .kpi-col li {
+    font-size: 14px;
+    color: var(--text);
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .kpi-col li::before {
+    content: "□";
+    color: var(--accent);
+    font-size: 16px;
+    line-height: 1;
+  }
+  .kpi-baseline {
+    margin-top: 24px;
+    background: var(--white);
+    border-left: 3px solid var(--orange);
+    padding: 16px 22px;
+    border-radius: 4px;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .kpi-baseline strong { color: var(--navy); }
+
+  /* Use cases */
+  .uc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-top: 8px;
+  }
+  .uc-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+  }
+  .uc-card .uc-num {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 12px;
+    color: var(--orange);
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .uc-card h3 {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  .uc-block {
+    margin-bottom: 14px;
+  }
+  .uc-block-label {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .uc-block p {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+    margin: 0;
+  }
+  .uc-outcomes {
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .uc-outcomes ul { margin: 0; padding: 0; list-style: none; }
+  .uc-outcomes li {
+    font-size: 13px;
+    color: var(--text);
+    padding: 4px 0 4px 14px;
+    position: relative;
+    line-height: 1.4;
+  }
+  .uc-outcomes li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--success);
+    font-weight: 600;
+  }
+
+  /* Closing recommendation */
+  .closing {
+    background: var(--navy);
+    color: var(--white);
+    padding: 80px 0;
+    border-top: 4px solid var(--orange);
+  }
+  .closing .section-eyebrow { color: var(--orange); }
+  .closing h2 { color: var(--white); font-size: 30px; margin-bottom: 24px; }
+  .closing p {
+    color: rgba(255,255,255,0.85);
+    font-size: 17px;
+    line-height: 1.7;
+    max-width: 760px;
+  }
+  .closing .pull {
+    border-left: 3px solid var(--orange);
+    padding: 12px 0 12px 24px;
+    margin-top: 32px;
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--white);
+    font-style: italic;
+    max-width: 760px;
+  }
+
+  /* Footer */
+  footer {
+    background: #030F26;
+    color: rgba(255,255,255,0.5);
+    padding: 28px 0;
+    font-size: 13px;
+    text-align: center;
+    font-family: 'Inter', -apple-system, sans-serif;
+    letter-spacing: 0.5px;
+  }
+
+  /* Responsive */
+  @media (max-width: 880px) {
+    .hero h1 { font-size: 32px; }
+    .hero-sub { font-size: 17px; }
+    .section-title { font-size: 26px; }
+    .thesis-grid, .why-grid, .kpi-grid, .uc-grid { grid-template-columns: 1fr; }
+    .stepper-layout { grid-template-columns: 1fr; }
+    .stepper-nav { border-right: none; border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; padding: 8px; }
+    .stepper-nav button { white-space: nowrap; padding: 10px 14px; border-left: none; border-bottom: 2px solid transparent; }
+    .stepper-nav button.active { border-left-color: transparent; border-bottom-color: var(--orange); }
+    .hphase-row { grid-template-columns: 1fr 1fr; }
+    .detail-grid { grid-template-columns: 1fr; gap: 20px; }
+    .sor-diagram { grid-template-columns: 1fr; gap: 16px; }
+    .sor-flow { flex-direction: row; }
+    .gating-stages { grid-template-columns: 1fr; gap: 8px; }
+    .step-block ul { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ============ DATA ============
+const STEPS = [
+  {
+    n: 1, name: "Establish Executive Alignment",
+    desc: "Bring the right cross-functional leaders together early to define the problem, scope, and success criteria.",
+    blocks: [
+      { title: "Recommended participants", items: ["VP Manufacturing", "Digital Transformation", "Quality leadership", "Training leadership", "Plant operations", "MES / IT leadership"] },
+      { title: "Workshop topics", items: ["Current-state workforce qualification processes", "MES qualification management limitations", "Audit readiness gaps", "Workforce scaling constraints", "Existing manual administration burden", "Cross-site inconsistencies"] },
+      { title: "Primary deliverables", items: ["Executive problem statement", "Initial KPI targets", "Budgetary framing", "Transformation charter"] }
+    ]
+  },
+  {
+    n: 2, name: "Select the Pilot Site",
+    desc: "Pick a site where the problem is real, leadership is bought in, and the win will be visible.",
+    blocks: [
+      { title: "Pilot characteristics", items: ["High qualification complexity", "Existing Solumina maturity", "Strong site leadership sponsorship", "Significant audit pressure", "High operational visibility", "Measurable workforce bottlenecks"] },
+      { title: "Avoid", items: ["Enterprise-wide first deployment", "Lowest-performing plants", "Sites in active MES stabilization"], style: "avoid" },
+      { title: "Recommended pilot scope", items: ["50–300 operators", "1–3 departments", "10–50 qualifications", "1–2 core workflows"] }
+    ]
+  },
+  {
+    n: 3, name: "Conduct Workforce Operations Discovery",
+    desc: "Three structured workshops to map current state, systems, and the future operating model before building anything.",
+    blocks: [
+      { title: "Session 1: Current-state workflows", items: ["OJT administration", "Qualification approvals", "Requalification management", "Audit evidence generation", "Skills matrix ownership"] },
+      { title: "Session 2: Systems architecture", items: ["Solumina integration points", "HRIS integration", "LMS dependencies", "Badge/access systems", "Existing databases and spreadsheets"] },
+      { title: "Session 3: Future-state operating model", items: ["Qualification governance", "Digital signoffs", "Workforce visibility", "MES gating strategy", "Workforce coverage planning"] },
+      { title: "Primary deliverables", items: ["Current-state process maps", "Integration blueprint", "Qualification hierarchy model", "Future-state workflow architecture"] }
+    ]
+  },
+  {
+    n: 4, name: "Define Pilot Success Metrics",
+    desc: "Baseline every KPI before deployment. Without baselines, ROI is asserted, not proven.",
+    blocks: [
+      { title: "Operations KPIs", items: ["Time-to-productivity", "Staffing flexibility", "Supervisor planning time", "Workforce coverage"] },
+      { title: "Quality KPIs", items: ["Audit readiness", "Expired certifications", "Qualification compliance", "Training-related NCRs"] },
+      { title: "Training KPIs", items: ["OJT completion speed", "Administrative effort reduction", "Evaluation throughput"] },
+      { title: "Approach", items: ["Baseline all KPIs before deployment to establish measurable ROI"], style: "single" }
+    ]
+  },
+  {
+    n: 5, name: "Deploy Foundational Covalent Capabilities",
+    desc: "Stand up the core workforce operations layer. Resist the temptation to deploy everything at once.",
+    blocks: [
+      { title: "Initial capabilities", items: ["Digital OJT workflows", "Skills matrices", "Qualification tracking", "Digital signoffs", "Certification expirations", "Audit trails", "Escalation notifications"] },
+      { title: "Intentionally deferred", items: ["Advanced workforce optimization", "Enterprise governance standardization", "Complex forecasting", "Large-scale historical migration"], style: "deferred" }
+    ]
+  },
+  {
+    n: 6, name: "Integrate Covalent with Solumina",
+    desc: "Define ownership cleanly, then sequence integration in three phases. Don't try to wire everything in week one.",
+    blocks: [
+      { title: "Solumina owns", items: ["Work execution", "Routing control", "Manufacturing genealogy", "Quality workflows"] },
+      { title: "Covalent owns", items: ["Workforce qualifications", "OJT workflows", "Skills matrices", "Workforce capability intelligence"] },
+      { title: "Phase 1: Foundation", items: ["Employee master data sync", "Qualification status visibility"] },
+      { title: "Phase 2: Gating", items: ["Qualification gating", "Touch data ingestion"] },
+      { title: "Phase 3: Optimization", items: ["Production backlog integration", "Intelligent work allocation"] }
+    ]
+  },
+  {
+    n: 7, name: "Operationalize Qualification Gating",
+    desc: "Covalent becomes the system of record for who is eligible. Solumina enforces eligibility at execution.",
+    blocks: [
+      { title: "Workflow", items: ["Operator completes qualification workflow in Covalent", "Qualification status updates automatically", "Eligibility syncs to Solumina", "Solumina validates eligibility during execution", "Ineligible workers are prevented from executing work"], style: "single" },
+      { title: "Expected outcomes", items: ["Reduced audit exposure", "Improved compliance consistency", "Elimination of manual qualification checks"] }
+    ]
+  },
+  {
+    n: 8, name: "Build Dynamic Workforce Profiles",
+    desc: "Production touch data from Solumina turns static certifications into living capability profiles.",
+    blocks: [
+      { title: "Data elements", items: ["Jobs completed", "Labor hours", "Product exposure", "Work-center history", "First-pass yield", "Recency of execution", "Cross-training exposure"] },
+      { title: "Strategic benefit", items: ["Employees evolve from static certifications into dynamic operational capability profiles"], style: "single" }
+    ]
+  },
+  {
+    n: 9, name: "Enable Intelligent Work Allocation",
+    desc: "Production backlog from Solumina powers Covalent's IWA. Labor decisions made on data, not tribal knowledge.",
+    blocks: [
+      { title: "Inputs", items: ["Work priority", "Production backlog", "Worker availability", "Qualification status", "Historical performance", "Shift staffing"] },
+      { title: "Outcomes", items: ["Reduced supervisor staffing time", "Faster response to schedule changes", "Improved labor allocation quality", "Reduced dependency on tribal knowledge"] }
+    ]
+  },
+  {
+    n: 10, name: "Scale to Enterprise Workforce Operations",
+    desc: "Take what worked at the pilot site and turn it into enterprise infrastructure.",
+    blocks: [
+      { title: "Enterprise scaling activities", items: ["Establish enterprise qualification standards", "Define governance ownership", "Standardize workforce KPIs", "Roll out by operational complexity", "Expand integrations", "Benchmark sites"] },
+      { title: "Long-term strategic outcome", items: ["Workforce capability becomes a core operational dataset across the enterprise digital manufacturing ecosystem"], style: "single" }
+    ]
+  }
+];
+
+const PHASES = [
+  {
+    id: 0, name: "Phase 0", label: "Evaluation & alignment", months: "Months 0–2", color: "#06448E", width: 10,
+    desc: "Establish executive alignment, define the business case, and select the pilot site before any deployment activity begins.",
+    deliverables: "Business case, pilot site selection, workshop sessions",
+    steps: [1, 2]
+  },
+  {
+    id: 1, name: "Phase 1", label: "Pilot deployment", months: "Months 2–6", color: "#0A5BB8", width: 18,
+    desc: "Run discovery workshops, baseline success metrics, and deploy foundational Covalent capabilities at the pilot site.",
+    deliverables: "Digital OJT, qualification workflows, audit visibility",
+    steps: [3, 4, 5]
+  },
+  {
+    id: 2, name: "Phase 2", label: "Operational expansion", months: "Months 6–12", color: "#FF9B36", width: 26,
+    desc: "Integrate Covalent with Solumina across the three integration phases, then operationalize qualification gating between systems.",
+    deliverables: "MES integrations, workforce visibility, coverage planning",
+    steps: [6, 7]
+  },
+  {
+    id: 3, name: "Phase 3", label: "Multi-site standardization", months: "Months 12–18", color: "#051B42", width: 26,
+    desc: "Take what worked at the pilot site and turn it into enterprise infrastructure: governance, standards, and cross-site benchmarking.",
+    deliverables: "Governance model, enterprise qualification standards",
+    steps: [10]
+  },
+  {
+    id: 4, name: "Phase 4", label: "Workforce intelligence", months: "Months 18–24", color: "#0A5BB8", width: 20,
+    desc: "Build dynamic workforce profiles from production touch data and enable Intelligent Work Allocation using backlog from Solumina.",
+    deliverables: "Intelligent work allocation, forecasting, optimization",
+    steps: [8, 9]
+  }
+];
+
+const SOR_PHASES = [
+  {
+    id: 0, name: "Phase 1: Foundation",
+    arrows: [
+      { active: true, label: "Employee master data", dir: "→" },
+      { active: true, label: "Qualification status", dir: "←" },
+      { active: false, label: "Touch data", dir: "→" },
+      { active: false, label: "Backlog & priority", dir: "→" }
+    ],
+    caption: "Establish the integration backbone. Covalent publishes qualification status; Solumina shares employee master data. No execution gating yet, just visibility."
+  },
+  {
+    id: 1, name: "Phase 2: Gating",
+    arrows: [
+      { active: true, label: "Employee master data", dir: "→" },
+      { active: true, label: "Qualification status", dir: "←" },
+      { active: true, label: "Touch data", dir: "→" },
+      { active: false, label: "Backlog & priority", dir: "→" }
+    ],
+    caption: "Qualification status now enforces execution. Solumina blocks ineligible workers at the work step. Touch data starts flowing back to Covalent to enrich profiles."
+  },
+  {
+    id: 2, name: "Phase 3: Optimization",
+    arrows: [
+      { active: true, label: "Employee master data", dir: "→" },
+      { active: true, label: "Qualification status", dir: "←" },
+      { active: true, label: "Touch data", dir: "→" },
+      { active: true, label: "Backlog & priority", dir: "→" }
+    ],
+    caption: "Production backlog flows into Covalent. IWA uses qualifications, availability, and history to recommend assignments. Workforce data becomes operational infrastructure."
+  }
+];
+
+const GATING_STAGES = [
+  { num: "01", name: "Operator completes OJT & evaluation", system: "COVALENT" },
+  { num: "02", name: "Qualification approved digitally", system: "COVALENT" },
+  { num: "03", name: "Eligibility status syncs to MES", system: "INTEGRATION" },
+  { num: "04", name: "Solumina validates at work step", system: "SOLUMINA" },
+  { num: "05", name: "Ineligible workers blocked", system: "SOLUMINA" }
+];
+
+const USE_CASES = [
+  {
+    n: "01", title: "Qualification Gating",
+    problem: "Qualification data was manually maintained and inconsistently reflected inside the MES.",
+    solution: "Covalent became the system of record for workforce eligibility. Qualification status synchronized into Solumina in real time.",
+    outcomes: ["Elimination of manual qualification verification", "Improved audit traceability", "Standardized qualification governance"]
+  },
+  {
+    n: "02", title: "Dynamic Workforce Profiles",
+    problem: "Leadership lacked visibility into practical operator experience and recency.",
+    solution: "Production touch data from Solumina fed Covalent employee profiles: jobs completed, product variants, labor hours, quality performance.",
+    outcomes: ["Better staffing visibility", "Reduced unnecessary retraining", "Improved workforce planning confidence"]
+  },
+  {
+    n: "03", title: "Intelligent Work Allocation",
+    problem: "Supervisors relied heavily on tribal knowledge for staffing decisions.",
+    solution: "Production backlog data from Solumina powered Covalent's intelligent work allocation workflows.",
+    outcomes: ["Reduced supervisor staffing effort", "Faster staffing decisions", "Improved labor allocation quality", "Greater operational flexibility"]
+  }
+];
+
+const WHY_ITEMS = [
+  "Qualification data often exists outside the MES.",
+  "Supervisors still rely heavily on tribal knowledge to staff work.",
+  "Training governance remains inconsistent across plants.",
+  "Audit evidence generation is highly manual.",
+  "MES qualification tables are difficult to maintain operationally.",
+  "Cross-training and workforce flexibility are hard to measure in real time.",
+  "Production scaling exposes labor bottlenecks and qualification gaps."
+];
+
+// ============ COMPONENTS ============
+
+function Hero() {
+  return (
+    <div className="hero">
+      <div className="container">
+        <div className="hero-logos">
+          <img className="hero-logo-covalent" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARgAAAA4CAYAAAAmVecOAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAATv0lEQVR42u1de7hf05l+v985J5KISEjE5RChblXXqEfRomO0RYJWzZBEdTzuT9Wlo4zpmKeSR3UaNR33KlqXUXUpMwTToVqlKkKVSVyjpK5BKpHkXH77nT/2u+Sz7P377XMjR9b7PPvZ5/z22uvyrbXe9a1vfWttICEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhIWHwwwZz5klaVA4CgJkxVW1CQiKY3hBKTfnOzCwrCVdTOJpZvUl8Ic4PPA5XIqyEhI8xwQTCMLPu6PdWAKMADBcZLDGztwvebxEh0f2PRuRTkE4poSUkJAxCggkaSyACksMAfAHAJACfBrABgGEAWkQwdQBLAMwH8BsAvzSzBzzReFIhuTqALQBsBmBdAGsqjrcBvATgaQDPBGIR0SERTULCICcYkjXXsdsBfBvAVACtAB4RgTwO4C8A3tE0ZzSAjQFMBLAHgK0BvABgJoDLzCwjuRaAvQHsD2AvAO0NslEH8BSAuwBcZ2azizSihISEwWVraQkkQ/K7JDtIPknySJKjehDPpiS/R3IxyedI7kNyFMm5fD+6SXZFVzc/iNtI7hxN3RISEgYhuWxK8k8k3yB5WByGZKuutugKv9dc+NEkLxBJ/Jt+u1b/d7IcGcm6CCdzZPQ9km2JZBISBie5fIbkMmkMI4M9RsRSiwmkKB4f1v2+B8m/krxb/18l0ugo0WCyAk0n/HYfyXGJZBISBoENJhhgSe4E4GEA55vZyXrWambdBUbakQAmAFgbQAbgNQDPm1lHICWVkQBaFMe6AB4EMN/MPk/ydgD7NrHD1CJZdQFoAzAXwN5m9rK3GQ2wnKwgP1AZe2wXckv6MRqumhWQaqXlfFcnKxphY3eDHsVfkkaPXA2K8ljlNbdKWbmMZfJ09kfrQz9NLhbO1lIjOY7kuyQvDsQSBB/ZZY4g+YBsK8t1XyJN5G2Sd5Hcr0AzCtOa4dJCLiW5mu7/RPIokceRnEFylrQdr714hKnVIyRXl8ZkA0ksXhtror3VKoazCvXS8hG1CfuYtXFbFfu2rSTCD9rLA8iXpXdRZ6qbGd3zLwK4RBrLzwHcDOAJ5MvKNQDrANgRwAEA/g7AHwB83czmhc4pLeYiAF8FMMnMft8gX+0ADgdwitKsI18SjzWZa8xsWqxh9bd89PdqKuM2ANZTfhYiX+16xMwWxu8UNXQ32m4OYAdpgsMBvAvgeQBzzOw5N7q+bzQk+QnkLgJUO3rDzF4laY1GTZJDkbsF+DY418y6CsJuCmB1pfEcgGU+70VlU3tZA8A4l7fFZvZas7y5eNZTuj3B22b2pt4fp7ZItcvlZvZ0o/RJbuLSJICnzKxLq55r9bLpLDSzRVXL/XG3uxwpjWBdjdax5vJdPf8hydFN4hxHcj2St+idg92zC2S43cmN5K0FlzcSb0TyjhJNpkv3A3x+B0A+Y0ieRfKZBkbp10n+mOQWRWp3VKYvk7y3gZF7Ocm7I03wPZuWDN2+/A/5eisoR3jvuOi9uSSH6F1TGkZyvLTSgB82k69LY6rq+F3dL/fPK8j6Rr3XqXt3g2u57tNdPDOU57or615F+Xft/N5I9uP1+5mKp0P3KlcIe2KVcn+cySU0qqEk3yF5RtRQQoXPlOD/1jcmZ8i1QAokd5ZwryU5guQJendyyX/V3xMrNjiLjMRXFpBMXYbfZzTdsv5Sh50cDiT5UkRqy9WQOt3fAUtInhKVIzTk9WQ89ytlcVzLI7K5PpC6y9PmCp+5jrRDGQm49B9wnYgkT4/iDffz3FQ0U/tYtyKJTYvSuLKHBHNLRBCNEMKc4+KZ7uoptJWnSQ6Lp6ZOLv/r4lxagWCK8pEIpqRBHKNOsZojjFDZX5MAdwt2lKIOHI0+AQvUof7BVfjuPRV6sBHp718VkEz4e2p/Vagrz/GR3ae7SYP3RHNpsA8prgkkn3Wy6KgQV0jvjzKQ+3r7H3X+ZQozs6j8TnZbK766I7aNnYzDgLMOyUUKkzltZ3oj+UYEk6mjZiSv6CHB3OzSzZpoMUFGM0oIxt9/EOejAsGc3cSNImvw/B8/aoL5qJktWNZPBPATM+sIthcAGcmxAK4AcKKZ/Y7kEDPrLCIA2Wg2ArCf5rBdyLcS/BHAeADbAbjHzO4Pq1KVDVW5B3AYlY+Q3WcNN8cP8+ZjAFzjytVXm9SBAC6UPCh7DwDcDeAmAPNUznYA+wA4VPP4LuXraACXA5gtB8VZADbV8xbV/1MArgXwEIDFyLdL7ApgGnKv6EzhtwXwXyQ/q/xAdbO3s0sdTPJMAB3RvL+meP5eYZcDGKr6eMGVN6wWHq98dCt8LchXJFbFrmDu6ot90mTTm+fKUWiDaWCDa5HMTib5CzN7qIK9Ljy7Xu0tc6t9awD4d9nMAOCvAL4pucKFfTSKa9VaOdJ9Q7HwRDcHDyPRhSSfbcbCkSZUNHLcE49SfdS44hEqcxrGhCL7Ry+mjWNJLoxG8NdITmrw7uZuLl8n+VX37HKnlQQVe4b2dxXFNZLk+U5D6/BTAeVxDZKvRrLY12ugLmybpgl+Be4QN70N5V5T5cyiqUBXs1G5YIoUNKveaDA+zS37oX14TbAtTJUaaDAbNEinTaulAa8iobQyppB8y/0fBD5Mgj682RKtaxj/GVVsUMUfCZXaV1JUXjZS480iD1+SnNIXtdTJ4dyIEBaS/JSzP7U6h8IWb8OQcfY417k/Fan5JHlqgT3rfXFFxvUuxbFMBljT8/9wnTkj+fOoTsJ9z0hOr5AcEdu6SJ4c2V5e0VQq1OVLmvZ9wNY1gAQzUTIaUrIg0BoNjJ5gsgKSPMvJvSHBRGkET/VxmkLSDTyjojCtK4MD6MrggToR+Y7lblVwaDS7SLW8TapwIzUvU2PbKipXpvhu1DJon4yvwfnJzF4EMEfxZW6KBC0f99roLTmM0PJ4WOasAfiGmT2haWK3rrq7ujVV7DazfczsYoUlgKMUR5gazTKzmcGeVRaXpiz/AuB3mk51aWpzhJueXKV8DpE8vkRyrKY8Xt5T3dI+ANxkZktcp69LmzrJTT0NwGEAfuXy3w5gqtL/sHx0FktGnU728VU2daKmoKEu6wDOJLmNpunNypCFNACEe1FfqPswTfK0ShHMxgD+HM2bgfw4hhebreO7Z8OQ+x7E82fIDuNJoC8IqwBlcW7Uh7RCfeyE/PiIujr2EwCu17y9s4mtyJwm2KX730Q2txkKV+r5G3mSznD5I/IjM0Iac5B7XtcAdMo+cFBIT0QzEsBk/RbsSD91cmpRPqZIfl3K62Nmdq/sSKE+CeBUkkNESh+GL9dEkjuR/LTu/grPxhTUefACv1j2qkAwbQAuWxW2mHyUBQyVMULGxRjtAF51rvHNMBwfdI4K773ZnxlXZ3ilxCg4oi9R6/5JyScYomcpTauSt8iZbm1Heq0AFgCYrWfNRri6wj0A4C11DAOwic7SCc53V0V1Oi2K54sAxjoN6lEZnoMGmMnL+tTIcH6OwtwB4Eml343cUe8rH4IWE/JxnUj0D7r7a7buX25gtB0O4FvIjxUJmuAuAE4qcjBMBPPhYZV0r1Zn9GV/rhcEGDBSDTyQyQKt1jX17nTP34kIdXUAI93zGxVmNaXzGZKfdJ1nmpuyAsDVjhxapC0dBGBLEUhY3boFuWd3J4DzIhI7TRrAYDj8a3UzW4T8TKOa027OJrmZSLQlEczAkMcSqdUxFgAYV3GkBYClyN3c3zd/1X3MAOR//RKNbEk/xB2PakP7MBXInC0KspX09GD0msjDxxm2LrSZ2RsAbtWzTnWWKTLEbqwpWrDTLAVwg8+biOI0J0cD8CM9HyLt5kaR3BCR0PYA9tW0cKDdLd4A8HLJ9aLujeq9S4R+CYB7pInVRfyXqS6YCGZg8AJyP5XQuIKgHwYwnuRor/Y3mBIsA/B61NnDfdt+LG9Qg7cr0bJe7Afta0H0/w49aYSRsXwhgEXu/01JrlXF4zismolM2136byHf/+VlfEVk5zlUeZ4s+1in8nC3mf0l5FHayz7Ijf1dIpB5ZnaRDM7LzKzLzN4B8J2oDk6PBpKBmsZP0rQsHK/qry11v6ER0bl2eqzaaovKu6fOO3ojEczAYA6AzbRiUXeN5UE1yoMqqJA1Nea5UYMLKvQhatB9Mgq6JcXxyDcc0skwxPt4H2SROZmEER8A9pejHJsZBoPToYyrLWa2WHKh5LkmgMmSV7ORPxhfv4J89ahT8TyujXjhCAwDcL/SaZWGMYHkrsiPJvVt7croGA0AOCPq0K+S/CbJU0meRPIUkidrIKq7qdhuJD8XOUIOBJaa2VIzW6K7v5bpXsVxc4iZPQPgLNeeqenftkjox6FhRWfdSL4COxY42v2I5Hz93VpGDi78sZG/QXDoutWtrvSHo93ZJY52Hf3gaBeOrnhU8QYHt4vClKQo7uDMpr/3cH4URvIbLn8Zyee147iR232Ia6yc6TInz6mRPML99CidOdpDFOTzYnDsc+/sHu3pabb/p+58ekhylpNbqR+Mc/azBleZH8z27sCzwnejMk2P9kLt59pw8DV6uGDLSVbgB+M3qIZ0xhT4wazhwyS8n2TmkjzfE4mutVUBp+rZkApktTzqmIGgbnFeqG19yOsGqtx65GSXkfxNX8glaqTTCvYfnRwR0XsOd+733fTObOfINlo7reuu08xynd0ih67QkEeR/G3k+DZf5+lYtCQO54DIEgezH/iOpr//u2SXejNkrg6CF/hqJQRzeQ/rOCaYHXvpaBcTTIsr945uM2Q9ctpMBNNPBOO38C8u2ew4RUL8rBvBq252fFau56e5377VU5KJNjvePdCbHZ0Wc5/r3GFkv7rIdV1kcJojWIoc2vX86wWENcfvUI/S35/k/7nyBe3lwCJN0Mn/Nuca7ztOneR2vg6lGdRduG7lqex6VPeXIgII3sNlBHONSHaM7v4a5e5tJQQzoYftuZRgonDnlGjCiWD6iWCCpjJMBBNv3W+JKmJ/X5kFxzW0uOMartQxEGfo3d1J7q2/T6hCMgXHNVzR4LiGp/vruAZXpg21Izwmhg6SvyZ5sfYL3Uzy5YLT9kK5Azle6hp0lwszR+fIzCT5E5KPR3GFsOeWTTOd5jk5klG4P+jKFur1uqgj/rSifLaIji/oJLmV64DToo67nOSbJddCd99c7/8yyvsNkvUluvvrAt0PcHJuRjBhujWU5LyoHSWC6WeSCUI/quTAqUA2/xxsEdpl3SjOdUiuT/J2NTJ/jswhiud4p7YWqbx+2rFhA1W+q9HI3g/Tx63cZ1aygrNayo5XWETyS66MIb4Lo/BdJXF1Rsc5nOviKtIgQ+MfKltLPToS4jg/zdVXI5ZFB61v7dMouUJ7uF7yCIdKXebyMjU6SiGrOO3aymkw3RWPxwg4z6V/tt5bqvu+cdso2KPV6aZMSyoQzFtub9kriWCqkczv3UjXGhtmSe4lTeFdTRUOIvkJqbhrk9yS5GHa9JhpirCJiy80zkPVUU9okq/1SX5b9otG5/Je3Z/kUiCX0dI+isitq8AwepfrLH7UrLkRfn7BFxOKOtQz4UTACitY8UZNf0LbOpHx+JoozK1VZOjIZ6eCTh4I6kj2DuH9O3vx7vddHr8fPZtcMq1sjTRLj/YGBDM2GhgW+69vrEx9u3Xl4RjWABwI4DmSF5vZcWpMdEuu9wLYXH4DRyN3UR+qZdGwlL0EuUv3JDO7PVSsllNDeW8CcCmAvbTT9jzk/jivSybtyP0ydkP+7Wug/DzeOQCOHQivUpW7pu9tH6PD0A9HfgbLBKzYltCJ3NnrQQA/M7M7XbnrwQ8jyNnMrlaHngLgYOQbNMeofJnk8BiAXwC4XpsSq5w3HMp/JYA99X8LgF+b2euKI5wz247c1ymcXTK9SucImyjNbDbJHyM/T7hTS9d7It9S8LrirqNnHrJLdf8T8nNwswquHCGNF9xv85V+aCNvRcvw772rMp8GYBO5EABAh64ydMktIGyNeRsrtpUkNBmtw8h0QQHTxyPAcE0hdie5q9yu2yIbSi1awl1PRsL79P8dTUamWMX2y7VP6oDoAf02Uny+itOutiG5nU6qGxqXu5ms3f+jpf1tL/vGqEbhe1uGePrXX/ElJPSUZHbRNOj20Nijc3dbmhz+XPbhtc/pUyRhhP9ZHz68dk+wBX1Yu2Lj8pSVuwek1drgfNtaI9+jisZ7a2T0rhKmojG86GwY6+nVl3cbvV9RXrVevNNr2SWSyUflx2TM+lpBR+rJp2PXlNMeNT82t4JR9dOx3u4xw3+n6SNafatFl/VjfKnBJnz8SUZ/f0dGwnkkj47V9ybxbKwlw0Uyan5BZDM3IpHuEg0mJpubwxcJkpqekFDBjrgSk0zNHXq0vgxhh8toNhvAfcj3/SxAvovaZCQbj/zApj1kvFwAYCaAS2QgHC0j6SQAe8nY2Mho+RSAOwFca2aPxMbThISEQUgwXptxXzUcivw0tQMA7Ix8l+8wV44M+SrSnwH8FsDNZnZ/UVz6fwRW7JDdACu+IrgI+a7op5Af51n306GV4SjChIREMP1oc4A+Xh/93gZgNFZ8wvRd5J/wzAqmXJn7XGqLiKJeMf1WNPkYfEJCwiAlmIhoasp3aYeXphHOj80aneeruIoMteH8Fa6y3/VNSFiVCKaEIHw5KM0kEUJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCv+D/AV3VvjYTw4hNAAAAAElFTkSuQmCC" alt="Covalent" />
+          <span className="hero-divider" aria-hidden="true"></span>
+          <svg className="hero-logo-ibaset" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 132 32" fill="none" aria-label="iBase-t">
+            <path d="M4.01212 31.3285H6.15563V9.40234H0.460938V27.7719C0.460938 29.7341 2.04991 31.3231 4.01212 31.3231V31.3285Z" fill="#FF6F00"></path>
+            <path d="M6.36888 4.55549C7.45663 1.85738 4.75858 -0.840722 2.06587 0.247052C0.908798 0.716288 0.0929852 1.83072 0.00767147 3.07313C-0.125631 5.11537 1.49533 6.7417 3.54286 6.6084C4.78524 6.52841 5.90498 5.70725 6.36888 4.55549Z" fill="#FF6F00"></path>
+            <path d="M74.0166 18.6378C71.8465 18.3765 68.6152 17.3794 68.6152 15.7051C68.6152 14.2654 69.687 13.4389 71.5479 13.4389C73.4088 13.4389 74.3739 14.2707 74.4752 15.8544H80.1752C80.0313 11.6526 76.5227 8.74121 71.5479 8.74121C67.2555 8.74121 62.9152 11.194 62.9152 15.8757C62.9152 18.5152 65.8372 21.6772 71.2493 22.349C73.2702 22.6157 74.7311 23.6768 74.7311 24.8659C74.7311 26.4655 73.1315 27.3027 71.5479 27.3027C69.6337 27.3027 68.4926 26.4282 68.3753 24.8872H62.6699C62.8352 29.5582 67.2182 32.0004 71.5479 32.0004C75.8776 32.0004 80.4312 29.4622 80.4312 24.6152C80.4312 20.9947 77.2106 19.0057 74.0166 18.6432V18.6378Z" fill="white"></path>
+            <path d="M94.3912 8.74121C87.6567 8.74121 82.1807 13.9561 82.1807 20.3708C82.1807 26.7855 87.6567 32.0004 94.3912 32.0004C99.4994 32.0004 104.042 28.993 105.818 24.4713H99.4354C98.2143 25.9856 96.3427 26.8868 94.3965 26.8868C91.6772 26.8868 89.2724 25.2178 88.2753 22.637L88.1313 22.2691H106.436C106.548 21.5759 106.602 20.968 106.602 20.3761C106.602 13.9668 101.126 8.74654 94.3912 8.74654V8.74121ZM88.1313 18.4779L88.2753 18.1099C89.2724 15.5291 91.6718 13.8601 94.3965 13.8601C97.1212 13.8601 99.5367 15.5665 100.518 18.1099L100.662 18.4779H88.142H88.1313Z" fill="white"></path>
+            <path d="M124.993 20.366V14.1859H131.232V9.40291H124.993V5.42507C124.993 3.48947 123.42 1.91113 121.479 1.91113H119.293V20.3606C119.293 26.9886 124.183 31.9902 130.672 31.9902H131.232V26.8659C127.766 26.722 124.993 23.8586 124.993 20.3606V20.366Z" fill="#FF6F00"></path>
+            <path d="M115.672 18.8204L112.003 15.1518C111.8 14.9545 111.571 14.8799 111.353 14.8799C111.219 14.8799 111.097 14.9065 110.99 14.9545C110.713 15.0718 110.414 15.3545 110.414 15.813V23.1448C110.414 23.6034 110.713 23.8913 110.99 24.0033C111.267 24.1206 111.678 24.126 112.003 23.8007L115.672 20.1321C116.034 19.7695 116.034 19.1777 115.672 18.8151V18.8204Z" fill="#FF6F00"></path>
+            <path d="M32.6873 15.8176L32.314 15.6096L32.6606 15.359C34.2069 14.2499 35.1294 12.4796 35.1294 10.6293C35.1294 5.49972 31.3756 1.91113 25.9955 1.91113H12.9531V31.3237H27.7444C32.9379 31.3237 36.7077 27.6604 36.7077 22.6055C36.7077 19.7688 35.204 17.2253 32.6873 15.8122V15.8176ZM19.0691 7.36067H25.8302C27.6911 7.36067 29.0987 8.67773 29.0987 10.4214C29.0987 12.165 27.6964 13.562 25.8302 13.562H19.0691V7.36067ZM27.4138 25.8742H19.0691V18.8409H27.4138C29.1521 18.8409 30.6824 20.5046 30.6824 22.3975C30.6824 24.2905 29.1841 25.8742 27.4138 25.8742Z" fill="white"></path>
+            <path d="M53.9362 28.6677H53.8455C53.0831 29.8515 52.0753 30.7046 50.8116 31.2219C49.5479 31.7391 48.2202 31.995 46.8232 31.995C45.7887 31.995 44.7916 31.8511 43.8372 31.5631C42.8774 31.2752 42.0349 30.8433 41.3044 30.2621C40.5739 29.6862 39.9981 28.9717 39.5715 28.1185C39.1449 27.2654 38.9316 26.2789 38.9316 25.1538C38.9316 23.8794 39.1663 22.797 39.6408 21.9171C40.11 21.0373 40.7499 20.3068 41.555 19.7309C42.3602 19.155 43.2826 18.7071 44.3117 18.3872C45.3462 18.0673 46.4179 17.8327 47.527 17.678C48.6361 17.5287 49.7452 17.4327 50.8542 17.4061C51.9633 17.3741 52.9871 17.3581 53.9309 17.3581C53.9309 16.1423 53.499 15.1772 52.6298 14.4627C51.7607 13.7482 50.7369 13.3909 49.5532 13.3909C48.4281 13.3909 47.4044 13.6255 46.4766 14.1001C45.5488 14.5693 44.7223 15.2199 43.9918 16.0357L40.3447 12.2978C41.6244 11.1141 43.112 10.2236 44.813 9.63169C46.5139 9.03982 48.2788 8.74121 50.1024 8.74121C52.1073 8.74121 53.7602 8.99183 55.0506 9.49305C56.341 9.99428 57.3754 10.7301 58.1539 11.7059C58.927 12.6817 59.4709 13.8708 59.7748 15.2839C60.0788 16.6969 60.2334 18.3339 60.2334 20.1842V31.4458H53.9415V28.6624L53.9362 28.6677ZM52.2512 21.7358C51.734 21.7358 51.0888 21.7572 50.3157 21.8052C49.5425 21.8532 48.796 21.9811 48.0815 22.1944C47.367 22.4077 46.7592 22.7276 46.258 23.1542C45.7567 23.5808 45.5061 24.1727 45.5061 24.9352C45.5061 25.7563 45.8527 26.3642 46.5566 26.7588C47.2551 27.1534 47.9856 27.3507 48.7427 27.3507C49.4092 27.3507 50.0597 27.26 50.6783 27.0787C51.3021 26.8974 51.8567 26.6362 52.3419 26.3056C52.8271 25.9696 53.2164 25.5484 53.5043 25.0312C53.7922 24.5139 53.9362 23.9061 53.9362 23.2075V21.7465H52.2512V21.7358Z" fill="white"></path>
+          </svg>
+        </div>
+        <h1>A 24-Month Workforce Operations Transformation</h1>
+        <p className="hero-sub">
+          Solumina digitizes production execution. Covalent digitizes workforce execution. This is a tactical framework for how a digital transformation team evaluates, pilots, and scales Covalent alongside an active Solumina deployment, without overpromising, overscoping, or duplicating systems.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Thesis() {
+  return (
+    <section>
+      <div className="container">
+        <div className="section-eyebrow">Strategic Thesis</div>
+        <h2 className="section-title">Two systems. One closed loop.</h2>
+        <p className="section-lede">
+          The objective is not digitized training administration. It's an integrated workforce intelligence layer covering qualification governance, audit readiness, workforce planning, and labor deployment, sitting alongside Solumina as part of the same operational stack.
+        </p>
+        <div className="thesis-grid">
+          <div className="thesis-card navy">
+            <div className="label">Solumina</div>
+            <h3>Digitizes production execution</h3>
+            <p>Routing control, manufacturing genealogy, quality workflows, work execution. The system of record for what happens on the floor.</p>
+          </div>
+          <div className="thesis-card accent">
+            <div className="label">Covalent</div>
+            <h3>Digitizes workforce execution</h3>
+            <p>Qualifications, OJT workflows, skills matrices, capability intelligence. The system of record for who can execute the work.</p>
+          </div>
+          <div className="thesis-card orange">
+            <div className="label">Together</div>
+            <h3>A closed-loop manufacturing operations ecosystem</h3>
+            <p>Workforce capability becomes operational infrastructure. A dataset alongside production data, not a separate HR concern.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Why() {
+  return (
+    <section className="alt">
+      <div className="container">
+        <div className="section-eyebrow">Why Now</div>
+        <h2 className="section-title">Why Manufacturers Pursue This Initiative</h2>
+        <p className="section-lede">
+          Manufacturers implementing Solumina consistently discover that production execution gets digitized while workforce qualification stays fragmented across spreadsheets, paper, tribal knowledge, and disconnected systems. These are the operational gaps that drive this initiative.
+        </p>
+        <div className="why-grid">
+          {WHY_ITEMS.map((item, i) => (
+            <div className="why-item" key={i}>
+              <div className="why-num">{String(i + 1).padStart(2, '0')}</div>
+              <div className="why-text">{item}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Timeline() {
+  const [phase, setPhase] = useState(0);
+  const current = PHASES[phase];
+
+  return (
+    <section>
+      <div className="container">
+        <div className="section-eyebrow">Phased Rollout</div>
+        <h2 className="section-title">24 Month Rollout</h2>
+        <p className="section-lede">
+          The transformation spans 24 months across five phases. Click a phase to see what it produces. No phase starts before its predecessor delivers. Sequencing matters more than speed.
+        </p>
+        <div className="timeline-wrap">
+          <div className="hphase-row">
+            {PHASES.map((p, i) => (
+              <button
+                key={p.id}
+                className={`hphase ${phase === i ? 'active' : ''}`}
+                onClick={() => setPhase(i)}
+              >
+                <div className="hphase-name">{p.name}</div>
+                <div className="hphase-label">{p.label}</div>
+                <div className="hphase-months">{p.months}</div>
+              </button>
+            ))}
+          </div>
+
+          <div className="timeline-detail-wide">
+            <div className="detail-eyebrow">{current.name} · {current.months}</div>
+            <div className="detail-grid">
+              <div className="detail-left">
+                <h3 className="detail-title">{current.label}</h3>
+                <p className="detail-desc">{current.desc}</p>
+              </div>
+              <div className="detail-right">
+                <div className="detail-deliverables-label">Key deliverables</div>
+                <div className="detail-deliverables-text">{current.deliverables}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Stepper() {
+  const [active, setActive] = useState(0);
+  const step = STEPS[active];
+
+  return (
+    <section className="alt">
+      <div className="container">
+        <div className="section-eyebrow">Tactical Framework</div>
+        <h2 className="section-title">The 10 Step Framework</h2>
+        <p className="section-lede">
+          Each step has a specific purpose, a defined set of participants, and concrete deliverables. Click any step to see what it requires.
+        </p>
+
+        <div className="stepper-layout">
+          <div className="stepper-nav">
+            {STEPS.map((s, i) => (
+              <button
+                key={s.n}
+                className={active === i ? 'active' : ''}
+                onClick={() => setActive(i)}
+              >
+                <span className="step-num">{String(s.n).padStart(2, '0')}</span>
+                <span>{s.name}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="stepper-content">
+            <div className="step-eyebrow">Step {String(step.n).padStart(2, '0')}</div>
+            <h3>{step.name}</h3>
+            <p className="step-desc">{step.desc}</p>
+
+            {step.blocks.map((b, i) => (
+              <div className={`step-block ${b.style === 'avoid' ? 'avoid' : ''} ${b.style === 'deferred' ? 'deferred' : ''}`} key={i}>
+                <div className="step-block-title">{b.title}</div>
+                <ul className={b.style === 'single' ? 'single' : ''}>
+                  {b.items.map((item, j) => (
+                    <li key={j}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+
+            <div className="step-pager">
+              <button onClick={() => setActive(Math.max(0, active - 1))} disabled={active === 0}>← Previous</button>
+              <span className="progress">{String(active + 1).padStart(2, '0')} / 10</span>
+              <button onClick={() => setActive(Math.min(STEPS.length - 1, active + 1))} disabled={active === STEPS.length - 1}>Next →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SystemOfRecord() {
+  const [phase, setPhase] = useState(0);
+  const current = SOR_PHASES[phase];
+
+  return (
+    <section className="alt">
+      <div className="container">
+        <div className="section-eyebrow">Integration Architecture</div>
+        <h2 className="section-title">Solumina and Covalent: Who owns what</h2>
+        <p className="section-lede">
+          Clean ownership boundaries are non-negotiable. Solumina remains the system of record for execution; Covalent becomes the system of record for capability. Integration happens in three phases. Each one builds on the last.
+        </p>
+
+        <div className="sor-wrap">
+          <div className="sor-tabs">
+            {SOR_PHASES.map((p, i) => (
+              <button
+                key={p.id}
+                className={phase === i ? 'active' : ''}
+                onClick={() => setPhase(i)}
+              >
+                <span className="phase-num">0{i + 1}</span>{p.name}
+              </button>
+            ))}
+          </div>
+
+          <div className="sor-diagram">
+            <div className="sor-side solumina">
+              <div className="sor-name">Solumina · MES</div>
+              <h4>System of record for execution</h4>
+              <ul>
+                <li>Work execution</li>
+                <li>Routing control</li>
+                <li>Manufacturing genealogy</li>
+                <li>Quality workflows</li>
+                <li>Production backlog</li>
+              </ul>
+            </div>
+
+            <div className="sor-flow">
+              {current.arrows.map((a, i) => (
+                <div className={`sor-arrow ${a.active ? 'active' : ''}`} key={i}>
+                  <span className="arrow-icon">{a.dir}</span>
+                  {a.label}
+                </div>
+              ))}
+            </div>
+
+            <div className="sor-side covalent">
+              <div className="sor-name">Covalent · Workforce Ops</div>
+              <h4>System of record for capability</h4>
+              <ul>
+                <li>Workforce qualifications</li>
+                <li>OJT workflows & sign-offs</li>
+                <li>Skills matrices</li>
+                <li>Capability intelligence</li>
+                <li>Intelligent Work Allocation</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="sor-caption">{current.caption}</div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function GatingWorkflow() {
+  const [stage, setStage] = useState(-1);
+  const [playing, setPlaying] = useState(false);
+  const intervalRef = useRef(null);
+
+  useEffect(() => {
+    if (playing) {
+      intervalRef.current = setInterval(() => {
+        setStage(prev => {
+          if (prev >= GATING_STAGES.length - 1) {
+            setPlaying(false);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 1100);
+    } else {
+      clearInterval(intervalRef.current);
+    }
+    return () => clearInterval(intervalRef.current);
+  }, [playing]);
+
+  const handlePlay = () => {
+    if (stage >= GATING_STAGES.length - 1) setStage(-1);
+    setPlaying(true);
+  };
+  const handleReset = () => {
+    setPlaying(false);
+    setStage(-1);
+  };
+
+  return (
+    <section>
+      <div className="container">
+        <div className="section-eyebrow">Workflow in motion</div>
+        <h2 className="section-title">Qualification gating, end to end</h2>
+        <p className="section-lede">
+          Qualification gating is where Covalent and Solumina close the loop operationally. Covalent owns who is eligible; Solumina enforces eligibility at the work step. Press play to walk through the full sequence.
+        </p>
+
+        <div className="gating-wrap">
+          <h3>From OJT completion to enforced execution</h3>
+          <p className="gating-sub">Operator → Covalent → Integration → Solumina → Floor</p>
+
+          <div className="gating-stages">
+            {GATING_STAGES.map((s, i) => {
+              let cls = '';
+              if (i === stage) cls = 'active';
+              else if (i < stage) cls = 'complete';
+              return (
+                <div className={`gating-stage ${cls}`} key={i} onClick={() => { setPlaying(false); setStage(i); }} style={{cursor: 'pointer'}}>
+                  <div className="stage-num">STAGE {s.num}</div>
+                  <div className="stage-name">{s.name}</div>
+                  <div className="stage-system">{s.system}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="gating-controls">
+            <button onClick={handlePlay} disabled={playing}>
+              {stage >= GATING_STAGES.length - 1 ? 'Replay' : (playing ? 'Playing...' : 'Play sequence')}
+            </button>
+            <button className="secondary" onClick={handleReset}>Reset</button>
+            <span className="gating-status">
+              {stage < 0 ? 'Ready' : stage >= GATING_STAGES.length - 1 ? 'Complete · ineligible workers blocked' : `Stage ${String(stage + 1).padStart(2, '0')} of 05`}
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function KPI() {
+  const cats = [
+    { label: "Operations", title: "Operational throughput & flexibility", items: ["Time-to-productivity", "Staffing flexibility", "Supervisor planning time", "Workforce coverage"] },
+    { label: "Quality", title: "Audit readiness & compliance", items: ["Audit readiness", "Expired certifications", "Qualification compliance", "Training-related NCRs"] },
+    { label: "Training", title: "OJT effectiveness & efficiency", items: ["OJT completion speed", "Administrative effort reduction", "Evaluation throughput"] }
+  ];
+  return (
+    <section className="alt">
+      <div className="container">
+        <div className="section-eyebrow">Success metrics</div>
+        <h2 className="section-title">KPI's to Measure</h2>
+        <p className="section-lede">
+          Three KPI categories cover the operational, quality, and training dimensions of the pilot. The discipline that matters most: baseline every metric before deployment. Without baselines, ROI is asserted, not proven.
+        </p>
+        <div className="kpi-grid">
+          {cats.map((c, i) => (
+            <div className="kpi-col" key={i}>
+              <div className="kpi-label">{c.label}</div>
+              <h4>{c.title}</h4>
+              <ul>
+                {c.items.map((it, j) => <li key={j}>{it}</li>)}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="kpi-baseline">
+          <strong>Baseline rule:</strong> measure every KPI for 4–6 weeks before Covalent goes live. Post-deployment delta is the ROI story.
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function UseCases() {
+  return (
+    <section>
+      <div className="container">
+        <div className="section-eyebrow">Illustrative Case Study</div>
+        <h2 className="section-title">AeroMotion Systems: Use Cases</h2>
+        <p className="section-lede">
+          A composite aerospace manufacturer operating multiple Solumina-enabled facilities. Despite production execution being standardized, workforce qualification data remained fragmented across spreadsheets, local databases, and paper records. These are the three highest-impact use cases that emerged from the deployment.
+        </p>
+        <div className="uc-grid">
+          {USE_CASES.map((u, i) => (
+            <div className="uc-card" key={i}>
+              <div className="uc-num">USE CASE {u.n}</div>
+              <h3>{u.title}</h3>
+              <div className="uc-block">
+                <div className="uc-block-label">Problem</div>
+                <p>{u.problem}</p>
+              </div>
+              <div className="uc-block">
+                <div className="uc-block-label">Solution</div>
+                <p>{u.solution}</p>
+              </div>
+              <div className="uc-outcomes">
+                <div className="uc-block-label">Outcomes</div>
+                <ul>
+                  {u.outcomes.map((o, j) => <li key={j}>{o}</li>)}
+                </ul>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Closing() {
+  return (
+    <div className="closing">
+      <div className="container narrow">
+        <div className="section-eyebrow">Executive Recommendation</div>
+        <h2>Position this as workforce operations modernization, not training software.</h2>
+        <p>
+          This initiative extends and amplifies the value of the existing Solumina investment. It treats workforce capability as operational infrastructure, supported by the same engineering rigor and integration discipline already applied to production execution.
+        </p>
+        <p>
+          The long-term objective is a fully integrated workforce intelligence layer capable of supporting qualification governance, audit readiness, workforce planning, and data-driven labor deployment, sitting alongside Solumina as part of the same operational stack.
+        </p>
+        <div className="pull">
+          Solumina digitizes production execution. Covalent digitizes workforce execution. Together, they close the loop.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <div>
+      <Hero />
+      <Thesis />
+      <Why />
+      <Timeline />
+      <Stepper />
+      <SystemOfRecord />
+      <GatingWorkflow />
+      <KPI />
+      <UseCases />
+      <Closing />
+      <footer>
+        Workforce Operations Playbook · Covalent + Solumina · Internal Planning Framework
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+</body>
+</html>
