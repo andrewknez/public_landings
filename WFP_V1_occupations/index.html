@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WFP Prototype - Facility Operational View</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .heat-good { background-color: #ecfdf5; color: #065f46; border: 1px solid #10b981; }
+        .heat-watch { background-color: #fffbeb; color: #92400e; border: 1px solid #f59e0b; }
+        .heat-partial { background-color: #fff7ed; color: #9a3412; border: 1px solid #f97316; }
+        .heat-critical { background-color: #fef2f2; color: #991b1b; border: 1px solid #ef4444; }
+        .nav-active { @apply border-b-2 border-blue-600 text-blue-600; }
+        .card { @apply bg-white rounded-xl shadow-sm border border-slate-200 p-6; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans">
+
+    <header class="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center gap-4">
+            <div class="bg-indigo-700 p-2 rounded-lg text-white font-bold text-xl">WFP</div>
+            <div>
+                <h1 class="text-lg font-bold leading-tight">Workforce Planning</h1>
+                <p class="text-xs text-slate-500 font-medium tracking-tight">Scenario: <span class="text-slate-800">Peak Season Ops - Final v1</span></p>
+            </div>
+        </div>
+        <nav class="flex gap-8 h-full">
+            <button onclick="showTab('setup')" id="nav-setup" class="nav-active px-2 py-2 text-sm font-semibold transition-all">1. Workstation Demand</button>
+            <button onclick="showTab('analysis')" id="nav-analysis" class="px-2 py-2 text-sm font-semibold text-slate-500 hover:text-slate-800 transition-all">2. Coverage Heat Map</button>
+            <button onclick="showTab('recs')" id="nav-recs" class="px-2 py-2 text-sm font-semibold text-slate-500 hover:text-slate-800 transition-all">3. Action Plan (Recs)</button>
+        </nav>
+        <div class="flex gap-3">
+            <button class="px-4 py-2 text-xs font-bold bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50">Scenario Settings</button>
+            <button class="px-4 py-2 text-xs font-bold bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700">Calculate Gaps</button>
+        </div>
+    </header>
+
+    <main class="p-8 max-w-[1600px] mx-auto grid grid-cols-12 gap-8">
+        
+        <aside class="col-span-3 space-y-6">
+            <div class="card sticky top-24">
+                <h3 class="text-xs font-bold text-slate-400 uppercase mb-6 tracking-widest">Global Adjustments</h3>
+                
+                <div class="space-y-8">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-bold text-slate-700">Absenteeism Factor</label>
+                            <span id="abs-val" class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded text-xs font-bold">12%</span>
+                        </div>
+                        <input type="range" min="0" max="40" value="12" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updateMetrics()">
+                        <p class="text-[10px] text-slate-400 mt-2">Reduces effective headcount across all zones.</p>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-bold text-slate-700">Efficiency Factor</label>
+                            <span id="eff-val" class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded text-xs font-bold">82%</span>
+                        </div>
+                        <input type="range" min="50" max="100" value="82" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="updateMetrics()">
+                        <p class="text-[10px] text-slate-400 mt-2">Adjusts productive hours per worker.</p>
+                    </div>
+
+                    <div class="pt-6 border-t border-slate-100">
+                        <div class="p-5 bg-slate-900 rounded-2xl text-white shadow-xl">
+                            <p class="text-[10px] text-slate-400 uppercase font-black mb-1">Effective Supply</p>
+                            <p class="text-3xl font-bold" id="supply-count">84.5 <span class="text-sm font-normal text-slate-500">FTE</span></p>
+                            <div class="mt-4 flex justify-between text-xs font-medium">
+                                <span class="text-slate-400">Demand: 91.2</span>
+                                <span class="text-red-400" id="gap-count">-6.7 FTE</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="col-span-9">
+            
+            <div id="tab-setup" class="space-y-8">
+                <div class="card">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-xl font-bold">Daily Assignment Demand</h2>
+                            <p class="text-sm text-slate-500">Input daily unit throughput / task counts per station.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="text-xs px-3 py-1.5 border border-slate-300 rounded hover:bg-slate-50">Bulk Fill 7-Day</button>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-8">
+                        <div>
+                            <h3 class="text-xs font-black text-indigo-600 uppercase mb-3 tracking-widest">Assembly Zone (Workstations)</h3>
+                            <table class="w-full text-sm border border-slate-100 rounded-lg overflow-hidden">
+                                <thead class="text-[10px] text-slate-500 uppercase bg-slate-50">
+                                    <tr>
+                                        <th class="p-3 text-left">Assignment Name</th>
+                                        <th class="p-3 text-center">Mon</th><th class="p-3 text-center">Tue</th><th class="p-3 text-center">Wed</th><th class="p-3 text-center">Thu</th><th class="p-3 text-center">Fri</th><th class="p-3 text-center">Sat</th><th class="p-3 text-center">Sun</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr>
+                                        <td class="p-3 font-semibold text-slate-700">Line 1: Stations 1-5 (Chassis)</td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="5"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="5"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="5"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="5"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="5"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="0"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="0"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3 font-semibold text-slate-700">Line 2: Stations 6-10 (Finish)</td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="4"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="4"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="4"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="4"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="4"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="0"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="0"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xs font-black text-indigo-600 uppercase mb-3 tracking-widest">Electrical Zone (Tasks)</h3>
+                            <table class="w-full text-sm border border-slate-100 rounded-lg">
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr>
+                                        <td class="p-3 font-semibold text-slate-700 w-1/3">Panel Wiring (Project A)</td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="3"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="3"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="3"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="3"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="3"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="2"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="2"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3 font-semibold text-slate-700">Fault Response / Maintenance</td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="2"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="2"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="2"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="2"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="2"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="1"></td>
+                                        <td class="p-3 text-center"><input type="number" class="w-10 p-1 border rounded text-center" value="1"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-analysis" class="hidden space-y-8">
+                <div class="card">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-sm font-bold">Shift Coverage Heat Map</h3>
+                        <div class="flex gap-3 text-[10px] uppercase font-bold">
+                            <span class="flex items-center gap-1"><i class="w-2 h-2 rounded bg-emerald-500"></i> Good</span>
+                            <span class="flex items-center gap-1"><i class="w-2 h-2 rounded bg-amber-500"></i> Watch</span>
+                            <span class="flex items-center gap-1"><i class="w-2 h-2 rounded bg-red-500"></i> Critical</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-separate border-spacing-2">
+                            <thead>
+                                <tr class="text-[10px] uppercase text-slate-400">
+                                    <th class="text-left px-2">Zone</th>
+                                    <th class="text-center">Day Shift</th>
+                                    <th class="text-center">Afternoon Shift</th>
+                                    <th class="text-center">Night Shift</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-sm font-bold">Assembly (Line 1)</td>
+                                    <td class="heat-good rounded-lg p-5 text-center font-bold">92%</td>
+                                    <td class="heat-watch rounded-lg p-5 text-center font-bold">82%</td>
+                                    <td class="heat-critical rounded-lg p-5 text-center font-bold">58%</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-sm font-bold">Assembly (Line 2)</td>
+                                    <td class="heat-watch rounded-lg p-5 text-center font-bold">88%</td>
+                                    <td class="heat-partial rounded-lg p-5 text-center font-bold">72%</td>
+                                    <td class="heat-critical rounded-lg p-5 text-center font-bold">61%</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-sm font-bold">Electrical</td>
+                                    <td class="heat-good rounded-lg p-5 text-center font-bold">94%</td>
+                                    <td class="heat-watch rounded-lg p-5 text-center font-bold">81%</td>
+                                    <td class="heat-partial rounded-lg p-5 text-center font-bold">74%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-recs" class="hidden space-y-4">
+                
+                <div class="card border-l-4 border-indigo-500 py-4">
+                    <div class="flex gap-6 items-center">
+                        <div class="w-20 text-center">
+                            <span class="bg-indigo-600 text-white px-2 py-1 rounded text-[10px] font-black uppercase">Redeploy</span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold">Borrow 1.5 FTE from Quality Zone</p>
+                            <p class="text-xs text-slate-500">Move Inspector L2 to Assembly (Line 2) for immediate gap closure on Day Shift.</p>
+                        </div>
+                        <div class="text-center px-4 border-l">
+                            <p class="text-[9px] font-black text-slate-400 uppercase">Initiate By</p>
+                            <p class="text-xs font-bold uppercase">May 20, 2026</p>
+                        </div>
+                        <button class="bg-slate-100 text-[10px] font-bold px-4 py-2 rounded-lg hover:bg-slate-200">Review Source</button>
+                    </div>
+                </div>
+
+                <div class="card border-l-4 border-amber-500 py-4">
+                    <div class="flex gap-6 items-center">
+                        <div class="w-20 text-center">
+                            <span class="bg-amber-500 text-white px-2 py-1 rounded text-[10px] font-black uppercase">Train</span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold">Upskill (2) Chassis Mechanics to Level 3</p>
+                            <p class="text-xs text-slate-500">Bridges senior proficiency gap for new model production in Week 12.</p>
+                        </div>
+                        <div class="text-center px-4 border-l">
+                            <p class="text-[9px] font-black text-slate-400 uppercase">Initiate By</p>
+                            <p class="text-xs font-bold uppercase">June 15, 2026</p>
+                        </div>
+                        <button class="bg-slate-100 text-[10px] font-bold px-4 py-2 rounded-lg hover:bg-slate-200">Assign Training</button>
+                    </div>
+                </div>
+
+                <div class="card border-l-4 border-red-500 py-4 bg-red-50/10">
+                    <div class="flex gap-6 items-center">
+                        <div class="w-20 text-center">
+                            <span class="bg-red-600 text-white px-2 py-1 rounded text-[10px] font-black uppercase">Hire</span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold">Hire 4.0 FTE: Night Shift Assembly</p>
+                            <p class="text-xs text-slate-500 italic">Critical exposure found on Night Shift (58% coverage). No internal surplus available.</p>
+                        </div>
+                        <div class="text-center px-4 border-l">
+                            <p class="text-[9px] font-black text-slate-400 uppercase">Initiate By</p>
+                            <p class="text-xs font-bold uppercase text-red-600 tracking-tighter">ASAP (Expedite Req)</p>
+                        </div>
+                        <button class="bg-red-600 text-white text-[10px] font-bold px-4 py-2 rounded-lg shadow-sm">Open Job Req</button>
+                    </div>
+                </div>
+
+                <div class="card border-l-4 border-red-500 py-4">
+                    <div class="flex gap-6 items-center">
+                        <div class="w-20 text-center">
+                            <span class="bg-red-600 text-white px-2 py-1 rounded text-[10px] font-black uppercase">Hire</span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold">Hire 1.0 FTE: Electrician L3 (Afternoon)</p>
+                            <p class="text-xs text-slate-500">Supports Panel Wiring Project A timeline. 12-week lead time assumes mid-August start.</p>
+                        </div>
+                        <div class="text-center px-4 border-l">
+                            <p class="text-[9px] font-black text-slate-400 uppercase">Initiate By</p>
+                            <p class="text-xs font-bold uppercase">May 24, 2026</p>
+                        </div>
+                        <button class="bg-slate-100 text-[10px] font-bold px-4 py-2 rounded-lg hover:bg-slate-200">Open Job Req</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        function showTab(tabId) {
+            ['setup', 'analysis', 'recs'].forEach(id => {
+                document.getElementById('tab-' + id).classList.add('hidden');
+                document.getElementById('nav-' + id).classList.remove('nav-active', 'text-blue-600');
+                document.getElementById('nav-' + id).classList.add('text-slate-500');
+            });
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            document.getElementById('nav-' + tabId).classList.add('nav-active', 'text-blue-600');
+        }
+
+        function updateMetrics() {
+            const abs = document.querySelectorAll('input[type="range"]')[0].value;
+            const eff = document.querySelectorAll('input[type="range"]')[1].value;
+            document.getElementById('abs-val').innerText = abs + '%';
+            document.getElementById('eff-val').innerText = eff + '%';
+            
+            const supply = (91.2 * (eff/100) * (1 - abs/100)).toFixed(1);
+            document.getElementById('supply-count').innerHTML = `${supply} <span class="text-sm font-normal text-slate-500">FTE</span>`;
+        }
+    </script>
+</body>
+</html>
