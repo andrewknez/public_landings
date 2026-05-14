@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Objective Intelligence — Covalent</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f7f6f2; --bg3: #f1efe8;
+    --text: #1a1a18; --text2: #5f5e5a; --text3: #88877f;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --radius: 12px; --radius-sm: 8px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: "SF Mono", "Fira Code", "Fira Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a; --bg2: #242422; --bg3: #2c2c28;
+      --text: #e8e6df; --text2: #9c9a92; --text3: #6e6d67;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.18);
+    }
+  }
+  body { font-family: var(--font); background: var(--bg3); color: var(--text); line-height: 1.6; padding: 40px 20px 80px; }
+  .page { max-width: 680px; margin: 0 auto; }
+  .page-header { margin-bottom: 56px; }
+  .page-header .kicker { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+  .page-header h1 { font-size: 32px; font-weight: 600; color: var(--text); line-height: 1.2; margin-bottom: 14px; }
+  .page-header .sub { font-size: 16px; color: var(--text2); line-height: 1.65; max-width: 560px; }
+  .chapter { padding: 48px 0 0; border-top: 1px solid var(--border); margin-top: 48px; }
+  .chapter:first-child { border-top: none; margin-top: 0; padding-top: 0; }
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--text3); margin-bottom: 8px; }
+  .chapter-title { font-size: 22px; font-weight: 600; color: var(--text); line-height: 1.3; margin-bottom: 10px; }
+  .chapter-body { font-size: 15px; color: var(--text2); line-height: 1.75; margin-bottom: 28px; }
+  .caption { font-size: 12px; color: var(--text3); text-align: center; margin-top: 8px; }
+  .card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 8px; }
+  .obj-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .obj-code { font-size: 20px; font-weight: 600; font-family: var(--mono); color: var(--text); }
+  .obj-desc { font-size: 13px; color: var(--text2); margin-top: 8px; line-height: 1.55; }
+  .obj-meta { display: flex; gap: 7px; margin-top: 14px; flex-wrap: wrap; }
+  .badge { font-size: 11px; padding: 3px 9px; border-radius: 5px; font-weight: 500; }
+  .badge-gray { background: var(--bg2); color: var(--text3); border: 1px solid var(--border); }
+  .badge-amber { background: #faeeda; color: #633806; }
+  @media (prefers-color-scheme: dark) { .badge-amber { background: #412402; color: #fac775; } }
+
+  /* CONTEXT TILES — popup style */
+  .ctx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .ctx-tile-wrap { position: relative; }
+  .ctx-tile {
+    background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 14px 16px; cursor: pointer; transition: border-color .15s, background .15s; user-select: none;
+    position: relative;
+  }
+  .ctx-tile:hover { border-color: var(--border2); background: var(--bg2); }
+  .ctx-tile.active { border-color: #7f77dd; background: #f5f4ff; }
+  @media (prefers-color-scheme: dark) { .ctx-tile.active { background: #1a1740; } }
+  .ctx-tile-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .ctx-tile-val { font-size: 12px; color: var(--text2); line-height: 1.45; }
+  .ctx-tile-indicator {
+    position: absolute; top: 10px; right: 10px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--bg2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--text3); transition: all .15s;
+  }
+  .ctx-tile.active .ctx-tile-indicator { background: #7f77dd; border-color: #7f77dd; color: white; }
+  .ctx-popup {
+    display: none;
+    position: absolute;
+    left: 0; right: 0;
+    background: var(--bg);
+    border: 1.5px solid #7f77dd;
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-size: 13px; color: var(--text2); line-height: 1.65;
+    z-index: 10;
+    box-shadow: 0 4px 20px rgba(127,119,221,0.15);
+  }
+  .ctx-popup.above { bottom: calc(100% + 8px); }
+  .ctx-popup.below { top: calc(100% + 8px); }
+  .ctx-popup.show { display: block; }
+  .ctx-popup::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    width: 8px; height: 8px;
+    background: var(--bg);
+    border: 1.5px solid #7f77dd;
+    transform: rotate(45deg);
+  }
+  .ctx-popup.above::before { bottom: -5px; border-top: none; border-left: none; }
+  .ctx-popup.below::before { top: -5px; border-bottom: none; border-right: none; }
+
+  /* GRAPH */
+  .graph-wrap { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 8px; }
+  .graph-controls { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+  .graph-btn {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 12px; font-size: 12px; font-weight: 500; color: var(--text2);
+    cursor: pointer; transition: all .15s; font-family: var(--font);
+  }
+  .graph-btn:hover { background: var(--bg3); border-color: var(--border2); color: var(--text); }
+  .graph-btn.active { background: #EEEDFE; border-color: #7f77dd; color: #3c3489; }
+  .graph-viewport { overflow: hidden; border-radius: 8px; border: 1px solid var(--border); background: var(--bg2); }
+  .graph-svg-wrap { transition: transform .5s cubic-bezier(.4,0,.2,1); transform-origin: center center; }
+  .graph-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text2); margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .leg-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
+
+  /* INTELLIGENCE SYNTHESIS DIAGRAM */
+  .synthesis-diagram { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 8px; overflow: hidden; }
+  .synthesis-diagram svg { display: block; width: 100%; }
+
+  /* BEFORE / AFTER */
+  .ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
+  .ba-panel { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; }
+  .ba-head { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; color: var(--text3); }
+  .ba-after { border-color: #9fe1cb; background: #f0fbf7; }
+  .ba-after .ba-head { color: #0f6e56; }
+  .ba-code { font-family: var(--mono); font-size: 13px; color: var(--text3); }
+  .ba-desc { font-size: 12px; color: var(--text3); margin-top: 6px; line-height: 1.5; }
+  .ba-text { font-size: 13px; line-height: 1.65; color: var(--text); }
+  .ba-pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-top: 10px; background: #9fe1cb; color: #085041; font-weight: 600; }
+  @media (prefers-color-scheme: dark) { .ba-after { background: #04342c; border-color: #085041; } }
+
+  /* CAROUSEL */
+  .carousel-wrap { overflow: hidden; border-radius: var(--radius); }
+  .carousel-track { display: flex; transition: transform .38s cubic-bezier(.4,0,.2,1); }
+  .carousel-slide { min-width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+  .slide-title { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+  .slide-body { font-size: 14px; color: var(--text2); line-height: 1.65; margin-bottom: 14px; }
+  .intel-note { font-size: 13px; color: var(--text2); line-height: 1.6; padding: 11px 14px; border-radius: 7px; border-left: 3px solid #7f77dd; background: #f5f4ff; margin-bottom: 18px; }
+  @media (prefers-color-scheme: dark) { .intel-note { background: #1a1740; } }
+  .slide-vis svg { display: block; width: 100%; }
+  .carousel-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+  .c-dots { display: flex; gap: 6px; }
+  .c-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); cursor: pointer; transition: background .2s; border: none; padding: 0; }
+  .c-dot.active { background: var(--text); }
+  .c-btn { background: var(--bg); border: 1px solid var(--border2); border-radius: 6px; padding: 6px 16px; font-size: 13px; color: var(--text); cursor: pointer; font-family: var(--font); transition: background .15s; }
+  .c-btn:hover { background: var(--bg2); }
+  .c-btn:disabled { opacity: .35; cursor: default; }
+
+  /* PHASE EXPLORER */
+  .phase-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .phase-tab {
+    flex: 1; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+    background: var(--bg); cursor: pointer; text-align: center; transition: all .2s; font-family: var(--font);
+  }
+  .phase-tab:hover { border-color: var(--border2); }
+  .phase-tab.active-p1 { background: #EBF9F3; border-color: #1D9E75; }
+  .phase-tab.active-p2 { background: #EEEDFE; border-color: #7F77DD; }
+  .phase-tab.active-p3 { background: #FEF3E2; border-color: #EF9F27; }
+  .phase-tab-num { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+  .phase-tab-num.p1 { color: #1D9E75; }
+  .phase-tab-num.p2 { color: #7F77DD; }
+  .phase-tab-num.p3 { color: #EF9F27; }
+  .phase-tab-label { font-size: 11px; color: var(--text3); }
+  .phase-panel { display: none; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .phase-panel.show { display: block; }
+  .phase-panel svg { display: block; width: 100%; }
+  .phase-desc { font-size: 13px; color: var(--text2); line-height: 1.6; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+  /* EXTENSIBILITY NOTE */
+  .ext-note {
+    margin-top: 32px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .ext-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+  .ext-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .ext-body { font-size: 13px; color: var(--text2); line-height: 1.6; }
+  .ext-entities { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .ext-entity { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg2); color: var(--text2); }
+  .ext-entity.current { background: #EBF9F3; border-color: #5DCAA5; color: #085041; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <p class="kicker">Covalent · Product Strategy</p>
+    <h1>Objective Intelligence</h1>
+    <p class="sub">How we transform very discrete, sometimes cryptic objective information into deep workforce understanding — and why it matters for every planning decision we make.</p>
+  </div>
+
+  <!-- CH 1 -->
+  <div class="chapter">
+    <p class="eyebrow">The problem</p>
+    <h2 class="chapter-title">An objective is just a cryptic code</h2>
+    <p class="chapter-body">Today, when a supervisor, planner, or new employee looks at a training objective, this is what they see — a name that encodes meaning only to its creator, a sparse description, and workflow steps with no context about why any of it matters.</p>
+    <div class="card">
+      <p class="obj-label">Objective</p>
+      <p class="obj-code">NV5-FDC-SUB1-OJT</p>
+      <p class="obj-desc">This Objective trains individuals to complete the Assembly procedure for the Nexus V500 Engine Fan-Drive-Compressor Sub-Module 1</p>
+      <div class="obj-meta">
+        <span class="badge badge-gray">6 steps</span>
+        <span class="badge badge-gray">On-the-job training</span>
+        <span class="badge badge-amber">What does this mean?</span>
+        <span class="badge badge-amber">Who needs this?</span>
+        <span class="badge badge-amber">Why does it exist?</span>
+      </div>
+    </div>
+    <p class="caption">The raw record. Answers nothing a human actually needs to know.</p>
+  </div>
+
+  <!-- CH 2 -->
+  <div class="chapter">
+    <p class="eyebrow">Step 1 — Context</p>
+    <h2 class="chapter-title">The answers are already in the system</h2>
+    <p class="chapter-body">Every objective is surrounded by rich context that already exists in Covalent — task content, evaluation criteria, job eligibility rules, assigned roles, and more. We just haven't connected it. Click any tile to see what each layer reveals.</p>
+    <div class="ctx-grid" id="ctxGrid">
+      <div class="ctx-tile-wrap">
+        <div class="ctx-tile" onclick="toggleCtx('tasks', this, 0)">
+          <div class="ctx-tile-indicator">+</div>
+          <div class="ctx-tile-title">Task content</div>
+          <div class="ctx-tile-val">Install bracket · torque fasteners · verify alignment</div>
+        </div>
+        <div class="ctx-popup below" id="p-tasks">Tasks reveal the real skill: installing a mounting bracket to spec FDC-101, torquing fasteners to exactly 25 ft-lb, and verifying alignment with a gauge. This tells us the capability being built — precision mechanical assembly.</div>
+      </div>
+      <div class="ctx-tile-wrap">
+        <div class="ctx-tile" onclick="toggleCtx('eval', this, 1)">
+          <div class="ctx-tile-indicator">+</div>
+          <div class="ctx-tile-title">Evaluation criteria</div>
+          <div class="ctx-tile-val">Identify torque sequence · demonstrate installation · pass inspection</div>
+        </div>
+        <div class="ctx-popup below" id="p-eval">Evaluations reveal the standard: trainees must demonstrate knowledge of the torque sequence, show bracket installation technique, and pass a visual inspection. This is a certification, not a checklist.</div>
+      </div>
+      <div class="ctx-tile-wrap">
+        <div class="ctx-tile" onclick="toggleCtx('jobs', this, 2)">
+          <div class="ctx-tile-indicator">+</div>
+          <div class="ctx-tile-title">Job eligibility</div>
+          <div class="ctx-tile-val">Required for V500 FDC Assembly Technician</div>
+        </div>
+        <div class="ctx-popup above" id="p-jobs">Job eligibility answers "why this exists": this objective is a gate. You cannot become a V500 FDC Assembly Technician without it. That single relationship gives the entire objective its strategic importance.</div>
+      </div>
+      <div class="ctx-tile-wrap">
+        <div class="ctx-tile" onclick="toggleCtx('roles', this, 3)">
+          <div class="ctx-tile-indicator">+</div>
+          <div class="ctx-tile-title">Assigned roles</div>
+          <div class="ctx-tile-val">Assembly Tech II, III · Senior Assembly Tech</div>
+        </div>
+        <div class="ctx-popup above" id="p-roles">Assigned roles show current scale: three seniority levels are trained on this objective. It's not a niche specialty — it's a core production capability that needs to be broadly distributed.</div>
+      </div>
+      <div class="ctx-tile-wrap">
+        <div class="ctx-tile" onclick="toggleCtx('groups', this, 4)">
+          <div class="ctx-tile-indicator">+</div>
+          <div class="ctx-tile-title">Objective groups</div>
+          <div class="ctx-tile-val">V500 Engine Assembly Certification Path · FDC Module Training</div>
+        </div>
+        <div class="ctx-popup above" id="p-groups">Groups reveal the progression: this is Sub-Module 1 in a larger certification path. Completing it is a step toward broader V500 engine assembly mastery. It's foundational, not standalone.</div>
+      </div>
+      <div class="ctx-tile-wrap">
+        <div class="ctx-tile" onclick="toggleCtx('site', this, 5)">
+          <div class="ctx-tile-indicator">+</div>
+          <div class="ctx-tile-title">Site context</div>
+          <div class="ctx-tile-val">Columbus · Production · NV-FDC workstation · Nexus V500</div>
+        </div>
+        <div class="ctx-popup above" id="p-site">Site context enables macro analysis: knowing this lives in Columbus Production on the NV-FDC workstation means we can analyze coverage, gaps, and risk at the facility level.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CH 3: GRAPH -->
+  <div class="chapter">
+    <p class="eyebrow">Step 2 — The graph</p>
+    <h2 class="chapter-title">A graph is just a map of weighted relationships</h2>
+    <p class="chapter-body">A graph is simply a set of things connected by relationships that have a direction and a strength. When we map every objective to every job, group, employee, and site it touches, the result is a living network where we can ask questions that were previously impossible to answer.</p>
+    <div class="graph-wrap">
+      <div class="graph-controls">
+        <button class="graph-btn active" id="zoomOutBtn" onclick="setZoom('out')">Full network</button>
+        <button class="graph-btn" id="zoomInBtn" onclick="setZoom('in')">Zoom: objective node</button>
+      </div>
+      <div class="graph-viewport" id="graphViewport" style="height:300px;">
+        <div class="graph-svg-wrap" id="graphWrap" style="width:100%;height:100%;">
+          <svg id="graphSvg" viewBox="0 0 900 460" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+            <defs>
+              <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+            </defs>
+
+            <!-- FULL NETWORK (visible at zoom out) -->
+            <g id="fullNetwork">
+              <!-- outer context nodes -->
+              <rect x="30" y="30" width="120" height="36" rx="6" fill="#E6F1FB" stroke="#378ADD" stroke-width=".8"/>
+              <text x="90" y="44" font-size="10" font-weight="600" fill="#042C53" font-family="sans-serif" text-anchor="middle">Columbus Site</text>
+              <text x="90" y="57" font-size="9" fill="#185FA5" font-family="sans-serif" text-anchor="middle">Production dept</text>
+
+              <rect x="30" y="110" width="120" height="36" rx="6" fill="#E6F1FB" stroke="#378ADD" stroke-width=".8"/>
+              <text x="90" y="124" font-size="10" font-weight="600" fill="#042C53" font-family="sans-serif" text-anchor="middle">Detroit Site</text>
+              <text x="90" y="137" font-size="9" fill="#185FA5" font-family="sans-serif" text-anchor="middle">Production dept</text>
+
+              <rect x="30" y="190" width="120" height="36" rx="6" fill="#E6F1FB" stroke="#378ADD" stroke-width=".8"/>
+              <text x="90" y="204" font-size="10" font-weight="600" fill="#042C53" font-family="sans-serif" text-anchor="middle">Nexus V500</text>
+              <text x="90" y="217" font-size="9" fill="#185FA5" font-family="sans-serif" text-anchor="middle">Product line</text>
+
+              <!-- employees -->
+              <rect x="30" y="290" width="120" height="36" rx="6" fill="#FEF3E2" stroke="#EF9F27" stroke-width=".8"/>
+              <text x="90" y="304" font-size="10" font-weight="600" fill="#412402" font-family="sans-serif" text-anchor="middle">Sam R.</text>
+              <text x="90" y="317" font-size="9" fill="#BA7517" font-family="sans-serif" text-anchor="middle">Sr. Assembly Tech</text>
+
+              <rect x="30" y="356" width="120" height="36" rx="6" fill="#FEF3E2" stroke="#EF9F27" stroke-width=".8"/>
+              <text x="90" y="370" font-size="10" font-weight="600" fill="#412402" font-family="sans-serif" text-anchor="middle">Jordan M.</text>
+              <text x="90" y="383" font-size="9" fill="#BA7517" font-family="sans-serif" text-anchor="middle">Assembly Tech II</text>
+
+              <!-- CENTRAL OBJECTIVE -->
+              <rect x="340" y="185" width="220" height="60" rx="10" fill="#E1F5EE" stroke="#1D9E75" stroke-width="2"/>
+              <text x="450" y="210" font-size="13" font-weight="700" fill="#085041" font-family="monospace" text-anchor="middle">NV5-FDC-SUB1-OJT</text>
+              <text x="450" y="228" font-size="11" fill="#0F6E56" font-family="sans-serif" text-anchor="middle">6 steps · OJT · Columbus</text>
+
+              <!-- job -->
+              <rect x="690" y="40" width="180" height="44" rx="7" fill="#EAF3DE" stroke="#639922" stroke-width="1"/>
+              <text x="780" y="58" font-size="11" font-weight="600" fill="#173404" font-family="sans-serif" text-anchor="middle">V500 FDC Assembly Tech</text>
+              <text x="780" y="73" font-size="10" fill="#3B6D11" font-family="sans-serif" text-anchor="middle">Job · required objective</text>
+
+              <!-- groups -->
+              <rect x="690" y="130" width="180" height="44" rx="7" fill="#EEEDFE" stroke="#7F77DD" stroke-width="1"/>
+              <text x="780" y="148" font-size="11" font-weight="600" fill="#26215C" font-family="sans-serif" text-anchor="middle">V500 Engine Assembly</text>
+              <text x="780" y="163" font-size="10" fill="#534AB7" font-family="sans-serif" text-anchor="middle">Certification Path</text>
+
+              <rect x="690" y="220" width="180" height="36" rx="7" fill="#EEEDFE" stroke="#7F77DD" stroke-width=".7"/>
+              <text x="780" y="235" font-size="11" font-weight="600" fill="#26215C" font-family="sans-serif" text-anchor="middle">FDC Module Training</text>
+              <text x="780" y="249" font-size="10" fill="#534AB7" font-family="sans-serif" text-anchor="middle">Objective group</text>
+
+              <!-- unlocks -->
+              <rect x="690" y="310" width="180" height="36" rx="7" fill="#FAEEDA" stroke="#EF9F27" stroke-width="1"/>
+              <text x="780" y="325" font-size="11" font-weight="600" fill="#412402" font-family="monospace" text-anchor="middle">NV5-FDC-SUB2-OJT</text>
+              <text x="780" y="339" font-size="10" fill="#BA7517" font-family="sans-serif" text-anchor="middle">next objective → unlocked</text>
+
+              <rect x="690" y="375" width="180" height="36" rx="7" fill="#F1EFE8" stroke="#B4B2A9" stroke-width=".7"/>
+              <text x="780" y="390" font-size="11" font-weight="600" fill="#2C2C2A" font-family="monospace" text-anchor="middle">NV4-FDC-SUB1-OJT</text>
+              <text x="780" y="404" font-size="10" fill="#5F5E5A" font-family="sans-serif" text-anchor="middle">V400 variant · 89% similar</text>
+
+              <!-- EDGES left side -->
+              <line x1="150" y1="48" x2="340" y2="210" stroke="#378ADD" stroke-width="1" opacity=".5" marker-end="url(#arr)"/>
+              <line x1="150" y1="128" x2="340" y2="215" stroke="#378ADD" stroke-width="1" opacity=".4" marker-end="url(#arr)"/>
+              <line x1="150" y1="208" x2="340" y2="218" stroke="#378ADD" stroke-width="1" opacity=".5" marker-end="url(#arr)"/>
+              <line x1="150" y1="308" x2="340" y2="222" stroke="#EF9F27" stroke-width="1" opacity=".6" marker-end="url(#arr)"/>
+              <line x1="150" y1="374" x2="340" y2="225" stroke="#EF9F27" stroke-width="1" opacity=".5" marker-end="url(#arr)"/>
+
+              <!-- EDGES right side -->
+              <line x1="560" y1="205" x2="690" y2="62" stroke="#1D9E75" stroke-width="2" opacity=".8" marker-end="url(#arr)"/>
+              <text x="614" y="118" font-size="9" fill="#0F6E56" font-family="sans-serif" text-anchor="middle">required for</text>
+              <line x1="560" y1="210" x2="690" y2="152" stroke="#534AB7" stroke-width="1.2" opacity=".7" marker-end="url(#arr)"/>
+              <text x="630" y="172" font-size="9" fill="#534AB7" font-family="sans-serif" text-anchor="middle">part of</text>
+              <line x1="560" y1="215" x2="690" y2="238" stroke="#534AB7" stroke-width="1" opacity=".5" marker-end="url(#arr)"/>
+              <line x1="560" y1="220" x2="690" y2="328" stroke="#BA7517" stroke-width="1.2" opacity=".7" marker-end="url(#arr)"/>
+              <text x="614" y="292" font-size="9" fill="#BA7517" font-family="sans-serif" text-anchor="middle">unlocks</text>
+              <line x1="560" y1="225" x2="690" y2="393" stroke="#888780" stroke-width="1" stroke-dasharray="4 3" opacity=".6" marker-end="url(#arr)"/>
+              <text x="628" y="335" font-size="9" fill="#5F5E5A" font-family="sans-serif" text-anchor="middle">89% similar</text>
+            </g>
+
+            <!-- ZOOMED IN VIEW (hidden by default) -->
+            <g id="zoomedNetwork" opacity="0" pointer-events="none">
+              <!-- Central large node -->
+              <rect x="300" y="165" width="300" height="80" rx="12" fill="#E1F5EE" stroke="#1D9E75" stroke-width="2.5"/>
+              <text x="450" y="196" font-size="15" font-weight="700" fill="#085041" font-family="monospace" text-anchor="middle">NV5-FDC-SUB1-OJT</text>
+              <text x="450" y="216" font-size="12" fill="#0F6E56" font-family="sans-serif" text-anchor="middle">6 steps · OJT · requires trainer · has evaluation</text>
+              <text x="450" y="234" font-size="11" fill="#1D9E75" font-family="sans-serif" text-anchor="middle">assembly · engine · V500 · torque · bracket</text>
+
+              <!-- immediate neighbors only, large and labeled -->
+              <rect x="50" y="50" width="180" height="50" rx="8" fill="#EAF3DE" stroke="#639922" stroke-width="1.5"/>
+              <text x="140" y="71" font-size="12" font-weight="600" fill="#173404" font-family="sans-serif" text-anchor="middle">V500 FDC Assembly Tech</text>
+              <text x="140" y="88" font-size="11" fill="#3B6D11" font-family="sans-serif" text-anchor="middle">required for job eligibility</text>
+              <line x1="300" y1="195" x2="230" y2="95" stroke="#1D9E75" stroke-width="2" marker-end="url(#arr)"/>
+
+              <rect x="670" y="50" width="200" height="50" rx="8" fill="#EEEDFE" stroke="#7F77DD" stroke-width="1.5"/>
+              <text x="770" y="71" font-size="12" font-weight="600" fill="#26215C" font-family="sans-serif" text-anchor="middle">V500 Engine Assembly</text>
+              <text x="770" y="88" font-size="11" fill="#534AB7" font-family="sans-serif" text-anchor="middle">Certification Path</text>
+              <line x1="600" y1="195" x2="720" y2="95" stroke="#534AB7" stroke-width="1.5" marker-end="url(#arr)"/>
+
+              <rect x="50" y="360" width="180" height="50" rx="8" fill="#FAEEDA" stroke="#EF9F27" stroke-width="1.5"/>
+              <text x="140" y="381" font-size="12" font-weight="600" fill="#412402" font-family="monospace" text-anchor="middle">NV5-FDC-SUB2-OJT</text>
+              <text x="140" y="397" font-size="11" fill="#BA7517" font-family="sans-serif" text-anchor="middle">unlocked next step</text>
+              <line x1="300" y1="215" x2="230" y2="360" stroke="#BA7517" stroke-width="1.5" marker-end="url(#arr)"/>
+
+              <rect x="670" y="360" width="200" height="50" rx="8" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="1"/>
+              <text x="770" y="381" font-size="12" font-weight="600" fill="#2C2C2A" font-family="monospace" text-anchor="middle">NV4-FDC-SUB1-OJT</text>
+              <text x="770" y="397" font-size="11" fill="#5F5E5A" font-family="sans-serif" text-anchor="middle">89% semantically similar</text>
+              <line x1="600" y1="215" x2="720" y2="360" stroke="#888780" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arr)"/>
+
+              <rect x="340" y="370" width="220" height="50" rx="8" fill="#FEF3E2" stroke="#EF9F27" stroke-width="1"/>
+              <text x="450" y="391" font-size="12" font-weight="600" fill="#412402" font-family="sans-serif" text-anchor="middle">Sam R. · Jordan M.</text>
+              <text x="450" y="407" font-size="11" fill="#BA7517" font-family="sans-serif" text-anchor="middle">2 of 14 assigned employees</text>
+              <line x1="450" y1="245" x2="450" y2="370" stroke="#EF9F27" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <div class="graph-legend">
+        <span><span class="leg-dot" style="background:#639922"></span>Job dependency</span>
+        <span><span class="leg-dot" style="background:#7F77DD"></span>Objective groups</span>
+        <span><span class="leg-dot" style="background:#EF9F27"></span>Unlocks / employees</span>
+        <span><span class="leg-dot" style="background:#B4B2A9"></span>Semantic similarity</span>
+        <span><span class="leg-dot" style="background:#378ADD"></span>Site / department</span>
+      </div>
+    </div>
+    <p class="caption">Every edge has a type and a weight. The graph lives in the database and answers questions in milliseconds.</p>
+  </div>
+
+  <!-- CH 4: INTELLIGENCE SYNTHESIS -->
+  <div class="chapter">
+    <p class="eyebrow">Step 3 — Intelligence</p>
+    <h2 class="chapter-title">AI writes the narrative. Rules and graph provide the facts.</h2>
+    <p class="chapter-body">Structural facts flow directly from the database — counts, flags, relationships. These feed into AI synthesis, which produces the human-readable outputs that make every objective instantly understandable. The data writes the truth; the model writes the sentence.</p>
+    <div class="synthesis-diagram">
+      <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="sa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+
+        <!-- LEFT: STRUCTURAL FACTS -->
+        <rect x="10" y="10" width="200" height="240" rx="10" fill="#EBF9F3" stroke="#5DCAA5" stroke-width="1"/>
+        <text x="110" y="32" font-size="11" font-weight="700" fill="#0F6E56" font-family="sans-serif" text-anchor="middle" letter-spacing=".05em">STRUCTURAL FACTS</text>
+        <text x="110" y="46" font-size="10" fill="#1D9E75" font-family="sans-serif" text-anchor="middle">Rules &amp; graph</text>
+
+        <rect x="22" y="58" width="176" height="26" rx="5" fill="#ffffff" stroke="#9FE1CB" stroke-width="1"/>
+        <text x="110" y="75" font-size="11" fill="#085041" font-family="sans-serif" text-anchor="middle">Step count · trainer flag</text>
+
+        <rect x="22" y="92" width="176" height="26" rx="5" fill="#ffffff" stroke="#9FE1CB" stroke-width="1"/>
+        <text x="110" y="109" font-size="11" fill="#085041" font-family="sans-serif" text-anchor="middle">Has evaluation</text>
+
+        <rect x="22" y="126" width="176" height="26" rx="5" fill="#ffffff" stroke="#9FE1CB" stroke-width="1"/>
+        <text x="110" y="143" font-size="11" fill="#085041" font-family="sans-serif" text-anchor="middle">Job links · group memberships</text>
+
+        <rect x="22" y="160" width="176" height="26" rx="5" fill="#ffffff" stroke="#9FE1CB" stroke-width="1"/>
+        <text x="110" y="177" font-size="11" fill="#085041" font-family="sans-serif" text-anchor="middle">Site · dept · product</text>
+
+        <rect x="22" y="194" width="176" height="26" rx="5" fill="#ffffff" stroke="#9FE1CB" stroke-width="1"/>
+        <text x="110" y="211" font-size="11" fill="#085041" font-family="sans-serif" text-anchor="middle">Task &amp; eval content</text>
+
+        <rect x="22" y="228" width="176" height="18" rx="4" fill="#9FE1CB" stroke="none"/>
+        <text x="110" y="240" font-size="10" font-weight="600" fill="#085041" font-family="sans-serif" text-anchor="middle">No inference · always exact</text>
+
+        <!-- CONNECTOR LINES with labels -->
+        <!-- line to purpose -->
+        <path d="M210 71 Q300 71 320 71" stroke="#1D9E75" stroke-width="1.2" fill="none" marker-end="url(#sa)"/>
+        <!-- line to construction -->
+        <path d="M210 130 Q300 130 320 130" stroke="#1D9E75" stroke-width="1.2" fill="none" marker-end="url(#sa)"/>
+        <!-- line to relationships -->
+        <path d="M210 207 Q300 207 320 195" stroke="#1D9E75" stroke-width="1.2" fill="none" marker-end="url(#sa)"/>
+
+        <!-- AI label in middle -->
+        <rect x="262" y="88" width="58" height="22" rx="5" fill="#EEEDFE" stroke="#7F77DD" stroke-width="1"/>
+        <text x="291" y="102" font-size="10" font-weight="700" fill="#534AB7" font-family="sans-serif" text-anchor="middle">+ AI</text>
+
+        <!-- RIGHT: NARRATIVE OUTPUTS -->
+        <rect x="322" y="10" width="308" height="240" rx="10" fill="#F5F4FF" stroke="#AFA9EC" stroke-width="1"/>
+        <text x="476" y="32" font-size="11" font-weight="700" fill="#3C3489" font-family="sans-serif" text-anchor="middle" letter-spacing=".05em">NARRATIVE OUTPUTS</text>
+        <text x="476" y="46" font-size="10" fill="#534AB7" font-family="sans-serif" text-anchor="middle">AI synthesis</text>
+
+        <!-- Purpose output -->
+        <rect x="334" y="56" width="284" height="52" rx="7" fill="#ffffff" stroke="#AFA9EC" stroke-width="1"/>
+        <text x="346" y="72" font-size="10" font-weight="700" fill="#534AB7" font-family="sans-serif">PURPOSE</text>
+        <text x="476" y="88" font-size="10" fill="#3C3489" font-family="sans-serif" text-anchor="middle">"Certifies technicians for V500 FDC</text>
+        <text x="476" y="101" font-size="10" fill="#3C3489" font-family="sans-serif" text-anchor="middle">sub-module assembly. Required for job eligibility."</text>
+
+        <!-- Construction output -->
+        <rect x="334" y="118" width="284" height="52" rx="7" fill="#ffffff" stroke="#AFA9EC" stroke-width="1"/>
+        <text x="346" y="134" font-size="10" font-weight="700" fill="#534AB7" font-family="sans-serif">CONSTRUCTION</text>
+        <text x="476" y="150" font-size="10" fill="#3C3489" font-family="sans-serif" text-anchor="middle">"4-phase workflow: sign-off, 3 hands-on</text>
+        <text x="476" y="163" font-size="10" fill="#3C3489" font-family="sans-serif" text-anchor="middle">tasks, evaluation, final certification."</text>
+
+        <!-- Relationships output -->
+        <rect x="334" y="180" width="284" height="52" rx="7" fill="#ffffff" stroke="#AFA9EC" stroke-width="1"/>
+        <text x="346" y="196" font-size="10" font-weight="700" fill="#534AB7" font-family="sans-serif">KEY RELATIONSHIPS</text>
+        <text x="476" y="212" font-size="10" fill="#3C3489" font-family="sans-serif" text-anchor="middle">Required for V500 FDC Assembly Tech ·</text>
+        <text x="476" y="225" font-size="10" fill="#3C3489" font-family="sans-serif" text-anchor="middle">Unlocks SUB2 · 89% similar to NV4 variant</text>
+      </svg>
+    </div>
+    <p class="caption">The AI writes the sentence. The data writes the truth.</p>
+  </div>
+
+  <!-- CH 5: RESULT -->
+  <div class="chapter">
+    <p class="eyebrow">The result</p>
+    <h2 class="chapter-title">From a code to a clear explanation</h2>
+    <p class="chapter-body">Once context is gathered, the graph is queried, and the model synthesizes — the result is stored and instantly available everywhere the objective appears. Any supervisor, planner, or new employee gets the same understanding in seconds.</p>
+    <div class="ba-grid">
+      <div class="ba-panel">
+        <div class="ba-head">Before</div>
+        <p class="ba-code">NV5-FDC-SUB1-OJT</p>
+        <p class="ba-desc">Assembly procedure for the Nexus V500 Engine Fan-Drive-Compressor Sub-Module 1</p>
+      </div>
+      <div class="ba-panel ba-after">
+        <div class="ba-head">After</div>
+        <p class="ba-text">Certifies production technicians to perform sub-module assembly on the V500 fan-drive-compressor system. Required for FDC Assembly Technician eligibility. Typically assigned to Assembly Tech II and above.</p>
+        <span class="ba-pill">Generated · stored · instant</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CH 6: APPLICATIONS -->
+  <div class="chapter">
+    <p class="eyebrow">Step 4 — Applications</p>
+    <h2 class="chapter-title">From atomic understanding to workforce intelligence</h2>
+    <p class="chapter-body">Deterministic data tells you who's eligible. Intelligence tells you who's best. In each of these decisions, the system fills the gap between "technically valid options" and "the right call" — without needing a discrete score or binary rule to explain why.</p>
+    <div class="carousel-wrap">
+      <div class="carousel-track" id="ctrack">
+
+        <div class="carousel-slide">
+          <div class="slide-title">Who should we assign to this task?</div>
+          <div class="slide-body">Multiple workers may hold the required objective. Deterministic data calls them all eligible. Intelligence fills the gap — surfacing who among them is the stronger fit based on capability depth, recency, and role history.</div>
+          <div class="intel-note">The system doesn't need a discrete efficiency score to know that a Senior Assembly Tech with recent V500 reps is a stronger assignment than an Assembly Tech II who certified two years ago.</div>
+          <div class="slide-vis">
+            <svg viewBox="0 0 620 160" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="ar1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+              <rect x="20" y="55" width="148" height="50" rx="8" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1"/>
+              <text x="94" y="75" font-size="12" font-weight="600" fill="#085041" font-family="sans-serif" text-anchor="middle">V500 FDC assembly</text>
+              <text x="94" y="92" font-size="11" fill="#0F6E56" font-family="sans-serif" text-anchor="middle">Thu · Columbus floor</text>
+              <line x1="168" y1="80" x2="206" y2="80" stroke="#B4B2A9" stroke-width="1" marker-end="url(#ar1)"/>
+              <text x="187" y="73" font-size="10" fill="#888780" font-family="sans-serif" text-anchor="middle">eligible</text>
+              <rect x="208" y="16" width="168" height="46" rx="7" fill="#F7F6F2" stroke="#D3D1C7" stroke-width="1"/>
+              <text x="292" y="35" font-size="12" font-weight="600" fill="#888780" font-family="sans-serif" text-anchor="middle">Jordan M.</text>
+              <text x="292" y="52" font-size="11" fill="#B4B2A9" font-family="sans-serif" text-anchor="middle">Assembly Tech II · certified 2yr ago</text>
+              <rect x="208" y="98" width="168" height="46" rx="7" fill="#EAF3DE" stroke="#639922" stroke-width="1.5"/>
+              <text x="292" y="117" font-size="12" font-weight="600" fill="#173404" font-family="sans-serif" text-anchor="middle">Sam R.</text>
+              <text x="292" y="134" font-size="11" fill="#3B6D11" font-family="sans-serif" text-anchor="middle">Senior Assembly Tech · recent reps</text>
+              <line x1="376" y1="121" x2="414" y2="121" stroke="#639922" stroke-width="1.2" marker-end="url(#ar1)"/>
+              <rect x="416" y="98" width="184" height="46" rx="7" fill="#EAF3DE" stroke="#639922" stroke-width="1.5"/>
+              <text x="508" y="117" font-size="11" font-weight="600" fill="#173404" font-family="sans-serif" text-anchor="middle">System recommendation</text>
+              <text x="508" y="134" font-size="11" fill="#3B6D11" font-family="sans-serif" text-anchor="middle">Sam R. — stronger capability fit</text>
+              <rect x="416" y="44" width="184" height="36" rx="7" fill="#EEEDFE" stroke="#7F77DD" stroke-width="0.5"/>
+              <text x="508" y="59" font-size="11" font-weight="600" fill="#26215C" font-family="sans-serif" text-anchor="middle">Intelligence</text>
+              <text x="508" y="73" font-size="11" fill="#534AB7" font-family="sans-serif" text-anchor="middle">weighs capability depth</text>
+              <line x1="508" y1="80" x2="508" y2="98" stroke="#7F77DD" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#ar1)"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="carousel-slide">
+          <div class="slide-title">Who should we train next?</div>
+          <div class="slide-body">Sorting by objectives missing doesn't tell you who benefits most from the next investment. Intelligence understands progression — which employees are close to unlocking high-value eligibility, and which objectives compound the most capability.</div>
+          <div class="intel-note">An employee one targeted objective away from a critical job eligibility is a very different investment than one missing three foundational ones. Discrete gap counts look the same; intelligence knows the difference.</div>
+          <div class="slide-vis">
+            <svg viewBox="0 0 620 156" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="ar2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+              <rect x="20" y="14" width="155" height="44" rx="7" fill="#EAF3DE" stroke="#639922" stroke-width="1.2"/>
+              <text x="98" y="32" font-size="12" font-weight="600" fill="#173404" font-family="sans-serif" text-anchor="middle">Alex T.</text>
+              <text x="98" y="48" font-size="11" fill="#3B6D11" font-family="sans-serif" text-anchor="middle">Missing: 1 objective</text>
+              <line x1="175" y1="36" x2="210" y2="36" stroke="#639922" stroke-width="1.2" marker-end="url(#ar2)"/>
+              <rect x="212" y="16" width="130" height="36" rx="6" fill="#FAEEDA" stroke="#EF9F27" stroke-width="1"/>
+              <text x="277" y="32" font-size="11" font-weight="600" fill="#412402" font-family="monospace" text-anchor="middle">NV5-FDC-SUB3</text>
+              <text x="277" y="46" font-size="11" fill="#BA7517" font-family="sans-serif" text-anchor="middle">1 objective away</text>
+              <line x1="342" y1="36" x2="378" y2="36" stroke="#639922" stroke-width="1.2" marker-end="url(#ar2)"/>
+              <rect x="380" y="14" width="218" height="44" rx="6" fill="#EAF3DE" stroke="#639922" stroke-width="1.5"/>
+              <text x="489" y="32" font-size="11" font-weight="600" fill="#173404" font-family="sans-serif" text-anchor="middle">V500 FDC Assembly Tech</text>
+              <text x="489" y="48" font-size="11" fill="#3B6D11" font-family="sans-serif" text-anchor="middle">unlocks job eligibility</text>
+              <rect x="20" y="96" width="155" height="44" rx="7" fill="#F7F6F2" stroke="#D3D1C7" stroke-width="1"/>
+              <text x="98" y="114" font-size="12" font-weight="600" fill="#888780" font-family="sans-serif" text-anchor="middle">Dana K.</text>
+              <text x="98" y="130" font-size="11" fill="#B4B2A9" font-family="sans-serif" text-anchor="middle">Missing: 4 objectives</text>
+              <line x1="175" y1="118" x2="210" y2="118" stroke="#D3D1C7" stroke-width="1" marker-end="url(#ar2)"/>
+              <rect x="212" y="98" width="130" height="36" rx="6" fill="#F7F6F2" stroke="#D3D1C7" stroke-width="0.5"/>
+              <text x="277" y="114" font-size="11" fill="#B4B2A9" font-family="sans-serif" text-anchor="middle">Multiple objectives</text>
+              <text x="277" y="129" font-size="11" fill="#B4B2A9" font-family="sans-serif" text-anchor="middle">further from impact</text>
+              <rect x="380" y="96" width="218" height="44" rx="6" fill="#EEEDFE" stroke="#7F77DD" stroke-width="1"/>
+              <text x="489" y="114" font-size="11" font-weight="600" fill="#26215C" font-family="sans-serif" text-anchor="middle">Intelligence: prioritize Alex</text>
+              <text x="489" y="130" font-size="11" fill="#534AB7" font-family="sans-serif" text-anchor="middle">highest ROI on next training dollar</text>
+            </svg>
+          </div>
+        </div>
+
+        <div class="carousel-slide">
+          <div class="slide-title">How do we plan for this production ramp?</div>
+          <div class="slide-body">A job title and a headcount number don't tell you if your workforce can absorb a ramp. Intelligence maps required capability to current certification depth, so planners see the real readiness gap — not just an org chart delta.</div>
+          <div class="intel-note">Two workers can hold the same job title but have very different capability depth. Intelligence distinguishes a workforce that's ready from one that's technically compliant on paper — before the ramp starts, not after it struggles.</div>
+          <div class="slide-vis">
+            <svg viewBox="0 0 620 150" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="ar3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+              <rect x="20" y="50" width="140" height="50" rx="8" fill="#FAEEDA" stroke="#EF9F27" stroke-width="1"/>
+              <text x="90" y="70" font-size="12" font-weight="600" fill="#412402" font-family="sans-serif" text-anchor="middle">V500 FDC Line 2</text>
+              <text x="90" y="87" font-size="11" fill="#BA7517" font-family="sans-serif" text-anchor="middle">Q3 ramp · needs 6 techs</text>
+              <line x1="160" y1="75" x2="195" y2="75" stroke="#B4B2A9" stroke-width="1" marker-end="url(#ar3)"/>
+              <rect x="197" y="36" width="196" height="78" rx="8" fill="#F7F6F2" stroke="#D3D1C7" stroke-width="1"/>
+              <text x="295" y="55" font-size="11" font-weight="600" fill="#5F5E5A" font-family="sans-serif" text-anchor="middle">Current workforce</text>
+              <rect x="213" y="65" width="110" height="16" rx="4" fill="#1D9E75"/>
+              <rect x="323" y="65" width="54" height="16" rx="4" fill="#F09595"/>
+              <text x="268" y="77" font-size="10" fill="#ffffff" font-family="sans-serif" text-anchor="middle">4 certified</text>
+              <text x="350" y="77" font-size="10" fill="#791F1F" font-family="sans-serif" text-anchor="middle">gap: 2</text>
+              <text x="295" y="102" font-size="11" fill="#888780" font-family="sans-serif" text-anchor="middle">3 workers near-ready (60–80% depth)</text>
+              <line x1="393" y1="75" x2="428" y2="75" stroke="#B4B2A9" stroke-width="1" marker-end="url(#ar3)"/>
+              <rect x="430" y="24" width="170" height="102" rx="8" fill="#EEEDFE" stroke="#7F77DD" stroke-width="1"/>
+              <text x="515" y="46" font-size="11" font-weight="600" fill="#26215C" font-family="sans-serif" text-anchor="middle">Intelligence recommendation</text>
+              <text x="515" y="63" font-size="11" fill="#534AB7" font-family="sans-serif" text-anchor="middle">Train 2 near-ready workers</text>
+              <text x="515" y="79" font-size="11" fill="#534AB7" font-family="sans-serif" text-anchor="middle">Est. 3 weeks to ready</text>
+              <text x="515" y="95" font-size="11" fill="#534AB7" font-family="sans-serif" text-anchor="middle">vs. 8 weeks to hire externally</text>
+              <text x="515" y="111" font-size="11" fill="#534AB7" font-family="sans-serif" text-anchor="middle">Hire 0 · train 2 · ramp on time</text>
+            </svg>
+          </div>
+        </div>
+
+        <div class="carousel-slide">
+          <div class="slide-title">Should we borrow or hire?</div>
+          <div class="slide-body">When a gap opens, the first instinct is to recruit. But intelligence can identify whether equivalent or better capability already exists elsewhere — not just matching on job title, but on actual objective depth and proximity to the required role.</div>
+          <div class="intel-note">A worker at another site might hold the same certification but have deeper hands-on depth in that specific module. Intelligence surfaces the better borrow candidate — even when discrete data would call both equally valid.</div>
+          <div class="slide-vis">
+            <svg viewBox="0 0 620 150" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="ar4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+              <rect x="20" y="50" width="130" height="50" rx="8" fill="#FCEBEB" stroke="#E24B4A" stroke-width="1"/>
+              <text x="85" y="70" font-size="12" font-weight="600" fill="#501313" font-family="sans-serif" text-anchor="middle">Columbus gap</text>
+              <text x="85" y="87" font-size="11" fill="#A32D2D" font-family="sans-serif" text-anchor="middle">2 FDC techs needed</text>
+              <line x1="150" y1="75" x2="185" y2="75" stroke="#B4B2A9" stroke-width="1" marker-end="url(#ar4)"/>
+              <rect x="187" y="14" width="160" height="44" rx="7" fill="#F7F6F2" stroke="#D3D1C7" stroke-width="1"/>
+              <text x="267" y="32" font-size="11" font-weight="600" fill="#888780" font-family="sans-serif" text-anchor="middle">External hire</text>
+              <text x="267" y="48" font-size="11" fill="#B4B2A9" font-family="sans-serif" text-anchor="middle">6–8 weeks · high cost</text>
+              <rect x="187" y="94" width="160" height="44" rx="7" fill="#EAF3DE" stroke="#639922" stroke-width="1.5"/>
+              <text x="267" y="112" font-size="11" font-weight="600" fill="#173404" font-family="sans-serif" text-anchor="middle">Casey L. · Detroit site</text>
+              <text x="267" y="128" font-size="11" fill="#3B6D11" font-family="sans-serif" text-anchor="middle">Deep V500 FDC capability</text>
+              <line x1="347" y1="116" x2="385" y2="116" stroke="#639922" stroke-width="1.2" marker-end="url(#ar4)"/>
+              <rect x="387" y="94" width="212" height="44" rx="7" fill="#EAF3DE" stroke="#639922" stroke-width="1.5"/>
+              <text x="493" y="112" font-size="11" font-weight="600" fill="#173404" font-family="sans-serif" text-anchor="middle">Intelligence: borrow Casey</text>
+              <text x="493" y="128" font-size="11" fill="#3B6D11" font-family="sans-serif" text-anchor="middle">Available in 3 days · best capability fit</text>
+              <line x1="347" y1="36" x2="599" y2="36" stroke="#D3D1C7" stroke-width="1" stroke-dasharray="4 3"/>
+              <text x="490" y="30" font-size="10" fill="#B4B2A9" font-family="sans-serif" text-anchor="middle">ruled out</text>
+            </svg>
+          </div>
+        </div>
+
+        <div class="carousel-slide">
+          <div class="slide-title">Are we building redundant training?</div>
+          <div class="slide-body">Duplicate objectives look different on paper — different codes, authors, timestamps. But intelligence understands what they're actually teaching. Semantic similarity surfaces overlap that no one would find by scanning names or descriptions alone.</div>
+          <div class="intel-note">Two objectives can be independently maintained and technically valid — but if they're 89% the same content, the system surfaces a consolidation recommendation that human reviewers would never catch at scale.</div>
+          <div class="slide-vis">
+            <svg viewBox="0 0 620 146" xmlns="http://www.w3.org/2000/svg">
+              <defs><marker id="ar5" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+              <rect x="20" y="20" width="170" height="44" rx="7" fill="#FAEEDA" stroke="#EF9F27" stroke-width="1"/>
+              <text x="105" y="38" font-size="12" font-weight="600" fill="#412402" font-family="monospace" text-anchor="middle">NV5-FDC-SUB1-OJT</text>
+              <text x="105" y="54" font-size="11" fill="#BA7517" font-family="sans-serif" text-anchor="middle">V500 · 6 steps · Columbus</text>
+              <rect x="20" y="86" width="170" height="44" rx="7" fill="#FAEEDA" stroke="#EF9F27" stroke-width="1"/>
+              <text x="105" y="104" font-size="12" font-weight="600" fill="#412402" font-family="monospace" text-anchor="middle">NV4-FDC-SUB1-OJT</text>
+              <text x="105" y="120" font-size="11" fill="#BA7517" font-family="sans-serif" text-anchor="middle">V400 · 6 steps · Columbus</text>
+              <line x1="190" y1="42" x2="244" y2="78" stroke="#B4B2A9" stroke-width="1" stroke-dasharray="3 2"/>
+              <line x1="190" y1="108" x2="244" y2="78" stroke="#B4B2A9" stroke-width="1" stroke-dasharray="3 2"/>
+              <rect x="246" y="62" width="104" height="30" rx="6" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="1"/>
+              <text x="298" y="81" font-size="13" font-weight="600" fill="#2C2C2A" font-family="sans-serif" text-anchor="middle">89% similar</text>
+              <line x1="350" y1="77" x2="388" y2="77" stroke="#534AB7" stroke-width="1.2" marker-end="url(#ar5)"/>
+              <rect x="390" y="38" width="210" height="78" rx="8" fill="#EEEDFE" stroke="#7F77DD" stroke-width="1"/>
+              <text x="495" y="58" font-size="11" font-weight="600" fill="#26215C" font-family="sans-serif" text-anchor="middle">Consolidation recommended</text>
+              <text x="495" y="74" font-size="11" fill="#534AB7" font-family="sans-serif" text-anchor="middle">Shared: bracket install, torque,</text>
+              <text x="495" y="89" font-size="11" fill="#534AB7" font-family="sans-serif" text-anchor="middle">alignment verification</text>
+              <text x="495" y="104" font-size="11" fill="#534AB7" font-family="sans-serif" text-anchor="middle">Difference: engine model only</text>
+            </svg>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="carousel-nav">
+      <button class="c-btn" id="cprev" onclick="cMove(-1)" disabled>← Prev</button>
+      <div class="c-dots" id="cdots"></div>
+      <button class="c-btn" id="cnext" onclick="cMove(1)">Next →</button>
+    </div>
+  </div>
+
+  <!-- CH 7: STRATEGIC IMPACT -->
+  <div class="chapter">
+    <p class="eyebrow">Strategic impact</p>
+    <h2 class="chapter-title">From "what objectives does this employee have?" to "what can this person actually do?"</h2>
+    <p class="chapter-body">Objective Intelligence is the foundation layer. Everything that follows — capability mapping, cross-training recommendations, automated planning, skills-based org design — is built on top of this understanding. Click each phase to see what it unlocks.</p>
+
+    <div class="phase-tabs">
+      <div class="phase-tab active-p1" id="tab-p1" onclick="showPhase(1)">
+        <div class="phase-tab-num p1">Phase 1</div>
+        <div class="phase-tab-label">Understand &amp; store</div>
+      </div>
+      <div class="phase-tab" id="tab-p2" onclick="showPhase(2)">
+        <div class="phase-tab-num p2">Phase 2</div>
+        <div class="phase-tab-label">Classify &amp; cluster</div>
+      </div>
+      <div class="phase-tab" id="tab-p3" onclick="showPhase(3)">
+        <div class="phase-tab-num p3">Phase 3+</div>
+        <div class="phase-tab-label">Plan, build, assign</div>
+      </div>
+    </div>
+
+    <!-- Phase 1 panel -->
+    <div class="phase-panel show" id="panel-p1">
+      <svg viewBox="0 0 640 220" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="pa1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+        <!-- A few objective nodes -->
+        <rect x="20" y="20" width="160" height="40" rx="7" fill="#FAEEDA" stroke="#EF9F27" stroke-width="1"/>
+        <text x="100" y="36" font-size="11" font-weight="600" fill="#412402" font-family="monospace" text-anchor="middle">NV5-FDC-SUB1-OJT</text>
+        <text x="100" y="51" font-size="10" fill="#BA7517" font-family="sans-serif" text-anchor="middle">cryptic · no context</text>
+
+        <rect x="20" y="90" width="160" height="40" rx="7" fill="#FAEEDA" stroke="#EF9F27" stroke-width="1"/>
+        <text x="100" y="106" font-size="11" font-weight="600" fill="#412402" font-family="monospace" text-anchor="middle">NV5-FDC-SUB2-OJT</text>
+        <text x="100" y="121" font-size="10" fill="#BA7517" font-family="sans-serif" text-anchor="middle">cryptic · no context</text>
+
+        <rect x="20" y="160" width="160" height="40" rx="7" fill="#FAEEDA" stroke="#EF9F27" stroke-width="1"/>
+        <text x="100" y="176" font-size="11" font-weight="600" fill="#412402" font-family="monospace" text-anchor="middle">NV5-HPT-SUB1-OJT</text>
+        <text x="100" y="191" font-size="10" fill="#BA7517" font-family="sans-serif" text-anchor="middle">cryptic · no context</text>
+
+        <line x1="180" y1="40" x2="228" y2="40" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#pa1)"/>
+        <line x1="180" y1="110" x2="228" y2="110" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#pa1)"/>
+        <line x1="180" y1="180" x2="228" y2="180" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#pa1)"/>
+
+        <!-- Intelligence engine -->
+        <rect x="230" y="70" width="140" height="80" rx="10" fill="#EBF9F3" stroke="#1D9E75" stroke-width="1.5"/>
+        <text x="300" y="100" font-size="12" font-weight="700" fill="#085041" font-family="sans-serif" text-anchor="middle">Intelligence</text>
+        <text x="300" y="116" font-size="11" fill="#0F6E56" font-family="sans-serif" text-anchor="middle">engine</text>
+        <text x="300" y="135" font-size="10" fill="#1D9E75" font-family="sans-serif" text-anchor="middle">context + graph + AI</text>
+
+        <line x1="370" y1="40" x2="418" y2="40" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#pa1)"/>
+        <line x1="370" y1="110" x2="418" y2="110" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#pa1)"/>
+        <line x1="370" y1="180" x2="418" y2="180" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#pa1)"/>
+
+        <!-- Understood objectives -->
+        <rect x="420" y="20" width="200" height="40" rx="7" fill="#EBF9F3" stroke="#1D9E75" stroke-width="1.5"/>
+        <text x="520" y="36" font-size="11" font-weight="600" fill="#085041" font-family="sans-serif" text-anchor="middle">Certifies V500 FDC assembly</text>
+        <text x="520" y="51" font-size="10" fill="#0F6E56" font-family="sans-serif" text-anchor="middle">purpose · construction · relationships</text>
+
+        <rect x="420" y="90" width="200" height="40" rx="7" fill="#EBF9F3" stroke="#1D9E75" stroke-width="1.5"/>
+        <text x="520" y="106" font-size="11" font-weight="600" fill="#085041" font-family="sans-serif" text-anchor="middle">Unlocks sub-module 2</text>
+        <text x="520" y="121" font-size="10" fill="#0F6E56" font-family="sans-serif" text-anchor="middle">purpose · construction · relationships</text>
+
+        <rect x="420" y="160" width="200" height="40" rx="7" fill="#EBF9F3" stroke="#1D9E75" stroke-width="1.5"/>
+        <text x="520" y="176" font-size="11" font-weight="600" fill="#085041" font-family="sans-serif" text-anchor="middle">Certifies HPT assembly</text>
+        <text x="520" y="191" font-size="10" fill="#0F6E56" font-family="sans-serif" text-anchor="middle">purpose · construction · relationships</text>
+      </svg>
+      <div class="phase-desc">Every objective gets a stored intelligence record. Purpose, construction summary, and relationships are synthesized and surfaced everywhere the objective appears — in the card UI, in assignments, in onboarding. The foundation is set.</div>
+    </div>
+
+    <!-- Phase 2 panel -->
+    <div class="phase-panel" id="panel-p2">
+      <svg viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="pa2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+        <!-- Capability clusters -->
+        <!-- Cluster 1: Assembly -->
+        <circle cx="160" cy="80" r="60" fill="#EBF9F3" stroke="#1D9E75" stroke-width="1.5" fill-opacity="0.7"/>
+        <text x="160" y="68" font-size="12" font-weight="700" fill="#085041" font-family="sans-serif" text-anchor="middle">Assembly</text>
+        <text x="160" y="83" font-size="10" fill="#0F6E56" font-family="sans-serif" text-anchor="middle">NV5-FDC-SUB1</text>
+        <text x="160" y="96" font-size="10" fill="#0F6E56" font-family="sans-serif" text-anchor="middle">NV5-FDC-SUB2</text>
+        <text x="160" y="109" font-size="10" fill="#1D9E75" font-family="sans-serif" text-anchor="middle">NV4-FDC-SUB1 ···</text>
+
+        <!-- Cluster 2: Inspection -->
+        <circle cx="320" cy="160" r="52" fill="#EEEDFE" stroke="#7F77DD" stroke-width="1.5" fill-opacity="0.7"/>
+        <text x="320" y="150" font-size="12" font-weight="700" fill="#26215C" font-family="sans-serif" text-anchor="middle">Inspection</text>
+        <text x="320" y="165" font-size="10" fill="#534AB7" font-family="sans-serif" text-anchor="middle">QC-V500-OJT</text>
+        <text x="320" y="178" font-size="10" fill="#534AB7" font-family="sans-serif" text-anchor="middle">INSP-FDC ···</text>
+
+        <!-- Cluster 3: Certification -->
+        <circle cx="490" cy="80" r="58" fill="#FEF3E2" stroke="#EF9F27" stroke-width="1.5" fill-opacity="0.7"/>
+        <text x="490" y="68" font-size="12" font-weight="700" fill="#412402" font-family="sans-serif" text-anchor="middle">Certification</text>
+        <text x="490" y="83" font-size="10" fill="#BA7517" font-family="sans-serif" text-anchor="middle">CERT-V500-FINAL</text>
+        <text x="490" y="96" font-size="10" fill="#BA7517" font-family="sans-serif" text-anchor="middle">CERT-HPT-ADV ···</text>
+
+        <!-- Similarity edges between clusters -->
+        <line x1="218" y1="100" x2="272" y2="135" stroke="#B4B2A9" stroke-width="1" stroke-dasharray="4 3" opacity=".6"/>
+        <line x1="432" y1="100" x2="368" y2="135" stroke="#B4B2A9" stroke-width="1" stroke-dasharray="4 3" opacity=".6"/>
+
+        <!-- Skill level labels -->
+        <rect x="60" y="176" width="200" height="52" rx="8" fill="var(--bg2,#f7f6f2)" stroke="var(--border,rgba(0,0,0,0.12))" stroke-width="1"/>
+        <text x="160" y="196" font-size="11" font-weight="600" fill="var(--text,#1a1a18)" font-family="sans-serif" text-anchor="middle">Skill levels inferred</text>
+        <text x="160" y="212" font-size="10" fill="var(--text2,#5f5e5a)" font-family="sans-serif" text-anchor="middle">Entry → Intermediate → Advanced → Expert</text>
+        <text x="160" y="222" font-size="10" fill="var(--text3,#88877f)" font-family="sans-serif" text-anchor="middle">from workflow complexity + prerequisites</text>
+
+        <rect x="380" y="176" width="200" height="52" rx="8" fill="var(--bg2,#f7f6f2)" stroke="var(--border,rgba(0,0,0,0.12))" stroke-width="1"/>
+        <text x="480" y="196" font-size="11" font-weight="600" fill="var(--text,#1a1a18)" font-family="sans-serif" text-anchor="middle">Capability taxonomy built</text>
+        <text x="480" y="212" font-size="10" fill="var(--text2,#5f5e5a)" font-family="sans-serif" text-anchor="middle">System-defined · cross-site · consistent</text>
+        <text x="480" y="222" font-size="10" fill="var(--text3,#88877f)" font-family="sans-serif" text-anchor="middle">Assembly · Inspection · Certification ···</text>
+      </svg>
+      <div class="phase-desc">With every objective understood, Phase 2 clusters them by semantic similarity and classifies capability areas against a system-defined taxonomy. Skill levels are inferred from workflow complexity and prerequisites. The result: a consistent, cross-site view of what capabilities actually exist in the organization.</div>
+    </div>
+
+    <!-- Phase 3 panel -->
+    <div class="phase-panel" id="panel-p3">
+      <svg viewBox="0 0 640 270" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="pa3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+        <!-- Intelligence core -->
+        <circle cx="320" cy="130" r="52" fill="#EBF9F3" stroke="#1D9E75" stroke-width="2"/>
+        <text x="320" y="122" font-size="13" font-weight="700" fill="#085041" font-family="sans-serif" text-anchor="middle">Objective</text>
+        <text x="320" y="138" font-size="13" font-weight="700" fill="#085041" font-family="sans-serif" text-anchor="middle">Intelligence</text>
+        <text x="320" y="154" font-size="10" fill="#0F6E56" font-family="sans-serif" text-anchor="middle">capability graph</text>
+
+        <!-- PLAN -->
+        <rect x="30" y="20" width="170" height="90" rx="10" fill="#E6F1FB" stroke="#378ADD" stroke-width="1.5"/>
+        <text x="115" y="42" font-size="13" font-weight="700" fill="#042C53" font-family="sans-serif" text-anchor="middle">PLAN</text>
+        <text x="115" y="60" font-size="10" fill="#185FA5" font-family="sans-serif" text-anchor="middle">Ramp gap analysis</text>
+        <text x="115" y="74" font-size="10" fill="#185FA5" font-family="sans-serif" text-anchor="middle">Hire vs. train modeling</text>
+        <text x="115" y="88" font-size="10" fill="#185FA5" font-family="sans-serif" text-anchor="middle">Capability coverage by site</text>
+        <text x="115" y="102" font-size="10" fill="#185FA5" font-family="sans-serif" text-anchor="middle">Cross-site resilience</text>
+        <line x1="200" y1="65" x2="270" y2="105" stroke="#378ADD" stroke-width="1.5" marker-end="url(#pa3)"/>
+
+        <!-- BUILD -->
+        <rect x="30" y="172" width="170" height="82" rx="10" fill="#EEEDFE" stroke="#7F77DD" stroke-width="1.5"/>
+        <text x="115" y="194" font-size="13" font-weight="700" fill="#26215C" font-family="sans-serif" text-anchor="middle">BUILD</text>
+        <text x="115" y="212" font-size="10" fill="#534AB7" font-family="sans-serif" text-anchor="middle">Training path recommendations</text>
+        <text x="115" y="226" font-size="10" fill="#534AB7" font-family="sans-serif" text-anchor="middle">Duplicate objective detection</text>
+        <text x="115" y="240" font-size="10" fill="#534AB7" font-family="sans-serif" text-anchor="middle">New objective suggestions</text>
+        <line x1="200" y1="195" x2="270" y2="155" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#pa3)"/>
+
+        <!-- ASSIGN -->
+        <rect x="440" y="90" width="178" height="90" rx="10" fill="#EAF3DE" stroke="#639922" stroke-width="1.5"/>
+        <text x="529" y="112" font-size="13" font-weight="700" fill="#173404" font-family="sans-serif" text-anchor="middle">ASSIGN</text>
+        <text x="529" y="130" font-size="10" fill="#3B6D11" font-family="sans-serif" text-anchor="middle">Best-fit worker surfacing</text>
+        <text x="529" y="144" font-size="10" fill="#3B6D11" font-family="sans-serif" text-anchor="middle">Borrow vs. hire decisions</text>
+        <text x="529" y="158" font-size="10" fill="#3B6D11" font-family="sans-serif" text-anchor="middle">Next training priority</text>
+        <text x="529" y="172" font-size="10" fill="#3B6D11" font-family="sans-serif" text-anchor="middle">Shift capability matching</text>
+        <line x1="372" y1="130" x2="440" y2="135" stroke="#639922" stroke-width="1.5" marker-end="url(#pa3)"/>
+
+        <!-- employee scoring note -->
+        <rect x="200" y="238" width="240" height="28" rx="6" fill="var(--bg2,#f7f6f2)" stroke="var(--border,rgba(0,0,0,0.12))" stroke-width="1"/>
+        <text x="320" y="256" font-size="11" fill="var(--text2,#5f5e5a)" font-family="sans-serif" text-anchor="middle">Employee capability scores from completed objectives</text>
+      </svg>
+      <div class="phase-desc">The intelligence graph powers three decision domains: Plan (workforce gap analysis, ramp modeling, coverage resilience), Build (training path design, duplicate detection, new objective suggestions), and Assign (best-fit matching, borrow vs. hire, shift capability alignment). Each employee gets a capability score derived from their completed objectives — enabling decisions based on what people can actually do, not just what they're listed as.</div>
+    </div>
+
+    <!-- EXTENSIBILITY NOTE -->
+    <div class="ext-note">
+      <div class="ext-icon">🔁</div>
+      <div>
+        <div class="ext-title">This model extends to every core entity</div>
+        <div class="ext-body">We're starting with objectives — but the same intelligence model applies across Covalent's core entities. Once objectives are understood, the same pipeline can generate intelligence for groups, jobs, and employees, creating a fully connected capability graph across the entire workforce.</div>
+        <div class="ext-entities">
+          <span class="ext-entity current">Objectives ✓ Phase 1</span>
+          <span class="ext-entity">Objective Groups</span>
+          <span class="ext-entity">Jobs</span>
+          <span class="ext-entity">Employees</span>
+          <span class="ext-entity">Sites</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Context tile popups
+  function toggleCtx(id, tile, idx) {
+    var popup = document.getElementById('p-' + id);
+    var isOpen = popup.classList.contains('show');
+    document.querySelectorAll('.ctx-popup').forEach(function(p) { p.classList.remove('show'); });
+    document.querySelectorAll('.ctx-tile').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.ctx-tile-indicator').forEach(function(i) { i.textContent = '+'; });
+    if (!isOpen) {
+      popup.classList.add('show');
+      tile.classList.add('active');
+      tile.querySelector('.ctx-tile-indicator').textContent = '×';
+    }
+  }
+
+  // Close popups on outside click
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.ctx-tile-wrap')) {
+      document.querySelectorAll('.ctx-popup').forEach(function(p) { p.classList.remove('show'); });
+      document.querySelectorAll('.ctx-tile').forEach(function(t) { t.classList.remove('active'); });
+      document.querySelectorAll('.ctx-tile-indicator').forEach(function(i) { i.textContent = '+'; });
+    }
+  });
+
+  // Graph zoom
+  var zoomed = false;
+  function setZoom(mode) {
+    var full = document.getElementById('fullNetwork');
+    var zoomed_g = document.getElementById('zoomedNetwork');
+    var inBtn = document.getElementById('zoomInBtn');
+    var outBtn = document.getElementById('zoomOutBtn');
+    if (mode === 'in') {
+      full.style.transition = 'opacity .4s';
+      full.style.opacity = '0';
+      full.style.pointerEvents = 'none';
+      setTimeout(function() {
+        zoomed_g.style.transition = 'opacity .4s';
+        zoomed_g.style.opacity = '1';
+        zoomed_g.style.pointerEvents = 'all';
+      }, 300);
+      inBtn.classList.add('active');
+      outBtn.classList.remove('active');
+    } else {
+      zoomed_g.style.transition = 'opacity .4s';
+      zoomed_g.style.opacity = '0';
+      zoomed_g.style.pointerEvents = 'none';
+      setTimeout(function() {
+        full.style.transition = 'opacity .4s';
+        full.style.opacity = '1';
+        full.style.pointerEvents = 'all';
+      }, 300);
+      outBtn.classList.add('active');
+      inBtn.classList.remove('active');
+    }
+  }
+
+  // Carousel
+  var cIdx = 0, cN = 5;
+  var ctrack = document.getElementById('ctrack');
+  var cdots = document.getElementById('cdots');
+  var cprev = document.getElementById('cprev');
+  var cnext = document.getElementById('cnext');
+  for (var i = 0; i < cN; i++) {
+    var d = document.createElement('button');
+    d.className = 'c-dot' + (i === 0 ? ' active' : '');
+    d.setAttribute('aria-label', 'Slide ' + (i + 1));
+    (function(j) { d.onclick = function() { cGo(j); }; })(i);
+    cdots.appendChild(d);
+  }
+  function cGo(i) {
+    cIdx = i;
+    ctrack.style.transform = 'translateX(-' + (i * 100) + '%)';
+    document.querySelectorAll('.c-dot').forEach(function(d, j) { d.classList.toggle('active', j === i); });
+    cprev.disabled = i === 0;
+    cnext.disabled = i === cN - 1;
+  }
+  function cMove(dir) { cGo(Math.max(0, Math.min(cN - 1, cIdx + dir))); }
+
+  // Phase explorer
+  function showPhase(n) {
+    [1,2,3].forEach(function(p) {
+      document.getElementById('panel-p' + p).classList.remove('show');
+      document.getElementById('tab-p' + p).className = 'phase-tab';
+    });
+    document.getElementById('panel-p' + n).classList.add('show');
+    document.getElementById('tab-p' + n).className = 'phase-tab active-p' + n;
+  }
+</script>
+</body>
+</html>
