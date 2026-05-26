@@ -512,6 +512,7 @@
       <span class="filters-label">Categories</span>
       <button class="filter-chip" data-filter="training" type="button">Training</button>
       <button class="filter-chip" data-filter="scheduling" type="button">Scheduling</button>
+      <button class="filter-chip" data-filter="planning" type="button">Planning</button>
       <button class="filter-chip filter-reset is-hidden" id="filterReset" type="button">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1044,6 +1045,97 @@
           </svg>
         </span>
         Real-time trainee roster & status
+      </div>
+    </a>
+
+    <!-- Card 6: Workforce Planning (Occupations) -->
+    <a class="card" href="https://pages.covalentworkforce.com/WFP_V1_occupations/" target="_blank" rel="noopener" data-category="planning" data-tags="workforce planning occupations roles headcount org structure">
+      <div class="card-thumb">
+        <svg viewBox="0 0 480 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="g6" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#5B21B6"/>
+              <stop offset="100%" stop-color="#7C3AED"/>
+            </linearGradient>
+            <pattern id="grain6" width="2" height="2" patternUnits="userSpaceOnUse">
+              <rect width="2" height="2" fill="rgba(255,255,255,0)"/>
+              <circle cx="1" cy="1" r="0.3" fill="rgba(255,255,255,0.06)"/>
+            </pattern>
+          </defs>
+          <rect width="480" height="300" fill="url(#g6)"/>
+          <rect width="480" height="300" fill="url(#grain6)"/>
+
+          <!-- Occupation taxonomy: parent role with branching sub-roles -->
+          <!-- Connecting lines -->
+          <g stroke="#FFFFFF" stroke-width="2.5" opacity="0.4" fill="none">
+            <path d="M240 108 L240 130"/>
+            <path d="M240 130 L120 130 L120 156"/>
+            <path d="M240 130 L240 156"/>
+            <path d="M240 130 L360 130 L360 156"/>
+          </g>
+
+          <!-- Parent occupation card -->
+          <g transform="translate(160, 56)">
+            <rect width="160" height="52" rx="10" fill="#FFFFFF"/>
+            <rect x="14" y="14" width="78" height="9" rx="4.5" fill="#0F1729"/>
+            <rect x="14" y="29" width="104" height="6" rx="3" fill="#94A3B8"/>
+            <!-- Headcount chip -->
+            <rect x="124" y="16" width="24" height="20" rx="6" fill="#EDE9FE"/>
+            <text x="136" y="30" text-anchor="middle" fill="#7C3AED" font-family="Inter, sans-serif" font-weight="800" font-size="10">24</text>
+          </g>
+
+          <!-- Sub-occupation cards -->
+          <g transform="translate(64, 156)">
+            <rect width="112" height="64" rx="9" fill="#FFFFFF"/>
+            <circle cx="22" cy="22" r="12" fill="#DDD6FE"/>
+            <text x="22" y="26" text-anchor="middle" fill="#7C3AED" font-family="Inter, sans-serif" font-weight="800" font-size="9">A</text>
+            <rect x="42" y="14" width="56" height="7" rx="3.5" fill="#0F1729"/>
+            <rect x="42" y="26" width="38" height="5" rx="2.5" fill="#94A3B8"/>
+            <!-- coverage bar -->
+            <rect x="14" y="44" width="84" height="8" rx="4" fill="#F1F5F9"/>
+            <rect x="14" y="44" width="62" height="8" rx="4" fill="#10B981"/>
+          </g>
+
+          <g transform="translate(184, 156)">
+            <rect width="112" height="64" rx="9" fill="#FFFFFF"/>
+            <circle cx="22" cy="22" r="12" fill="#DDD6FE"/>
+            <text x="22" y="26" text-anchor="middle" fill="#7C3AED" font-family="Inter, sans-serif" font-weight="800" font-size="9">B</text>
+            <rect x="42" y="14" width="48" height="7" rx="3.5" fill="#0F1729"/>
+            <rect x="42" y="26" width="44" height="5" rx="2.5" fill="#94A3B8"/>
+            <rect x="14" y="44" width="84" height="8" rx="4" fill="#F1F5F9"/>
+            <rect x="14" y="44" width="40" height="8" rx="4" fill="#F59E0B"/>
+          </g>
+
+          <g transform="translate(304, 156)">
+            <rect width="112" height="64" rx="9" fill="#FFFFFF"/>
+            <circle cx="22" cy="22" r="12" fill="#DDD6FE"/>
+            <text x="22" y="26" text-anchor="middle" fill="#7C3AED" font-family="Inter, sans-serif" font-weight="800" font-size="9">C</text>
+            <rect x="42" y="14" width="52" height="7" rx="3.5" fill="#0F1729"/>
+            <rect x="42" y="26" width="36" height="5" rx="2.5" fill="#94A3B8"/>
+            <rect x="14" y="44" width="84" height="8" rx="4" fill="#F1F5F9"/>
+            <rect x="14" y="44" width="78" height="8" rx="4" fill="#10B981"/>
+          </g>
+        </svg>
+        <span class="card-tag">Planning</span>
+      </div>
+      <div class="card-title-row">
+        <h3 class="card-title">Workforce Planning (Occupations)</h3>
+        <span class="card-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="7" y1="17" x2="17" y2="7"></line>
+            <polyline points="7 7 17 7 17 17"></polyline>
+          </svg>
+        </span>
+      </div>
+      <div class="card-meta">
+        <span class="card-meta-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"></path>
+          </svg>
+        </span>
+        Occupation structure & headcount planning
       </div>
     </a>
 
