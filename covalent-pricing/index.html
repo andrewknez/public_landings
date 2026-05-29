@@ -82,6 +82,36 @@
   .foot-definition strong { color: var(--ink-2); font-weight: 600; }
   .foot-definition + .foot { margin-top: 0; }
 
+  /* FAQ section */
+  .faq { margin-top: 80px; position: relative; }
+  .faq-layout { display: grid; grid-template-columns: 320px 1fr; gap: 64px; max-width: 1080px; margin: 0 auto; align-items: start; }
+  .faq-intro { position: sticky; top: 32px; }
+  .faq-intro .section-eyebrow { text-align: left; margin-bottom: 16px; }
+  .faq-intro .section-title { text-align: left; font-size: 36px; line-height: 1.1; margin-bottom: 16px; }
+  .faq-intro-sub { font-size: 14px; color: var(--ink-3); line-height: 1.55; margin: 0 0 20px; }
+  .faq-contact { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--blue-500); text-decoration: none; padding: 8px 14px; border: 1px solid var(--blue-500); border-radius: 999px; transition: all 0.15s ease; background: transparent; cursor: pointer; font-family: inherit; }
+  .faq-contact:hover { background: var(--blue-500); color: #fff; }
+  .faq-contact svg { display: block; }
+
+  .faq-list { display: flex; flex-direction: column; gap: 12px; }
+  .faq-item { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease; }
+  .faq-item:hover { border-color: var(--line-strong); box-shadow: var(--shadow-sm); }
+  .faq-item.open { border-color: var(--blue-500); box-shadow: 0 4px 24px rgba(46,111,214,0.08); }
+
+  .faq-question { width: 100%; background: transparent; border: none; padding: 20px 22px; font-family: inherit; font-size: 16px; font-weight: 500; color: var(--navy-900); text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; letter-spacing: -0.01em; transition: color 0.15s ease; }
+  .faq-question:hover { color: var(--blue-500); }
+  .faq-item.open .faq-question { color: var(--blue-500); padding-bottom: 12px; }
+
+  .faq-icon { flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%; background: var(--blue-50); color: var(--blue-500); display: flex; align-items: center; justify-content: center; transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease, color 0.2s ease; }
+  .faq-icon svg { display: block; }
+  .faq-item.open .faq-icon { transform: rotate(135deg); background: var(--blue-500); color: #fff; }
+
+  .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+  .faq-item.open .faq-answer { max-height: 500px; }
+  .faq-answer-inner { padding: 0 22px 22px; font-size: 14.5px; color: var(--ink-2); line-height: 1.65; max-width: 640px; }
+  .faq-answer-inner p { margin: 0 0 12px; }
+  .faq-answer-inner p:last-child { margin-bottom: 0; }
+  .faq-answer-inner strong { color: var(--ink); font-weight: 600; }
   @media (max-width: 900px) {
     .page { padding: 40px 20px 64px; }
     h1 { font-size: 32px; }
@@ -91,6 +121,12 @@
   }
 
   /* Phone & small-tablet view: compact table to prevent overlap & truncation */
+  @media (max-width: 900px) {
+    .faq-layout { grid-template-columns: 1fr; gap: 32px; }
+    .faq-intro { position: static; }
+    .faq-intro .section-title { font-size: 28px; }
+  }
+
   @media (max-width: 700px) {
     .page { padding: 28px 14px 48px; }
     h1 { font-size: 26px; margin-bottom: 8px; }
@@ -133,6 +169,12 @@
     /* Footer */
     .foot { font-size: 11px; padding: 0 8px; line-height: 1.6; }
     .foot .dot { margin: 0 6px; }
+
+    /* FAQ */
+    .faq { margin-top: 56px; }
+    .faq-intro .section-title { font-size: 24px; }
+    .faq-question { padding: 16px 18px; font-size: 15px; }
+    .faq-answer-inner { padding: 0 18px 18px; font-size: 13.5px; }
   }
 
   @media (max-width: 560px) {
@@ -313,10 +355,97 @@
     </div>
   </section>
 
+  <section class="faq" aria-label="Frequently asked questions">
+    <div class="faq-layout">
+      <div class="faq-intro">
+        <div class="section-eyebrow">FAQ</div>
+        <h2 class="section-title">Frequently Asked Questions</h2>
+      </div>
+    <div class="faq-list">
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          What defines a user?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2V10M2 6H10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            <p>A licensed user is anyone with a training record or an administration role in the platform. That includes hourly operators tracked in the skills matrix, supervisors managing assignments, trainers signing off on evaluations, and admins configuring the system.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          How is Covalent different from an LMS?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2V10M2 6H10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            <p>An LMS is built to deliver and track courses. Covalent is built to operate the workforce on the shop floor &mdash; planning coverage, sequencing on-the-job training, capturing trainer sign-offs, and gating job eligibility against live skill records.</p>
+            <p>Covalent <strong>complements</strong> your LMS rather than replacing it. Course completions from systems like Cornerstone, Absorb, or Docebo flow in as skill prerequisites, and Covalent layers on the OJT workflows, audit trails, and assignment logic that an LMS was never designed to handle.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          How long does implementation take?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2V10M2 6H10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            <p>Typical deployment runs 4&ndash;8 weeks depending on scope, data readiness, and integration complexity. Implementation covers platform configuration (organizational structure, roles, workflows), data migration (employees, training records, skill structures), administrator training, and SSO setup as needed.</p>
+            <p>All plans include tiered implementation and hypercare support depending on the plan. Pro and Enterprise customers also receive ongoing engagement from our customer success team to continuously roll out additional sites, objectives, and integrations.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          What happens if my user count grows mid-contract?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2V10M2 6H10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            <p>Add users at any time at your contracted per-user rate. We true up at your next annual billing cycle rather than triggering a new contract every time you onboard new operators.</p>
+            <p>If growth pushes you past a tier threshold or warrants a tier upgrade, your data stays intact and our team can discuss activation of new features and contract amendments.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Is my data secure?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2V10M2 6H10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            <p>Data is stored in Covalent's AWS cloud with SOC 2 controls and access restricted to authorized parties. SSO is available on Pro (add-on) and Enterprise plans for centralized identity management.</p>
+            <p>For regulated industries, Enterprise customers can host in a dedicated FedRAMP High environment &mdash; the right fit for aerospace, defense, and other manufacturers handling controlled unclassified information.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    </div>
+  </section>
+
   <p class="foot foot-definition"><strong>Licensed user</strong> &nbsp;Anyone with a training record or an administration role in the platform.</p>
   <p class="foot">Multi-year contracts billed on an annual basis<span class="dot">•</span>Volume discounts available at enterprise scale</p>
 
 </div>
+
+<script>
+  // FAQ accordion
+  document.querySelectorAll('.faq-question').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.faq-item');
+      const isOpen = item.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+  });
+</script>
 
 </body>
 </html>
