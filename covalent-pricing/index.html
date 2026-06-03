@@ -40,6 +40,46 @@
   .price-contact { font-size: 22px; font-weight: 600; color: var(--navy-900); line-height: 1.1; letter-spacing: -0.01em; }
   .price-min { font-size: 12px; color: var(--ink-3); margin: 2px 0 0; font-weight: 500; }
   .tier-desc { font-size: 13px; color: var(--ink-2); margin: 12px 0 0; line-height: 1.5; }
+
+  /* Volume pricing pill — sits between tier cards and comparison table */
+  .volume-pill {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: linear-gradient(135deg, rgba(46,111,214,0.04) 0%, rgba(46,111,214,0.08) 100%);
+    border: 1px solid rgba(46,111,214,0.18);
+    border-radius: 999px;
+    padding: 14px 22px 14px 18px;
+    margin: -12px 0 40px;
+    box-shadow: 0 1px 2px rgba(10, 26, 51, 0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .volume-pill:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(46,111,214,0.1); border-color: rgba(46,111,214,0.3); }
+  .volume-icon { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%; background: var(--blue-500); color: #fff; display: flex; align-items: center; justify-content: center; }
+  .volume-icon svg { display: block; }
+  .volume-text { flex: 1 1 auto; font-size: 13.5px; color: var(--ink-2); line-height: 1.45; }
+  .volume-text strong { color: var(--navy-900); font-weight: 600; }
+  .volume-cta {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--blue-500);
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid rgba(46,111,214,0.3);
+    transition: all 0.15s ease;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .volume-cta:hover { background: var(--blue-500); color: #fff; border-color: var(--blue-500); }
+  .volume-cta svg { display: block; transition: transform 0.2s ease; }
+  .volume-cta:hover svg { transform: translateX(2px); }
   .table-wrap { background: transparent; border: 1px solid var(--line); border-radius: 16px; overflow: visible; box-shadow: var(--shadow-sm); position: relative; background-color: var(--card); }
   .table-wrap table { border-radius: 16px; overflow: hidden; }
   .table-wrap thead tr:first-child th:first-child { border-top-left-radius: 16px; }
@@ -218,6 +258,9 @@
   }
 
   @media (max-width: 700px) {
+    .volume-pill { flex-direction: column; gap: 12px; border-radius: 20px; padding: 18px 20px; text-align: center; max-width: 100%; margin: -8px 0 32px; }
+    .volume-text { font-size: 13px; max-width: 100%; }
+    .volume-cta { font-size: 12px; padding: 8px 14px; }
     .page { padding: 28px 14px 48px; }
     h1 { font-size: 26px; margin-bottom: 8px; }
     .logo { height: 24px; margin-bottom: 32px; }
@@ -317,6 +360,19 @@
       <p class="price-min">&nbsp;</p>
     </div>
   </section>
+
+  <div class="volume-pill" role="note">
+    <span class="volume-icon">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3 13V9M8 13V5M13 13V7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </span>
+    <span class="volume-text">Per-user volume bands included as user count grows. The numbers above are base rates.</span>
+    <a class="volume-cta" href="https://www.covalentnetworks.com/contact" target="_blank" rel="noopener">
+      Contact sales
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 6H9M9 6L6 3M9 6L6 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
 
   <section class="table-wrap" aria-label="Feature comparison">
     <table>
