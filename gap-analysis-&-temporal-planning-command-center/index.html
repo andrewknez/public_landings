@@ -1,0 +1,2353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gap Analysis & Action Command Center - Temporal Planning</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0A4D68;
+            --primary-dark: #083A4F;
+            --accent-green: #0D9488;
+            --accent-red: #DC2626;
+            --accent-orange: #F59E0B;
+            --accent-blue: #3B82F6;
+            --accent-purple: #7C3AED;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --text: #0F172A;
+            --text-muted: #475569;
+            --text-light: #94A3B8;
+            --border: #E2E8F0;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            padding: 1.5rem 3rem 1rem;
+            color: white;
+            box-shadow: 0 4px 20px rgba(10, 77, 104, 0.2);
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'IBM Plex Sans', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-action {
+            background: var(--primary);
+            color: white;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-action:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-outline:hover {
+            background: var(--bg);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .header-meta {
+            display: flex;
+            gap: 2rem;
+            font-size: 0.9rem;
+            opacity: 0.95;
+            margin-bottom: 1rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .meta-label {
+            opacity: 0.8;
+        }
+
+        .meta-value {
+            font-weight: 600;
+        }
+
+        /* Date Picker / Timeline Section */
+        .timeline-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .timeline-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .date-dropdown {
+            background: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary);
+            cursor: pointer;
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+
+        .timeline-track {
+            position: relative;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            margin: 0.5rem 0;
+        }
+
+        .timeline-progress {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            transition: width 0.3s ease;
+        }
+
+        .timeline-markers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .timeline-marker:hover {
+            transform: translateX(-50%) scale(1.3);
+        }
+
+        .timeline-marker.expiration {
+            background: var(--accent-red);
+        }
+
+        .timeline-marker.completion {
+            background: var(--accent-green);
+        }
+
+        .timeline-marker.requirement-change {
+            background: var(--accent-purple);
+        }
+
+        .timeline-marker.selected {
+            width: 16px;
+            height: 16px;
+            box-shadow: 0 0 0 4px rgba(255,255,255,0.5);
+        }
+
+        .timeline-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            opacity: 0.8;
+            margin-top: 0.25rem;
+        }
+
+        .timeline-legend {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.expiration { background: var(--accent-red); }
+        .legend-dot.completion { background: var(--accent-green); }
+        .legend-dot.requirement { background: var(--accent-purple); }
+
+        /* Change Summary Banner */
+        .change-banner {
+            background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+            border: 1px solid #F59E0B;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .change-banner.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .change-banner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .change-banner-title {
+            font-weight: 700;
+            color: #92400E;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .change-banner-date {
+            font-size: 0.875rem;
+            color: #B45309;
+        }
+
+        .change-items {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .change-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #78350F;
+        }
+
+        .change-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .change-icon.negative {
+            background: rgba(220, 38, 38, 0.2);
+            color: var(--accent-red);
+        }
+
+        .change-icon.positive {
+            background: rgba(13, 148, 136, 0.2);
+            color: var(--accent-green);
+        }
+
+        .change-icon.neutral {
+            background: rgba(124, 58, 237, 0.2);
+            color: var(--accent-purple);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem 3rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            background: var(--surface);
+            padding: 0.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 8px rgba(10, 77, 104, 0.3);
+        }
+
+        .tab:hover:not(.active) {
+            background: var(--bg);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Summary Cards with Delta */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px var(--shadow);
+            border-left: 4px solid;
+            transition: all 0.2s ease;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px var(--shadow);
+        }
+
+        .summary-card.total { border-left-color: var(--primary); }
+        .summary-card.meeting { border-left-color: var(--accent-green); }
+        .summary-card.below { border-left-color: var(--accent-red); }
+        .summary-card.gap { border-left-color: var(--accent-orange); }
+
+        .summary-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-value-container {
+            display: flex;
+            align-items: baseline;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1;
+        }
+
+        .summary-card.meeting .summary-value { color: var(--accent-green); }
+        .summary-card.below .summary-value { color: var(--accent-red); }
+        .summary-card.gap .summary-value { color: var(--accent-orange); }
+
+        .summary-delta {
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .summary-delta.show {
+            display: inline-block;
+        }
+
+        .summary-delta.negative {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--accent-red);
+        }
+
+        .summary-delta.positive {
+            background: rgba(13, 148, 136, 0.1);
+            color: var(--accent-green);
+        }
+
+        .summary-trend {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Filters */
+        .filters {
+            background: var(--surface);
+            padding: 1.25rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .filter-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .filter-select {
+            padding: 0.625rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: var(--surface);
+            transition: all 0.2s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Gap Analysis Table */
+        .table-container {
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+            overflow: hidden;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--primary);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        thead th {
+            padding: 0.875rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        thead th.center {
+            text-align: center;
+        }
+
+        .shift-header {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: all 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--bg);
+        }
+
+        tbody tr.has-change {
+            background: rgba(254, 243, 199, 0.3);
+        }
+
+        tbody td {
+            padding: 0.875rem;
+            font-size: 0.9rem;
+        }
+
+        .objective-cell {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .data-cell {
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .goal-cell {
+            background: rgba(10, 77, 104, 0.05);
+            font-weight: 600;
+        }
+
+        .actual-cell {
+            font-weight: 500;
+        }
+
+        .actual-cell.has-projection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.125rem;
+        }
+
+        .projection-value {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .projection-value.negative {
+            color: var(--accent-red);
+        }
+
+        .projection-value.positive {
+            color: var(--accent-green);
+        }
+
+        .gap-cell {
+            font-weight: 700;
+            position: relative;
+        }
+
+        .gap-positive { color: var(--accent-green); }
+        .gap-negative { color: var(--accent-red); }
+        .gap-zero { color: var(--text-light); }
+
+        .gap-worsening {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            margin: 0 auto;
+        }
+
+        .status-indicator.clickable {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .status-indicator.clickable:hover {
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .status-success {
+            background: rgba(13, 148, 136, 0.1);
+            color: var(--accent-green);
+        }
+
+        .status-warning {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--accent-red);
+        }
+
+        .status-warning.clickable:hover {
+            background: rgba(220, 38, 38, 0.2);
+        }
+
+        .change-indicator {
+            font-size: 0.65rem;
+            padding: 0.125rem 0.375rem;
+            border-radius: 4px;
+            margin-left: 0.25rem;
+            font-weight: 700;
+        }
+
+        .change-indicator.expiring {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--accent-red);
+        }
+
+        .change-indicator.completing {
+            background: rgba(13, 148, 136, 0.1);
+            color: var(--accent-green);
+        }
+
+        /* Action Items */
+        .action-items-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .action-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .action-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .action-stats {
+            display: flex;
+            gap: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .action-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .action-stat-label {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .action-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .action-stat.high .action-stat-value { color: var(--accent-red); }
+        .action-stat.medium .action-stat-value { color: var(--accent-orange); }
+        .action-stat.low .action-stat-value { color: var(--text-muted); }
+
+        .action-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .action-item {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px var(--shadow);
+            border-left: 4px solid;
+            transition: all 0.2s ease;
+        }
+
+        .action-item.high { border-left-color: var(--accent-red); }
+        .action-item.medium { border-left-color: var(--accent-orange); }
+        .action-item.low { border-left-color: var(--text-light); }
+        .action-item.escalating { 
+            border-left-color: var(--accent-red);
+            box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2), 0 2px 8px var(--shadow);
+        }
+
+        .action-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .action-item-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .priority-dropdown {
+            padding: 0.375rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 2px solid transparent;
+            background: transparent;
+            cursor: pointer;
+            font-family: 'IBM Plex Sans', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .priority-dropdown.high {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--accent-red);
+        }
+
+        .priority-dropdown.medium {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent-orange);
+        }
+
+        .priority-dropdown.low {
+            background: rgba(148, 163, 184, 0.1);
+            color: var(--text-muted);
+        }
+
+        .priority-dropdown:hover {
+            border-color: currentColor;
+        }
+
+        .escalation-badge {
+            background: linear-gradient(135deg, var(--accent-red), #B91C1C);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        .action-item-objective {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .action-item-shift {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Urgency Alert */
+        .urgency-alert {
+            background: linear-gradient(135deg, #FEE2E2, #FECACA);
+            border: 1px solid var(--accent-red);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .urgency-alert.show {
+            display: block;
+        }
+
+        .urgency-alert-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            color: #991B1B;
+            margin-bottom: 0.375rem;
+        }
+
+        .urgency-alert-body {
+            font-size: 0.875rem;
+            color: #7F1D1D;
+        }
+
+        .urgency-alert-recommendation {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(220, 38, 38, 0.2);
+            font-size: 0.875rem;
+            color: #991B1B;
+            font-weight: 600;
+        }
+
+        /* Enhanced Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 8px;
+        }
+
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .metric-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1;
+        }
+
+        .metric-value.positive { color: var(--accent-green); }
+        .metric-value.negative { color: var(--accent-red); }
+        .metric-value.neutral { color: var(--text); }
+        .metric-value.warning { color: var(--accent-orange); }
+
+        .metric-projection {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .metric-projection.worsening {
+            color: var(--accent-red);
+            font-weight: 600;
+        }
+
+        .metric-projection.improving {
+            color: var(--accent-green);
+        }
+
+        .metric-subtext {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        /* Training Progress Table */
+        .training-progress {
+            margin: 1rem 0;
+        }
+
+        .training-progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .training-progress-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .training-progress-count {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .training-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .training-table thead {
+            background: var(--bg);
+        }
+
+        .training-table th {
+            padding: 0.75rem;
+            text-align: left;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .training-table td {
+            padding: 0.75rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .status-badge.in-progress {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-blue);
+        }
+
+        .status-badge.assigned {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent-orange);
+        }
+
+        .status-badge.expiring {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--accent-red);
+        }
+
+        .status-badge.completed {
+            background: rgba(13, 148, 136, 0.1);
+            color: var(--accent-green);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-blue);
+            transition: width 0.3s ease;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin: 1rem 0;
+        }
+
+        /* Comments */
+        .comments-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .comments-header {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .comment-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-family: 'IBM Plex Sans', sans-serif;
+            resize: vertical;
+            min-height: 50px;
+        }
+
+        .comment-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .comment-item {
+            padding: 0.75rem;
+            background: var(--bg);
+            border-radius: 6px;
+            margin-top: 0.5rem;
+        }
+
+        .comment-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 0.375rem;
+        }
+
+        .comment-text {
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        /* Footer */
+        .action-item-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            margin-top: 1rem;
+        }
+
+        .owner-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .owner-label {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .owner-name {
+            color: var(--text);
+        }
+
+        .action-timestamp {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        /* Modals */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .modal-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-section-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.75rem;
+        }
+
+        .candidate-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .candidate-card {
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .candidate-card:hover {
+            border-color: var(--primary);
+            background: rgba(10, 77, 104, 0.02);
+        }
+
+        .candidate-card.selected {
+            border-color: var(--primary);
+            background: rgba(10, 77, 104, 0.05);
+        }
+
+        .candidate-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.5rem;
+        }
+
+        .candidate-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .candidate-id {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .workload-badge {
+            padding: 0.25rem 0.625rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .workload-badge.low {
+            background: rgba(13, 148, 136, 0.1);
+            color: var(--accent-green);
+        }
+
+        .workload-badge.medium {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent-orange);
+        }
+
+        .workload-badge.high {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--accent-red);
+        }
+
+        .candidate-skills {
+            display: flex;
+            gap: 0.375rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.375rem;
+        }
+
+        .skill-chip {
+            padding: 0.2rem 0.5rem;
+            background: var(--bg);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .candidate-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .modal-footer {
+            padding: 1.25rem 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--accent-green);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            display: flex;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); }
+            to { transform: translateX(0); }
+        }
+
+        /* Section Divider */
+        .section-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 2rem 0 1rem;
+        }
+
+        .section-divider-line {
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .section-divider-text {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Collapsed section */
+        .collapsed-section {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px var(--shadow);
+            transition: all 0.2s ease;
+        }
+
+        .collapsed-section:hover {
+            background: var(--bg);
+        }
+
+        .collapsed-section-content {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        .collapsed-section.expanded .collapsed-section-content {
+            display: block;
+        }
+
+        .expand-icon {
+            transition: transform 0.2s ease;
+        }
+
+        .collapsed-section.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        .action-item.resolved { 
+            border-left-color: var(--accent-green);
+            opacity: 0.7;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .container { padding: 1.5rem; }
+            .header { padding: 1.25rem 1.5rem 1rem; }
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+            .timeline-legend { flex-wrap: wrap; gap: 0.75rem; }
+        }
+
+        @media (max-width: 768px) {
+            .header-top { flex-direction: column; gap: 1rem; align-items: flex-start; }
+            .header-meta { flex-direction: column; gap: 0.5rem; }
+            .summary-grid { grid-template-columns: 1fr; }
+            .filters { flex-direction: column; }
+            .change-items { flex-direction: column; gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="header-top">
+                <h1>Gap Analysis & Action Command Center</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="exportReport()">
+                        <span>📊</span> Export Report
+                    </button>
+                    <button class="btn btn-primary" onclick="refreshData()">
+                        <span>🔄</span> Refresh Data
+                    </button>
+                </div>
+            </div>
+            <div class="header-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Location:</span>
+                    <span class="meta-value">Plant A - Chicago</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Scope:</span>
+                    <span class="meta-value">Zone 1 - Assembly</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Goal:</span>
+                    <span class="meta-value">Q1 2025 Objective Coverage</span>
+                </div>
+            </div>
+
+            <!-- Timeline / Date Picker Section -->
+            <div class="timeline-section">
+                <div class="timeline-header">
+                    <div class="timeline-title">
+                        <span>📅</span> Planning Horizon
+                    </div>
+                    <select class="date-dropdown" id="dateDropdown" onchange="changeViewDate(this.value)">
+                        <option value="today">Today (Feb 5, 2025)</option>
+                        <option value="feb13">Feb 13 • 2 expirations</option>
+                        <option value="feb18">Feb 18 • 1 training completes</option>
+                        <option value="mar1">Mar 1 • Requirement changes</option>
+                        <option value="mar15">Mar 15 • End of Q1</option>
+                    </select>
+                </div>
+                <div class="timeline-track">
+                    <div class="timeline-progress" id="timelineProgress" style="width: 0%;"></div>
+                    <div class="timeline-markers">
+                        <div class="timeline-marker selected" style="left: 0%;" onclick="selectDate('today')" title="Today"></div>
+                        <div class="timeline-marker expiration" style="left: 20%;" onclick="selectDate('feb13')" title="Feb 13: 2 certifications expiring"></div>
+                        <div class="timeline-marker completion" style="left: 33%;" onclick="selectDate('feb18')" title="Feb 18: 1 training completes"></div>
+                        <div class="timeline-marker requirement-change" style="left: 60%;" onclick="selectDate('mar1')" title="Mar 1: Requirement changes"></div>
+                        <div class="timeline-marker" style="left: 100%;" onclick="selectDate('mar15')" title="Mar 15: End of Q1"></div>
+                    </div>
+                </div>
+                <div class="timeline-labels">
+                    <span>Today</span>
+                    <span>+45 days (Mar 15)</span>
+                </div>
+                <div class="timeline-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot expiration"></div>
+                        <span>Expirations</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot completion"></div>
+                        <span>Training Completions</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot requirement"></div>
+                        <span>Requirement Changes</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Change Summary Banner -->
+        <div class="change-banner" id="changeBanner">
+            <div class="change-banner-header">
+                <div class="change-banner-title">
+                    <span>⚠️</span> Projected Changes
+                </div>
+                <div class="change-banner-date" id="bannerDate">Viewing: February 13, 2025 (8 days from now)</div>
+            </div>
+            <div class="change-items" id="changeItems">
+                <div class="change-item">
+                    <div class="change-icon negative">-2</div>
+                    <span><strong>Expirations:</strong> TIG Welding (John S., Maria G.)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('gap-analysis')">
+                📊 Gap Analysis
+            </button>
+            <button class="tab" onclick="switchTab('action-items')">
+                🎯 Action Command Center <span id="actionCount" style="background: rgba(220,38,38,0.2); padding: 0.25rem 0.5rem; border-radius: 12px; margin-left: 0.5rem; font-size: 0.8rem;">8</span>
+            </button>
+        </div>
+
+        <!-- Gap Analysis Tab -->
+        <div class="tab-content active" id="gap-analysis">
+            <div class="summary-grid">
+                <div class="summary-card total">
+                    <div class="summary-label">Total Requirements</div>
+                    <div class="summary-value-container">
+                        <div class="summary-value">18</div>
+                    </div>
+                    <div class="summary-trend">Across 3 shifts</div>
+                </div>
+                <div class="summary-card meeting">
+                    <div class="summary-label">Meeting Target</div>
+                    <div class="summary-value-container">
+                        <div class="summary-value" id="meetingValue">10</div>
+                        <div class="summary-delta negative" id="meetingDelta">↓ 2</div>
+                    </div>
+                    <div class="summary-trend" id="meetingTrend">56% on track</div>
+                </div>
+                <div class="summary-card below">
+                    <div class="summary-label">Below Target</div>
+                    <div class="summary-value-container">
+                        <div class="summary-value" id="belowValue">8</div>
+                        <div class="summary-delta negative" id="belowDelta">↑ 2</div>
+                    </div>
+                    <div class="summary-trend" id="belowTrend">Requires action</div>
+                </div>
+                <div class="summary-card gap">
+                    <div class="summary-label">Total Gap</div>
+                    <div class="summary-value-container">
+                        <div class="summary-value" id="gapValue">-11</div>
+                        <div class="summary-delta negative" id="gapDelta">↓ 4</div>
+                    </div>
+                    <div class="summary-trend" id="gapTrend">Employees needed</div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters">
+                <div class="filter-group">
+                    <label class="filter-label">Filter by Status</label>
+                    <select class="filter-select" onchange="filterTable(this.value)">
+                        <option value="all">All Requirements</option>
+                        <option value="meeting">Meeting Target</option>
+                        <option value="below">Below Target</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Filter by Shift</label>
+                    <select class="filter-select">
+                        <option value="all">All Shifts</option>
+                        <option value="shift1">Shift 1 (6AM-2PM)</option>
+                        <option value="shift2">Shift 2 (2PM-10PM)</option>
+                        <option value="shift3">Shift 3 (10PM-6AM)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Search Objectives</label>
+                    <input type="text" class="filter-select" placeholder="Search..." oninput="searchTable(this.value)">
+                </div>
+            </div>
+
+            <!-- Gap Analysis Table -->
+            <div class="table-container">
+                <div class="table-wrapper">
+                    <table id="gapTable">
+                        <thead>
+                            <tr>
+                                <th rowspan="2">Objective</th>
+                                <th colspan="3" class="center shift-header">Shift 1 (6AM-2PM)</th>
+                                <th colspan="3" class="center shift-header">Shift 2 (2PM-10PM)</th>
+                                <th colspan="3" class="center shift-header">Shift 3 (10PM-6AM)</th>
+                                <th rowspan="2" class="center">Status</th>
+                            </tr>
+                            <tr>
+                                <th class="center">Goal</th>
+                                <th class="center">Actual</th>
+                                <th class="center">Gap</th>
+                                <th class="center">Goal</th>
+                                <th class="center">Actual</th>
+                                <th class="center">Gap</th>
+                                <th class="center">Goal</th>
+                                <th class="center">Actual</th>
+                                <th class="center">Gap</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gapTableBody">
+                            <!-- Rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Items Tab -->
+        <div class="tab-content" id="action-items">
+            <div class="action-items-container">
+                <div class="action-header">
+                    <h2>Active Gaps</h2>
+                    <div class="action-stats">
+                        <div class="action-stat high">
+                            <span class="action-stat-label">High</span>
+                            <span class="action-stat-value" id="highCount">2</span>
+                        </div>
+                        <div class="action-stat medium">
+                            <span class="action-stat-label">Medium</span>
+                            <span class="action-stat-value" id="mediumCount">3</span>
+                        </div>
+                        <div class="action-stat low">
+                            <span class="action-stat-label">Low</span>
+                            <span class="action-stat-value" id="lowCount">3</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-list" id="actionList">
+                    <!-- Action items will be populated by JavaScript -->
+                </div>
+
+                <!-- Resolved Gaps Section -->
+                <div class="section-divider" style="margin-top: 3rem;">
+                    <div class="section-divider-line"></div>
+                    <div class="section-divider-text">Resolved Gaps (3)</div>
+                    <div class="section-divider-line"></div>
+                </div>
+
+                <div class="collapsed-section" onclick="toggleSection(this)">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="font-size: 1.25rem;">✓</span>
+                        <div>
+                            <div style="font-weight: 600; color: var(--text);">View Resolved Gaps</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">3 gaps closed in the last 30 days</div>
+                        </div>
+                    </div>
+                    <div class="expand-icon" style="font-size: 1.25rem; color: var(--text-muted);">▼</div>
+                    
+                    <div class="collapsed-section-content">
+                        <div class="action-list" style="margin-top: 1rem;">
+                            <div class="action-item resolved">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div style="padding: 0.25rem 0.625rem; border-radius: 12px; font-size: 0.7rem; font-weight: 700; background: rgba(13, 148, 136, 0.1); color: var(--accent-green);">RESOLVED</div>
+                                    <div>
+                                        <div style="font-weight: 600;">Blueprint Reading</div>
+                                        <div style="font-size: 0.8rem; color: var(--text-muted);">Shift 2 (2PM - 10PM)</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
+                                    Gap closed on Dec 2, 2025 • Solution: Training Assignment • Time to close: 14 days
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assign Training Modal -->
+    <div class="modal-overlay" id="assignTrainingModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Assign Training - <span id="assignModalTitle">Welding TIG</span></div>
+                <button class="modal-close" onclick="closeModal('assignTrainingModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <div class="modal-section-title">Eligible Candidates</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                        Showing employees in Zone 1 - Assembly who meet prerequisites
+                    </div>
+                    <div class="candidate-list">
+                        <div class="candidate-card" onclick="toggleCandidate(this)">
+                            <div class="candidate-header">
+                                <div>
+                                    <div class="candidate-name">Robert Martinez</div>
+                                    <div class="candidate-id">EMP-1024 • Shift 3</div>
+                                </div>
+                                <div class="workload-badge low">Low Workload</div>
+                            </div>
+                            <div class="candidate-skills">
+                                <span class="skill-chip">✓ Welding - MIG</span>
+                                <span class="skill-chip">✓ Safety Protocol</span>
+                                <span class="skill-chip">✓ Blueprint Reading</span>
+                            </div>
+                            <div class="candidate-meta">
+                                <strong>Skills:</strong> 8 • <strong>In-Progress:</strong> 1 • <strong>Available:</strong> Yes
+                            </div>
+                        </div>
+
+                        <div class="candidate-card" onclick="toggleCandidate(this)">
+                            <div class="candidate-header">
+                                <div>
+                                    <div class="candidate-name">Lisa Chen</div>
+                                    <div class="candidate-id">EMP-1087 • Shift 3</div>
+                                </div>
+                                <div class="workload-badge medium">Medium Workload</div>
+                            </div>
+                            <div class="candidate-skills">
+                                <span class="skill-chip">✓ Welding - MIG</span>
+                                <span class="skill-chip">✓ Safety Protocol</span>
+                                <span class="skill-chip">✓ Quality Inspection</span>
+                            </div>
+                            <div class="candidate-meta">
+                                <strong>Skills:</strong> 12 • <strong>In-Progress:</strong> 2 • <strong>Available:</strong> Yes
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('assignTrainingModal')">Cancel</button>
+                <button class="btn btn-action" onclick="assignTraining()">Assign Training (0 selected)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gap Details Modal -->
+    <div class="modal-overlay" id="gapDetailsModal">
+        <div class="modal" style="max-width: 650px;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" id="gapDetailsTitle">Gap Details</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;" id="gapDetailsSubtitle"></div>
+                </div>
+                <button class="modal-close" onclick="closeModal('gapDetailsModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <div class="metrics-grid" style="background: transparent; padding: 0;">
+                        <div class="metric-item">
+                            <div class="metric-label">Target</div>
+                            <div class="metric-value neutral" id="modalTarget">—</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Current</div>
+                            <div class="metric-value neutral" id="modalActual">—</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">In-Training</div>
+                            <div class="metric-value warning" id="modalInTraining">—</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Gap</div>
+                            <div class="metric-value negative" id="modalGap">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <div class="modal-section-title">Quick Actions</div>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <button class="btn btn-action" style="width: 100%; justify-content: center;" onclick="closeModal('gapDetailsModal'); switchToTab('action-items');">
+                            <span>🎯</span> Go to Action Command Center
+                        </button>
+                        <button class="btn btn-outline" style="width: 100%; justify-content: center;" onclick="closeModal('gapDetailsModal'); openAssignTrainingModal();">
+                            <span>➕</span> Assign Training
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <span style="font-size: 1.25rem;">✓</span>
+        <span id="toastMessage">Action completed successfully</span>
+    </div>
+
+    <script>
+        // Data for different dates
+        const dateData = {
+            today: {
+                meeting: 10,
+                below: 8,
+                gap: -11,
+                rows: [
+                    { objective: 'Welding - MIG', s1: {goal:5,actual:7}, s2: {goal:5,actual:6}, s3: {goal:5,actual:4}, status: 'warning', change: null },
+                    { objective: 'Welding - TIG', s1: {goal:5,actual:4}, s2: {goal:5,actual:5}, s3: {goal:5,actual:5}, status: 'warning', change: null },
+                    { objective: 'CNC Operation - Basic', s1: {goal:8,actual:9}, s2: {goal:8,actual:7}, s3: {goal:8,actual:8}, status: 'warning', change: null },
+                    { objective: 'CNC Operation - Advanced', s1: {goal:3,actual:2}, s2: {goal:3,actual:3}, s3: {goal:3,actual:4}, status: 'warning', change: null },
+                    { objective: 'Quality Inspection', s1: {goal:10,actual:12}, s2: {goal:10,actual:11}, s3: {goal:10,actual:11}, status: 'success', change: null },
+                    { objective: 'Safety Protocol - LOTO', s1: {goal:15,actual:18}, s2: {goal:15,actual:16}, s3: {goal:15,actual:15}, status: 'success', change: null },
+                    { objective: 'Assembly - Pneumatic', s1: {goal:4,actual:3}, s2: {goal:4,actual:4}, s3: {goal:4,actual:5}, status: 'warning', change: null },
+                    { objective: 'Material Handling', s1: {goal:8,actual:10}, s2: {goal:8,actual:8}, s3: {goal:8,actual:9}, status: 'success', change: null },
+                ]
+            },
+            feb13: {
+                meeting: 8,
+                below: 10,
+                gap: -15,
+                banner: {
+                    date: 'February 13, 2025 (8 days from now)',
+                    changes: [
+                        { type: 'negative', value: '-2', text: '<strong>Expirations:</strong> TIG Welding (John S., Maria G.)' }
+                    ]
+                },
+                rows: [
+                    { objective: 'Welding - MIG', s1: {goal:5,actual:7}, s2: {goal:5,actual:6}, s3: {goal:5,actual:4}, status: 'warning', change: null },
+                    { objective: 'Welding - TIG', s1: {goal:5,actual:4}, s2: {goal:5,actual:5}, s3: {goal:5,actual:3,proj:-2}, status: 'warning', change: {type:'expiring', text:'2 expiring'} },
+                    { objective: 'CNC Operation - Basic', s1: {goal:8,actual:9}, s2: {goal:8,actual:7}, s3: {goal:8,actual:8}, status: 'warning', change: null },
+                    { objective: 'CNC Operation - Advanced', s1: {goal:3,actual:2}, s2: {goal:3,actual:3}, s3: {goal:3,actual:4}, status: 'warning', change: null },
+                    { objective: 'Quality Inspection', s1: {goal:10,actual:12}, s2: {goal:10,actual:11}, s3: {goal:10,actual:11}, status: 'success', change: null },
+                    { objective: 'Safety Protocol - LOTO', s1: {goal:15,actual:18}, s2: {goal:15,actual:16}, s3: {goal:15,actual:15}, status: 'success', change: null },
+                    { objective: 'Assembly - Pneumatic', s1: {goal:4,actual:3}, s2: {goal:4,actual:4}, s3: {goal:4,actual:5}, status: 'warning', change: null },
+                    { objective: 'Material Handling', s1: {goal:8,actual:10}, s2: {goal:8,actual:8}, s3: {goal:8,actual:9}, status: 'success', change: null },
+                ]
+            },
+            feb18: {
+                meeting: 9,
+                below: 9,
+                gap: -13,
+                banner: {
+                    date: 'February 18, 2025 (13 days from now)',
+                    changes: [
+                        { type: 'negative', value: '-2', text: '<strong>Expirations:</strong> TIG Welding (John S., Maria G.)' },
+                        { type: 'positive', value: '+1', text: '<strong>Training Completes:</strong> CNC Advanced (David C.)' }
+                    ]
+                },
+                rows: [
+                    { objective: 'Welding - MIG', s1: {goal:5,actual:7}, s2: {goal:5,actual:6}, s3: {goal:5,actual:4}, status: 'warning', change: null },
+                    { objective: 'Welding - TIG', s1: {goal:5,actual:4}, s2: {goal:5,actual:5}, s3: {goal:5,actual:3,proj:-2}, status: 'warning', change: {type:'expiring', text:'2 expiring'} },
+                    { objective: 'CNC Operation - Basic', s1: {goal:8,actual:9}, s2: {goal:8,actual:7}, s3: {goal:8,actual:8}, status: 'warning', change: null },
+                    { objective: 'CNC Operation - Advanced', s1: {goal:3,actual:3,proj:+1}, s2: {goal:3,actual:3}, s3: {goal:3,actual:4}, status: 'success', change: {type:'completing', text:'1 completing'} },
+                    { objective: 'Quality Inspection', s1: {goal:10,actual:12}, s2: {goal:10,actual:11}, s3: {goal:10,actual:11}, status: 'success', change: null },
+                    { objective: 'Safety Protocol - LOTO', s1: {goal:15,actual:18}, s2: {goal:15,actual:16}, s3: {goal:15,actual:15}, status: 'success', change: null },
+                    { objective: 'Assembly - Pneumatic', s1: {goal:4,actual:3}, s2: {goal:4,actual:4}, s3: {goal:4,actual:5}, status: 'warning', change: null },
+                    { objective: 'Material Handling', s1: {goal:8,actual:10}, s2: {goal:8,actual:8}, s3: {goal:8,actual:9}, status: 'success', change: null },
+                ]
+            },
+            mar1: {
+                meeting: 7,
+                below: 11,
+                gap: -18,
+                banner: {
+                    date: 'March 1, 2025 (24 days from now)',
+                    changes: [
+                        { type: 'negative', value: '-2', text: '<strong>Expirations:</strong> TIG Welding' },
+                        { type: 'positive', value: '+1', text: '<strong>Training Completes:</strong> CNC Advanced' },
+                        { type: 'neutral', value: '↑', text: '<strong>Req Change:</strong> Assembly target 4→5' }
+                    ]
+                },
+                rows: [
+                    { objective: 'Welding - MIG', s1: {goal:5,actual:7}, s2: {goal:5,actual:6}, s3: {goal:5,actual:4}, status: 'warning', change: null },
+                    { objective: 'Welding - TIG', s1: {goal:5,actual:4}, s2: {goal:5,actual:5}, s3: {goal:5,actual:3,proj:-2}, status: 'warning', change: {type:'expiring', text:'2 expired'} },
+                    { objective: 'CNC Operation - Basic', s1: {goal:8,actual:9}, s2: {goal:8,actual:7}, s3: {goal:8,actual:8}, status: 'warning', change: null },
+                    { objective: 'CNC Operation - Advanced', s1: {goal:3,actual:3,proj:+1}, s2: {goal:3,actual:3}, s3: {goal:3,actual:4}, status: 'success', change: {type:'completing', text:'completed'} },
+                    { objective: 'Quality Inspection', s1: {goal:10,actual:12}, s2: {goal:10,actual:11}, s3: {goal:10,actual:11}, status: 'success', change: null },
+                    { objective: 'Safety Protocol - LOTO', s1: {goal:15,actual:18}, s2: {goal:15,actual:16}, s3: {goal:15,actual:15}, status: 'success', change: null },
+                    { objective: 'Assembly - Pneumatic', s1: {goal:5,actual:3}, s2: {goal:5,actual:4}, s3: {goal:5,actual:5}, status: 'warning', change: {type:'expiring', text:'Goal ↑'} },
+                    { objective: 'Material Handling', s1: {goal:8,actual:10}, s2: {goal:8,actual:8}, s3: {goal:8,actual:9}, status: 'success', change: null },
+                ]
+            },
+            mar15: {
+                meeting: 7,
+                below: 11,
+                gap: -18,
+                banner: {
+                    date: 'March 15, 2025 (End of Q1)',
+                    changes: [
+                        { type: 'negative', value: '-2', text: '<strong>Expirations:</strong> TIG Welding' },
+                        { type: 'positive', value: '+1', text: '<strong>Training Completes:</strong> CNC Advanced' },
+                        { type: 'neutral', value: '↑', text: '<strong>Req Change:</strong> Assembly target increased' }
+                    ]
+                },
+                rows: [
+                    { objective: 'Welding - MIG', s1: {goal:5,actual:7}, s2: {goal:5,actual:6}, s3: {goal:5,actual:4}, status: 'warning', change: null },
+                    { objective: 'Welding - TIG', s1: {goal:5,actual:4}, s2: {goal:5,actual:5}, s3: {goal:5,actual:3,proj:-2}, status: 'warning', change: {type:'expiring', text:'2 expired'} },
+                    { objective: 'CNC Operation - Basic', s1: {goal:8,actual:9}, s2: {goal:8,actual:7}, s3: {goal:8,actual:8}, status: 'warning', change: null },
+                    { objective: 'CNC Operation - Advanced', s1: {goal:3,actual:3,proj:+1}, s2: {goal:3,actual:3}, s3: {goal:3,actual:4}, status: 'success', change: {type:'completing', text:'completed'} },
+                    { objective: 'Quality Inspection', s1: {goal:10,actual:12}, s2: {goal:10,actual:11}, s3: {goal:10,actual:11}, status: 'success', change: null },
+                    { objective: 'Safety Protocol - LOTO', s1: {goal:15,actual:18}, s2: {goal:15,actual:16}, s3: {goal:15,actual:15}, status: 'success', change: null },
+                    { objective: 'Assembly - Pneumatic', s1: {goal:5,actual:3}, s2: {goal:5,actual:4}, s3: {goal:5,actual:5}, status: 'warning', change: {type:'expiring', text:'Goal ↑'} },
+                    { objective: 'Material Handling', s1: {goal:8,actual:10}, s2: {goal:8,actual:8}, s3: {goal:8,actual:9}, status: 'success', change: null },
+                ]
+            }
+        };
+
+        let currentDate = 'today';
+
+        function changeViewDate(date) {
+            currentDate = date;
+            updateView();
+            updateTimelineMarkers();
+        }
+
+        function selectDate(date) {
+            document.getElementById('dateDropdown').value = date;
+            changeViewDate(date);
+        }
+
+        function updateTimelineMarkers() {
+            const markers = document.querySelectorAll('.timeline-marker');
+            markers.forEach(m => m.classList.remove('selected'));
+            
+            const positions = { today: 0, feb13: 1, feb18: 2, mar1: 3, mar15: 4 };
+            markers[positions[currentDate]].classList.add('selected');
+            
+            const progressPercent = { today: 0, feb13: 20, feb18: 33, mar1: 60, mar15: 100 };
+            document.getElementById('timelineProgress').style.width = progressPercent[currentDate] + '%';
+        }
+
+        function updateView() {
+            const data = dateData[currentDate];
+            
+            // Update summary cards
+            document.getElementById('meetingValue').textContent = data.meeting;
+            document.getElementById('belowValue').textContent = data.below;
+            document.getElementById('gapValue').textContent = data.gap;
+            
+            // Show/hide deltas
+            const showDelta = currentDate !== 'today';
+            const todayData = dateData.today;
+            
+            const meetingDelta = document.getElementById('meetingDelta');
+            const belowDelta = document.getElementById('belowDelta');
+            const gapDelta = document.getElementById('gapDelta');
+            
+            if (showDelta) {
+                const meetingDiff = data.meeting - todayData.meeting;
+                const belowDiff = data.below - todayData.below;
+                const gapDiff = data.gap - todayData.gap;
+                
+                meetingDelta.textContent = (meetingDiff >= 0 ? '↑ ' : '↓ ') + Math.abs(meetingDiff);
+                meetingDelta.className = 'summary-delta show ' + (meetingDiff >= 0 ? 'positive' : 'negative');
+                
+                belowDelta.textContent = (belowDiff >= 0 ? '↑ ' : '↓ ') + Math.abs(belowDiff);
+                belowDelta.className = 'summary-delta show ' + (belowDiff <= 0 ? 'positive' : 'negative');
+                
+                gapDelta.textContent = (gapDiff >= 0 ? '↑ ' : '↓ ') + Math.abs(gapDiff);
+                gapDelta.className = 'summary-delta show ' + (gapDiff >= 0 ? 'positive' : 'negative');
+            } else {
+                meetingDelta.classList.remove('show');
+                belowDelta.classList.remove('show');
+                gapDelta.classList.remove('show');
+            }
+            
+            // Update banner
+            const banner = document.getElementById('changeBanner');
+            if (data.banner) {
+                document.getElementById('bannerDate').textContent = 'Viewing: ' + data.banner.date;
+                document.getElementById('changeItems').innerHTML = data.banner.changes.map(c => `
+                    <div class="change-item">
+                        <div class="change-icon ${c.type}">${c.value}</div>
+                        <span>${c.text}</span>
+                    </div>
+                `).join('');
+                banner.classList.add('show');
+            } else {
+                banner.classList.remove('show');
+            }
+            
+            // Update table
+            renderTable(data.rows);
+            
+            // Update action items
+            renderActionItems();
+        }
+
+        function renderTable(rows) {
+            const tbody = document.getElementById('gapTableBody');
+            tbody.innerHTML = rows.map(row => {
+                const s1Gap = row.s1.actual - row.s1.goal;
+                const s2Gap = row.s2.actual - row.s2.goal;
+                const s3Gap = row.s3.actual - row.s3.goal;
+                
+                const hasChange = row.change !== null;
+                
+                return `
+                    <tr data-status="${row.status === 'success' ? 'meeting' : 'below'}" class="${hasChange ? 'has-change' : ''}">
+                        <td class="objective-cell">
+                            ${row.objective}
+                            ${row.change ? `<span class="change-indicator ${row.change.type}">${row.change.text}</span>` : ''}
+                        </td>
+                        <td class="data-cell goal-cell">${row.s1.goal}</td>
+                        <td class="data-cell actual-cell ${row.s1.proj !== undefined ? 'has-projection' : ''}">
+                            ${row.s1.proj !== undefined ? `
+                                <span>${row.s1.actual}</span>
+                                <span class="projection-value ${row.s1.proj > 0 ? 'positive' : 'negative'}">→ ${row.s1.actual + row.s1.proj}</span>
+                            ` : row.s1.actual}
+                        </td>
+                        <td class="data-cell gap-cell ${s1Gap > 0 ? 'gap-positive' : s1Gap < 0 ? 'gap-negative' : 'gap-zero'}">
+                            ${s1Gap > 0 ? '+' : ''}${s1Gap}
+                        </td>
+                        <td class="data-cell goal-cell">${row.s2.goal}</td>
+                        <td class="data-cell actual-cell">${row.s2.actual}</td>
+                        <td class="data-cell gap-cell ${s2Gap > 0 ? 'gap-positive' : s2Gap < 0 ? 'gap-negative' : 'gap-zero'}">
+                            ${s2Gap > 0 ? '+' : ''}${s2Gap}
+                        </td>
+                        <td class="data-cell goal-cell">${row.s3.goal}</td>
+                        <td class="data-cell actual-cell ${row.s3.proj !== undefined ? 'has-projection' : ''}">
+                            ${row.s3.proj !== undefined ? `
+                                <span>${row.s3.actual}</span>
+                                <span class="projection-value ${row.s3.proj > 0 ? 'positive' : 'negative'}">→ ${row.s3.actual + row.s3.proj}</span>
+                            ` : row.s3.actual}
+                        </td>
+                        <td class="data-cell gap-cell ${s3Gap > 0 ? 'gap-positive' : s3Gap < 0 ? 'gap-negative' : 'gap-zero'} ${hasChange && row.change.type === 'expiring' ? 'gap-worsening' : ''}">
+                            ${s3Gap > 0 ? '+' : ''}${s3Gap}
+                        </td>
+                        <td class="data-cell">
+                            ${row.status === 'success' 
+                                ? '<div class="status-indicator status-success" title="Meeting all requirements">✓</div>'
+                                : `<div class="status-indicator status-warning clickable" onclick="openGapDetailsModal('${row.objective}')" title="Click to view gap details">⚠</div>`
+                            }
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderActionItems() {
+            const isEscalating = currentDate !== 'today';
+            const actionList = document.getElementById('actionList');
+            
+            actionList.innerHTML = `
+                <!-- High Priority with Escalation -->
+                <div class="action-item ${isEscalating ? 'escalating' : 'high'}">
+                    <div class="action-item-header">
+                        <div class="action-item-title">
+                            <select class="priority-dropdown high" onchange="updatePriority(this)">
+                                <option value="high" selected>High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                            ${isEscalating ? '<div class="escalation-badge"><span>⚡</span> ESCALATING</div>' : ''}
+                            <div>
+                                <div class="action-item-objective">Welding - TIG</div>
+                                <div class="action-item-shift">Shift 3 (10PM - 6AM)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Urgency Alert (shown when viewing future date) -->
+                    <div class="urgency-alert ${isEscalating ? 'show' : ''}">
+                        <div class="urgency-alert-header">
+                            <span>⚠️</span> Gap Worsening
+                        </div>
+                        <div class="urgency-alert-body">
+                            <strong>Today:</strong> Gap of -2 | <strong>Projected:</strong> Gap of -4 by Feb 13<br>
+                            <strong>Reason:</strong> 2 certifications expiring (John S., Maria G.)
+                        </div>
+                        <div class="urgency-alert-recommendation">
+                            🔔 Recommended: Start renewal training NOW (certification takes 3 weeks, only 8 days until expiry)
+                        </div>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <div class="metric-label">Target</div>
+                            <div class="metric-value neutral">5</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Current</div>
+                            <div class="metric-value neutral">5</div>
+                            ${isEscalating ? '<div class="metric-projection worsening">→ 3 on Feb 13</div>' : ''}
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">In-Training</div>
+                            <div class="metric-value warning">2</div>
+                            <div class="metric-subtext">3 weeks avg</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Gap</div>
+                            <div class="metric-value negative">-2</div>
+                            ${isEscalating ? '<div class="metric-projection worsening">→ -4 on Feb 13</div>' : '<div class="metric-subtext">After training: 0</div>'}
+                        </div>
+                    </div>
+
+                    <div class="training-progress">
+                        <div class="training-progress-header">
+                            <div class="training-progress-title">Training Progress</div>
+                            <div class="training-progress-count">2 active</div>
+                        </div>
+                        <table class="training-table">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Status</th>
+                                    <th>Progress</th>
+                                    <th>Est. Complete</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>John Smith</td>
+                                    <td><span class="status-badge ${isEscalating ? 'expiring' : 'in-progress'}">${isEscalating ? 'Cert Expiring' : 'In-Progress'}</span></td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <div class="progress-bar-container" style="flex: 1;">
+                                                <div class="progress-bar" style="width: 60%;"></div>
+                                            </div>
+                                            <span style="font-size: 0.7rem; color: var(--text-muted);">6/10</span>
+                                        </div>
+                                    </td>
+                                    <td>Jan 15, 2025</td>
+                                </tr>
+                                <tr>
+                                    <td>Maria Garcia</td>
+                                    <td><span class="status-badge ${isEscalating ? 'expiring' : 'assigned'}">${isEscalating ? 'Cert Expiring' : 'Assigned'}</span></td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <div class="progress-bar-container" style="flex: 1;">
+                                                <div class="progress-bar" style="width: 0%;"></div>
+                                            </div>
+                                            <span style="font-size: 0.7rem; color: var(--text-muted);">0/10</span>
+                                        </div>
+                                    </td>
+                                    <td>Feb 1, 2025</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-action" onclick="openAssignTrainingModal()">
+                            <span>➕</span> Assign Training
+                        </button>
+                        <button class="btn btn-outline" onclick="openReallocateModal()">
+                            <span>🔄</span> Reallocate Resources
+                        </button>
+                    </div>
+
+                    <div class="comments-section">
+                        <div class="comments-header">Comments</div>
+                        <div class="comment-item">
+                            <div class="comment-meta">
+                                <span><strong>Sarah Johnson</strong> (Training Manager)</span>
+                                <span>2 hours ago</span>
+                            </div>
+                            <div class="comment-text">Scheduled 2 employees for TIG certification. John is progressing well.</div>
+                        </div>
+                        <textarea class="comment-input" placeholder="Add a comment..." style="margin-top: 0.5rem;"></textarea>
+                    </div>
+
+                    <div class="action-item-footer">
+                        <div class="owner-info">
+                            <span>👤</span>
+                            <span class="owner-label">Owner:</span>
+                            <span class="owner-name">Sarah Johnson (Training Manager)</span>
+                        </div>
+                        <div class="action-timestamp">Updated 2h ago</div>
+                    </div>
+                </div>
+
+                <!-- Medium Priority -->
+                <div class="action-item medium">
+                    <div class="action-item-header">
+                        <div class="action-item-title">
+                            <select class="priority-dropdown medium" onchange="updatePriority(this)">
+                                <option value="high">High</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                            <div>
+                                <div class="action-item-objective">Assembly - Pneumatic Tools</div>
+                                <div class="action-item-shift">Shift 1 (6AM - 2PM)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <div class="metric-label">Target</div>
+                            <div class="metric-value neutral">4</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Current</div>
+                            <div class="metric-value neutral">3</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">In-Training</div>
+                            <div class="metric-value warning">1</div>
+                            <div class="metric-subtext">1 week avg</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Gap</div>
+                            <div class="metric-value negative">-1</div>
+                            <div class="metric-subtext">After training: 0</div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-action" onclick="openAssignTrainingModal()">
+                            <span>➕</span> Assign Training
+                        </button>
+                        <button class="btn btn-outline" onclick="openReallocateModal()">
+                            <span>🔄</span> Reallocate Resources
+                        </button>
+                    </div>
+
+                    <div class="action-item-footer">
+                        <div class="owner-info">
+                            <span>👤</span>
+                            <span class="owner-label">Owner:</span>
+                            <span class="owner-name">Mike Torres (Shift Supervisor)</span>
+                        </div>
+                        <div class="action-timestamp">Updated 1d ago</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            
+            const tabButtons = document.querySelectorAll('.tab');
+            tabButtons.forEach(tab => {
+                if ((tabName === 'gap-analysis' && tab.textContent.includes('Gap Analysis')) ||
+                    (tabName === 'action-items' && tab.textContent.includes('Action Command Center'))) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function switchToTab(tabName) {
+            switchTab(tabName);
+        }
+
+        function filterTable(status) {
+            const rows = document.querySelectorAll('#gapTable tbody tr');
+            rows.forEach(row => {
+                if (status === 'all') {
+                    row.style.display = '';
+                } else {
+                    const rowStatus = row.getAttribute('data-status');
+                    row.style.display = rowStatus === status ? '' : 'none';
+                }
+            });
+        }
+
+        function searchTable(query) {
+            const rows = document.querySelectorAll('#gapTable tbody tr');
+            const lowerQuery = query.toLowerCase();
+            
+            rows.forEach(row => {
+                const objective = row.querySelector('.objective-cell').textContent.toLowerCase();
+                row.style.display = objective.includes(lowerQuery) ? '' : 'none';
+            });
+        }
+
+        function updatePriority(select) {
+            const card = select.closest('.action-item');
+            const oldPriority = card.className.match(/\b(high|medium|low)\b/)?.[0] || 'high';
+            const newPriority = select.value;
+            
+            card.classList.remove(oldPriority, 'escalating');
+            card.classList.add(newPriority);
+            
+            select.className = `priority-dropdown ${newPriority}`;
+            
+            showToast(`Priority updated to ${newPriority.toUpperCase()}`);
+        }
+
+        function openAssignTrainingModal() {
+            document.getElementById('assignTrainingModal').classList.add('show');
+        }
+
+        function openReallocateModal() {
+            showToast('Reallocate Resources modal would open here');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        function toggleCandidate(card) {
+            card.classList.toggle('selected');
+            updateAssignButton();
+        }
+
+        function updateAssignButton() {
+            const selected = document.querySelectorAll('#assignTrainingModal .candidate-card.selected').length;
+            const button = document.querySelector('#assignTrainingModal .btn-action');
+            button.textContent = `Assign Training (${selected} selected)`;
+        }
+
+        function assignTraining() {
+            const selected = document.querySelectorAll('#assignTrainingModal .candidate-card.selected').length;
+            if (selected > 0) {
+                closeModal('assignTrainingModal');
+                showToast(`Training assigned to ${selected} employee${selected > 1 ? 's' : ''}`);
+            }
+        }
+
+        function openGapDetailsModal(objective) {
+            document.getElementById('gapDetailsTitle').textContent = objective;
+            document.getElementById('gapDetailsSubtitle').textContent = 'Shift 3 (10PM - 6AM)';
+            document.getElementById('modalTarget').textContent = '5';
+            document.getElementById('modalActual').textContent = '3';
+            document.getElementById('modalInTraining').textContent = '2';
+            document.getElementById('modalGap').textContent = '-2';
+            
+            document.getElementById('gapDetailsModal').classList.add('show');
+        }
+
+        function toggleSection(section) {
+            section.classList.toggle('expanded');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const messageEl = document.getElementById('toastMessage');
+            messageEl.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function exportReport() {
+            showToast('Exporting gap analysis report...');
+        }
+
+        function refreshData() {
+            showToast('Data refreshed successfully');
+        }
+
+        // Close modals on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('show');
+                }
+            });
+        });
+
+        // Initialize
+        updateView();
+    </script>
+</body>
+</html>
