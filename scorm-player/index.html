@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCORM Player Prototype v3 - Covalent Workforce Intelligence Suite</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f3f5; }
+    ::-webkit-scrollbar-thumb { background: #ced4da; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// =============================================================================
+// THEME COLORS (Matching Covalent UI)
+// =============================================================================
+
+const theme = {
+  navy: '#1e3a5f',
+  navyDark: '#152a45',
+  navyLight: '#2a4a72',
+  blue: '#0d6efd',
+  blueHover: '#0b5ed7',
+  white: '#ffffff',
+  gray50: '#f8f9fa',
+  gray100: '#f1f3f5',
+  gray200: '#e9ecef',
+  gray300: '#dee2e6',
+  gray400: '#ced4da',
+  gray500: '#adb5bd',
+  gray600: '#6c757d',
+  gray700: '#495057',
+  gray800: '#343a40',
+  gray900: '#212529',
+  success: '#198754',
+  successLight: '#d1e7dd',
+  danger: '#dc3545',
+  dangerLight: '#f8d7da',
+  warning: '#ffc107',
+  warningLight: '#fff3cd',
+  info: '#0dcaf0',
+  infoLight: '#cff4fc',
+  teal: '#20c997',
+};
+
+// =============================================================================
+// SIMULATED SCORM ADAPTER
+// =============================================================================
+
+class SimulatedSCORMAdapter {
+  constructor(config, onApiCall) {
+    this.config = config;
+    this.onApiCall = onApiCall;
+    this.initialized = false;
+    this.finished = false;
+    this.sessionStart = null;
+    this.interactionCount = 0;
+    
+    this.data = {
+      'cmi.core.student_id': config.learnerId,
+      'cmi.core.student_name': config.learnerName,
+      'cmi.core.lesson_status': 'not attempted',
+      'cmi.core.lesson_location': '',
+      'cmi.core.entry': 'ab-initio',
+      'cmi.core.credit': config.playbackMode === 'REVIEW' ? 'no-credit' : 'credit',
+      'cmi.core.lesson_mode': config.playbackMode === 'REVIEW' ? 'review' : 'normal',
+      'cmi.core.score.raw': '',
+      'cmi.core.score.min': 0,
+      'cmi.core.score.max': 100,
+      'cmi.core.session_time': '0000:00:00.00',
+      'cmi.core.total_time': '0000:00:00.00',
+      'cmi.core.exit': '',
+      'cmi.suspend_data': '',
+      'cmi.student_data.mastery_score': config.masteryScore || '',
+      'cmi.interactions._count': 0,
+    };
+  }
+
+  log(method, args, result) {
+    this.onApiCall({
+      timestamp: new Date().toISOString(),
+      method,
+      args,
+      result,
+      dataSnapshot: { ...this.data },
+    });
+  }
+
+  LMSInitialize(param) {
+    this.initialized = true;
+    this.sessionStart = Date.now();
+    this.log('LMSInitialize', [param], 'true');
+    return 'true';
+  }
+
+  LMSFinish(param) {
+    if (!this.initialized) return 'false';
+    const sessionMs = Date.now() - this.sessionStart;
+    this.data['cmi.core.session_time'] = this.msToScormTime(sessionMs);
+    this.finished = true;
+    this.initialized = false;
+    this.log('LMSFinish', [param], 'true');
+    return 'true';
+  }
+
+  LMSGetValue(element) {
+    const value = this.data[element] ?? '';
+    this.log('LMSGetValue', [element], String(value));
+    return String(value);
+  }
+
+  LMSSetValue(element, value) {
+    if (!this.initialized) return 'false';
+    const interactionMatch = element.match(/^cmi\.interactions\.(\d+)\./);
+    if (interactionMatch) {
+      const idx = parseInt(interactionMatch[1]);
+      if (idx >= this.interactionCount) {
+        this.interactionCount = idx + 1;
+        this.data['cmi.interactions._count'] = this.interactionCount;
+      }
+    }
+    this.data[element] = value;
+    this.log('LMSSetValue', [element, value], 'true');
+    return 'true';
+  }
+
+  LMSCommit(param) {
+    this.log('LMSCommit', [param], 'true');
+    return 'true';
+  }
+
+  LMSGetLastError() { return '0'; }
+  LMSGetErrorString(code) { return code === '0' ? 'No error' : 'Error'; }
+  LMSGetDiagnostic(code) { return ''; }
+
+  msToScormTime(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const centiseconds = Math.floor((ms % 1000) / 10);
+    return hours.toString().padStart(4, '0') + ':' + minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0') + '.' + centiseconds.toString().padStart(2, '0');
+  }
+
+  getSessionTimeMs() {
+    if (!this.sessionStart) return 0;
+    return Date.now() - this.sessionStart;
+  }
+}
+
+// =============================================================================
+// MOCK COURSE CONTENT - VARIED TYPES
+// =============================================================================
+
+const mockCourse = {
+  id: 'cnc-safety-101',
+  title: 'CNC Mill Safety Fundamentals',
+  scormVersion: '1.2',
+  masteryScore: 80,
+  thumbnail: '🔧',
+  modules: [
+    {
+      id: 'intro',
+      type: 'text',
+      title: 'Introduction to CNC Safety',
+      duration: '3 min',
+      content: {
+        heading: 'Welcome to CNC Mill Safety Training',
+        sections: [
+          {
+            title: 'Course Overview',
+            body: 'This course covers essential safety procedures for operating CNC milling equipment. By completing this training, you will be certified to operate CNC mills in our facility.'
+          },
+          {
+            title: 'Learning Objectives',
+            body: 'By the end of this course, you will be able to:',
+            bullets: [
+              'Identify required Personal Protective Equipment (PPE)',
+              'Understand machine guarding requirements and protocols',
+              'Execute proper emergency stop procedures',
+              'Recognize common hazards in the machining area',
+              'Apply lockout/tagout (LOTO) procedures correctly'
+            ]
+          },
+          {
+            title: 'Why Safety Matters',
+            body: 'CNC mills operate at high speeds with sharp cutting tools. Proper safety procedures protect you and your coworkers from serious injury. In 2024, improper machine guarding was cited in over 2,000 workplace injuries nationally.'
+          }
+        ]
+      }
+    },
+    {
+      id: 'ppe',
+      type: 'text-image',
+      title: 'Personal Protective Equipment',
+      duration: '5 min',
+      content: {
+        heading: 'Required PPE for CNC Operations',
+        image: {
+          emoji: '🥽',
+          caption: 'Always wear appropriate PPE before entering the machining area'
+        },
+        sections: [
+          {
+            title: 'Mandatory Equipment',
+            body: 'The following PPE must be worn at ALL times when operating or working near CNC equipment:'
+          },
+          {
+            items: [
+              { icon: '👓', label: 'Safety Glasses', desc: 'ANSI Z87.1 rated with side shields. Protects against flying chips and coolant spray.' },
+              { icon: '👂', label: 'Hearing Protection', desc: 'Required when noise levels exceed 85 dB. Use earplugs or earmuffs.' },
+              { icon: '👢', label: 'Steel-Toed Boots', desc: 'ASTM F2413 compliant footwear. Protects against dropped workpieces and tools.' },
+            ]
+          },
+          {
+            title: 'Prohibited Items',
+            body: 'The following are NOT allowed near operating CNC equipment:',
+            bullets: [
+              'Loose clothing, ties, or scarves',
+              'Jewelry including rings, watches, and necklaces',
+              'Gloves (can get caught in rotating parts)',
+              'Long hair that is not tied back and secured'
+            ],
+            warning: true
+          }
+        ]
+      }
+    },
+    {
+      id: 'guarding',
+      type: 'video',
+      title: 'Machine Guarding & Lockout',
+      duration: '8 min',
+      content: {
+        heading: 'Machine Guarding Demonstration',
+        description: 'Watch this video to understand proper machine guarding inspection and lockout/tagout procedures.',
+        videoLength: 480,
+      }
+    },
+    {
+      id: 'emergency',
+      type: 'text-image',
+      title: 'Emergency Procedures',
+      duration: '4 min',
+      content: {
+        heading: 'Emergency Response Procedures',
+        image: {
+          emoji: '🛑',
+          caption: 'Know the location of all emergency stops before operating any machine'
+        },
+        sections: [
+          {
+            title: 'Emergency Stop Buttons',
+            body: 'Every CNC machine has one or more emergency stop (E-Stop) buttons. These are large, red, mushroom-shaped buttons designed to be hit quickly in an emergency.'
+          },
+          {
+            title: 'When to Use E-Stop',
+            bullets: [
+              'Unexpected machine movement or malfunction',
+              'Tool breakage during operation',
+              'Workpiece coming loose from fixture',
+              'Any situation where you feel unsafe',
+              'Fire, smoke, or unusual smells'
+            ]
+          },
+          {
+            title: 'After Triggering E-Stop',
+            body: 'Follow these steps after any emergency stop:',
+            numbered: [
+              'Do NOT reset the E-Stop immediately',
+              'Notify your supervisor of the incident',
+              'Investigate and document the cause',
+              'Get supervisor approval before resetting',
+              'Complete an incident report if required'
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: 'assessment',
+      type: 'assessment',
+      title: 'Final Assessment',
+      duration: '5 min',
+      questions: [
+        {
+          id: 'q1',
+          text: 'What is the FIRST thing you should do before operating a CNC mill?',
+          options: [
+            { id: 'a', text: 'Start the spindle to warm up the machine' },
+            { id: 'b', text: 'Perform a safety inspection and verify lockout status' },
+            { id: 'c', text: 'Load your workpiece into the fixture' },
+            { id: 'd', text: 'Set the feed rate and spindle speed' }
+          ],
+          correctAnswer: 'b',
+          weight: 1
+        },
+        {
+          id: 'q2',
+          text: 'Which PPE items are REQUIRED when operating CNC equipment?',
+          options: [
+            { id: 'a', text: 'Safety glasses only' },
+            { id: 'b', text: 'Gloves and open-toed shoes' },
+            { id: 'c', text: 'Safety glasses, hearing protection, and steel-toed boots' },
+            { id: 'd', text: 'No PPE required for modern enclosed CNC machines' }
+          ],
+          correctAnswer: 'c',
+          weight: 1
+        },
+        {
+          id: 'q3',
+          text: 'When must machine guarding be in place?',
+          options: [
+            { id: 'a', text: 'Only during automatic/unattended operation' },
+            { id: 'b', text: 'Only when training new operators' },
+            { id: 'c', text: 'At ALL times during machine operation' },
+            { id: 'd', text: 'Only during high-speed cutting operations' }
+          ],
+          correctAnswer: 'c',
+          weight: 1
+        },
+        {
+          id: 'q4',
+          text: 'What should you do IMMEDIATELY after triggering an emergency stop?',
+          options: [
+            { id: 'a', text: 'Reset it immediately and continue working' },
+            { id: 'b', text: 'Do NOT reset it and notify your supervisor' },
+            { id: 'c', text: 'Ignore it if the machine appears to be fine' },
+            { id: 'd', text: 'Only report it if there was visible damage' }
+          ],
+          correctAnswer: 'b',
+          weight: 1
+        },
+        {
+          id: 'q5',
+          text: 'Lockout/Tagout (LOTO) procedures are required when:',
+          options: [
+            { id: 'a', text: 'Only during annual maintenance' },
+            { id: 'b', text: 'Performing ANY maintenance, adjustment, or cleaning' },
+            { id: 'c', text: 'Only when requested by safety personnel' },
+            { id: 'd', text: 'Only for electrical repairs' }
+          ],
+          correctAnswer: 'b',
+          weight: 1
+        }
+      ]
+    }
+  ]
+};
+
+// =============================================================================
+// DEBUG PANEL COMPONENTS
+// =============================================================================
+
+const ApiCallLog = ({ calls }) => {
+  const logRef = useRef(null);
+  
+  useEffect(() => {
+    if (logRef.current) {
+      logRef.current.scrollTop = logRef.current.scrollHeight;
+    }
+  }, [calls]);
+
+  const getMethodColor = (method) => {
+    switch (method) {
+      case 'LMSInitialize': return theme.success;
+      case 'LMSFinish': return theme.danger;
+      case 'LMSSetValue': return theme.blue;
+      case 'LMSGetValue': return '#6f42c1';
+      case 'LMSCommit': return '#fd7e14';
+      default: return theme.gray600;
+    }
+  };
+
+  return (
+    <div ref={logRef} style={{
+      flex: 1,
+      overflowY: 'auto',
+      fontFamily: "'Consolas', 'Monaco', monospace",
+      fontSize: '10px',
+      lineHeight: '1.5',
+      background: theme.gray50,
+    }}>
+      {calls.length === 0 && (
+        <div style={{ color: theme.gray500, padding: '12px', fontStyle: 'italic', fontSize: '11px' }}>
+          Waiting for SCORM API calls...
+        </div>
+      )}
+      {calls.map((call, idx) => (
+        <div key={idx} style={{
+          padding: '6px 10px',
+          borderBottom: '1px solid ' + theme.gray200,
+          background: idx % 2 === 0 ? theme.white : theme.gray50,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+            <span style={{ color: theme.gray400, fontSize: '9px' }}>
+              {new Date(call.timestamp).toLocaleTimeString()}
+            </span>
+            <span style={{ color: getMethodColor(call.method), fontWeight: 600 }}>
+              {call.method}
+            </span>
+          </div>
+          <div style={{ color: theme.gray600, paddingLeft: '4px', wordBreak: 'break-all' }}>
+            {call.args.map((arg, i) => (
+              <span key={i}>
+                {i > 0 && <span style={{ color: theme.gray400 }}>, </span>}
+                <span style={{ color: '#d63384' }}>"{arg}"</span>
+              </span>
+            ))}
+            <span style={{ color: theme.gray400 }}> → </span>
+            <span style={{ color: theme.success }}>"{call.result}"</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const DataModelPanel = ({ data, sessionTimeMs }) => {
+  const importantKeys = [
+    'cmi.core.lesson_status',
+    'cmi.core.score.raw',
+    'cmi.core.lesson_location',
+    'cmi.core.entry',
+    'cmi.core.credit',
+    'cmi.student_data.mastery_score',
+    'cmi.interactions._count',
+  ];
+
+  const formatTime = (ms) => {
+    const seconds = Math.floor(ms / 1000);
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return mins + ':' + secs.toString().padStart(2, '0');
+  };
+
+  return (
+    <div style={{
+      padding: '10px',
+      fontFamily: "'Consolas', 'Monaco', monospace",
+      fontSize: '10px',
+      background: theme.gray50,
+      height: '100%',
+      overflowY: 'auto',
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '12px',
+        paddingBottom: '10px',
+        borderBottom: '1px solid ' + theme.gray300,
+      }}>
+        <span style={{ color: theme.gray600, textTransform: 'uppercase', letterSpacing: '0.5px', fontSize: '9px' }}>
+          Session Time
+        </span>
+        <span style={{ color: theme.navy, fontSize: '18px', fontWeight: 700 }}>
+          {formatTime(sessionTimeMs)}
+        </span>
+      </div>
+      
+      {importantKeys.map(key => (
+        <div key={key} style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          padding: '6px 0',
+          borderBottom: '1px solid ' + theme.gray200,
+          gap: '8px',
+        }}>
+          <span style={{ color: theme.gray500, fontSize: '9px', flexShrink: 0 }}>{key.replace('cmi.', '')}</span>
+          <span style={{ 
+            color: data[key] === '' || data[key] === undefined ? theme.gray400 : theme.gray800,
+            fontWeight: 500,
+            textAlign: 'right',
+            wordBreak: 'break-all',
+          }}>
+            {data[key] === '' || data[key] === undefined ? '(empty)' : String(data[key])}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const ResponsesPanel = ({ responses }) => {
+  return (
+    <div style={{
+      padding: '10px',
+      fontFamily: "'Consolas', 'Monaco', monospace",
+      fontSize: '10px',
+      background: theme.gray50,
+      height: '100%',
+      overflowY: 'auto',
+    }}>
+      {responses.length === 0 && (
+        <div style={{ color: theme.gray500, fontStyle: 'italic', fontSize: '11px' }}>
+          No responses captured yet...
+        </div>
+      )}
+      {responses.map((response, idx) => (
+        <div key={idx} style={{
+          padding: '10px',
+          marginBottom: '8px',
+          background: theme.white,
+          borderRadius: '4px',
+          border: '1px solid ' + (response.result === 'correct' ? theme.success : theme.danger),
+          borderLeftWidth: '3px',
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '6px',
+          }}>
+            <span style={{ color: theme.gray800, fontWeight: 600 }}>Question {idx + 1}</span>
+            <span style={{
+              color: theme.white,
+              background: response.result === 'correct' ? theme.success : theme.danger,
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              fontSize: '9px',
+              padding: '2px 6px',
+              borderRadius: '3px',
+            }}>
+              {response.result}
+            </span>
+          </div>
+          <div style={{ color: theme.gray600, fontSize: '9px' }}>
+            Response: <span style={{ color: theme.navy, fontWeight: 500 }}>{response.studentResponse.toUpperCase()}</span>
+            <span style={{ marginLeft: '8px', color: theme.gray400 }}>({response.latency}ms)</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// =============================================================================
+// NAVIGATION FOOTER
+// =============================================================================
+
+const NavigationFooter = ({ onPrevious, onNext, canGoPrevious, canGoNext, isCompleted, isLastModule, moduleType }) => {
+  return (
+    <div style={{
+      padding: '12px 24px',
+      background: theme.white,
+      borderTop: '1px solid ' + theme.gray200,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    }}>
+      <button
+        onClick={onPrevious}
+        disabled={!canGoPrevious}
+        style={{
+          padding: '10px 20px',
+          background: canGoPrevious ? theme.white : theme.gray100,
+          border: '1px solid ' + (canGoPrevious ? theme.gray300 : theme.gray200),
+          borderRadius: '6px',
+          fontSize: '13px',
+          fontWeight: 500,
+          color: canGoPrevious ? theme.gray700 : theme.gray400,
+          cursor: canGoPrevious ? 'pointer' : 'not-allowed',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+        }}
+      >
+        ← Previous
+      </button>
+      
+      <div style={{ fontSize: '12px', color: theme.gray500 }}>
+        {isCompleted && moduleType !== 'assessment' && (
+          <span style={{ color: theme.success, fontWeight: 500 }}>✓ Module Complete</span>
+        )}
+      </div>
+      
+      <button
+        onClick={onNext}
+        disabled={!canGoNext || !isCompleted}
+        style={{
+          padding: '10px 20px',
+          background: (canGoNext && isCompleted) ? theme.blue : theme.gray100,
+          border: '1px solid ' + ((canGoNext && isCompleted) ? theme.blue : theme.gray200),
+          borderRadius: '6px',
+          fontSize: '13px',
+          fontWeight: 600,
+          color: (canGoNext && isCompleted) ? theme.white : theme.gray400,
+          cursor: (canGoNext && isCompleted) ? 'pointer' : 'not-allowed',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+        }}
+      >
+        {isLastModule ? 'Start Assessment' : 'Next'} →
+      </button>
+    </div>
+  );
+};
+
+// =============================================================================
+// TEXT MODULE COMPONENT
+// =============================================================================
+
+const TextModule = ({ module, onComplete, isCompleted }) => {
+  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(isCompleted);
+  const contentRef = useRef(null);
+  
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    if (scrollTop + clientHeight >= scrollHeight - 20) {
+      if (!hasScrolledToBottom) {
+        setHasScrolledToBottom(true);
+        onComplete();
+      }
+    }
+  };
+  
+  useEffect(() => {
+    if (contentRef.current) {
+      const { scrollHeight, clientHeight } = contentRef.current;
+      if (scrollHeight <= clientHeight && !isCompleted) {
+        setTimeout(() => {
+          setHasScrolledToBottom(true);
+          onComplete();
+        }, 1000);
+      }
+    }
+  }, [isCompleted, onComplete]);
+
+  return (
+    <div 
+      ref={contentRef}
+      onScroll={handleScroll}
+      style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '32px 48px',
+        background: theme.white,
+      }}
+    >
+      <h1 style={{
+        fontSize: '26px',
+        fontWeight: 700,
+        color: theme.navy,
+        marginBottom: '24px',
+        paddingBottom: '16px',
+        borderBottom: '2px solid ' + theme.gray200,
+      }}>
+        {module.content.heading}
+      </h1>
+      
+      {module.content.sections.map((section, idx) => (
+        <div key={idx} style={{ marginBottom: '28px' }}>
+          {section.title && (
+            <h2 style={{
+              fontSize: '18px',
+              fontWeight: 600,
+              color: theme.gray800,
+              marginBottom: '12px',
+            }}>
+              {section.title}
+            </h2>
+          )}
+          
+          {section.body && (
+            <p style={{
+              fontSize: '15px',
+              color: theme.gray700,
+              lineHeight: 1.7,
+              marginBottom: section.bullets || section.numbered ? '12px' : '0',
+            }}>
+              {section.body}
+            </p>
+          )}
+          
+          {section.bullets && (
+            <ul style={{
+              paddingLeft: '24px',
+              margin: '12px 0',
+            }}>
+              {section.bullets.map((bullet, bIdx) => (
+                <li key={bIdx} style={{
+                  fontSize: '14px',
+                  color: section.warning ? theme.danger : theme.gray700,
+                  marginBottom: '8px',
+                  lineHeight: 1.5,
+                }}>
+                  {bullet}
+                </li>
+              ))}
+            </ul>
+          )}
+          
+          {section.numbered && (
+            <ol style={{
+              paddingLeft: '24px',
+              margin: '12px 0',
+            }}>
+              {section.numbered.map((item, nIdx) => (
+                <li key={nIdx} style={{
+                  fontSize: '14px',
+                  color: theme.gray700,
+                  marginBottom: '8px',
+                  lineHeight: 1.5,
+                }}>
+                  {item}
+                </li>
+              ))}
+            </ol>
+          )}
+          
+          {section.warning && (
+            <div style={{
+              marginTop: '12px',
+              padding: '12px 16px',
+              background: theme.dangerLight,
+              borderLeft: '4px solid ' + theme.danger,
+              borderRadius: '4px',
+              fontSize: '13px',
+              color: theme.danger,
+            }}>
+              ⚠️ These items pose a serious safety hazard and are strictly prohibited.
+            </div>
+          )}
+        </div>
+      ))}
+      
+      {!hasScrolledToBottom && (
+        <div style={{
+          textAlign: 'center',
+          padding: '20px',
+          color: theme.gray500,
+          fontSize: '13px',
+        }}>
+          ↓ Scroll to continue ↓
+        </div>
+      )}
+    </div>
+  );
+};
+
+// =============================================================================
+// TEXT + IMAGE MODULE COMPONENT
+// =============================================================================
+
+const TextImageModule = ({ module, onComplete, isCompleted }) => {
+  const [hasRead, setHasRead] = useState(isCompleted);
+  const contentRef = useRef(null);
+  
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    if (scrollTop + clientHeight >= scrollHeight - 20) {
+      if (!hasRead) {
+        setHasRead(true);
+        onComplete();
+      }
+    }
+  };
+  
+  useEffect(() => {
+    if (contentRef.current) {
+      const { scrollHeight, clientHeight } = contentRef.current;
+      if (scrollHeight <= clientHeight && !isCompleted) {
+        setTimeout(() => {
+          setHasRead(true);
+          onComplete();
+        }, 1000);
+      }
+    }
+  }, [isCompleted, onComplete]);
+
+  return (
+    <div 
+      ref={contentRef}
+      onScroll={handleScroll}
+      style={{
+        flex: 1,
+        overflowY: 'auto',
+        background: theme.white,
+      }}
+    >
+      <div style={{
+        background: 'linear-gradient(135deg, ' + theme.navy + ' 0%, ' + theme.navyLight + ' 100%)',
+        padding: '48px',
+        textAlign: 'center',
+      }}>
+        <div style={{
+          width: '100px',
+          height: '100px',
+          background: 'rgba(255,255,255,0.15)',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 16px',
+          fontSize: '48px',
+        }}>
+          {module.content.image.emoji}
+        </div>
+        <h1 style={{
+          fontSize: '28px',
+          fontWeight: 700,
+          color: theme.white,
+          marginBottom: '8px',
+        }}>
+          {module.content.heading}
+        </h1>
+        <p style={{
+          fontSize: '14px',
+          color: 'rgba(255,255,255,0.8)',
+        }}>
+          {module.content.image.caption}
+        </p>
+      </div>
+      
+      <div style={{ padding: '32px 48px' }}>
+        {module.content.sections.map((section, idx) => (
+          <div key={idx} style={{ marginBottom: '28px' }}>
+            {section.title && (
+              <h2 style={{
+                fontSize: '18px',
+                fontWeight: 600,
+                color: theme.gray800,
+                marginBottom: '12px',
+              }}>
+                {section.title}
+              </h2>
+            )}
+            
+            {section.body && (
+              <p style={{
+                fontSize: '15px',
+                color: theme.gray700,
+                lineHeight: 1.7,
+                marginBottom: '12px',
+              }}>
+                {section.body}
+              </p>
+            )}
+            
+            {section.items && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', margin: '16px 0' }}>
+                {section.items.map((item, iIdx) => (
+                  <div key={iIdx} style={{
+                    display: 'flex',
+                    gap: '16px',
+                    padding: '16px',
+                    background: theme.gray50,
+                    borderRadius: '8px',
+                    border: '1px solid ' + theme.gray200,
+                  }}>
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      background: theme.white,
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '24px',
+                      flexShrink: 0,
+                      border: '1px solid ' + theme.gray200,
+                    }}>
+                      {item.icon}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600, color: theme.gray800, marginBottom: '4px' }}>
+                        {item.label}
+                      </div>
+                      <div style={{ fontSize: '13px', color: theme.gray600, lineHeight: 1.5 }}>
+                        {item.desc}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {section.bullets && (
+              <ul style={{
+                paddingLeft: '24px',
+                margin: '12px 0',
+                background: section.warning ? theme.dangerLight : 'transparent',
+                padding: section.warning ? '16px 16px 16px 36px' : undefined,
+                borderRadius: section.warning ? '8px' : undefined,
+              }}>
+                {section.bullets.map((bullet, bIdx) => (
+                  <li key={bIdx} style={{
+                    fontSize: '14px',
+                    color: section.warning ? theme.danger : theme.gray700,
+                    marginBottom: '8px',
+                    lineHeight: 1.5,
+                  }}>
+                    {bullet}
+                  </li>
+                ))}
+              </ul>
+            )}
+            
+            {section.numbered && (
+              <ol style={{
+                paddingLeft: '24px',
+                margin: '12px 0',
+                background: theme.infoLight,
+                padding: '16px 16px 16px 36px',
+                borderRadius: '8px',
+              }}>
+                {section.numbered.map((item, nIdx) => (
+                  <li key={nIdx} style={{
+                    fontSize: '14px',
+                    color: theme.gray700,
+                    marginBottom: '8px',
+                    lineHeight: 1.5,
+                  }}>
+                    {item}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
+// VIDEO MODULE COMPONENT
+// =============================================================================
+
+const VideoModule = ({ module, onComplete, isCompleted }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(isCompleted ? 100 : 0);
+  
+  useEffect(() => {
+    let interval;
+    if (isPlaying && progress < 100) {
+      interval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 100) {
+            setIsPlaying(false);
+            return 100;
+          }
+          return prev + 0.5;
+        });
+      }, 50);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying, progress]);
+  
+  useEffect(() => {
+    if (progress >= 100 && !isCompleted) {
+      onComplete();
+    }
+  }, [progress, isCompleted, onComplete]);
+
+  const formatTime = (percentage) => {
+    const totalSeconds = Math.floor((percentage / 100) * (module.content.videoLength || 300));
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return mins + ':' + secs.toString().padStart(2, '0');
+  };
+  
+  const totalTime = () => {
+    const totalSeconds = module.content.videoLength || 300;
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return mins + ':' + secs.toString().padStart(2, '0');
+  };
+
+  return (
+    <div style={{
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      background: theme.gray900,
+    }}>
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '120px',
+            height: '120px',
+            background: 'rgba(255,255,255,0.1)',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 24px',
+            fontSize: '48px',
+          }}>
+            🎬
+          </div>
+          <h2 style={{
+            fontSize: '24px',
+            fontWeight: 600,
+            color: theme.white,
+            marginBottom: '8px',
+          }}>
+            {module.content.heading}
+          </h2>
+          <p style={{
+            fontSize: '14px',
+            color: theme.gray400,
+            maxWidth: '500px',
+            marginBottom: '32px',
+          }}>
+            {module.content.description}
+          </p>
+          
+          {progress < 100 ? (
+            <button
+              onClick={() => setIsPlaying(!isPlaying)}
+              style={{
+                width: '72px',
+                height: '72px',
+                borderRadius: '50%',
+                background: theme.blue,
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '28px',
+                color: theme.white,
+                boxShadow: '0 4px 20px rgba(13, 110, 253, 0.4)',
+              }}
+            >
+              {isPlaying ? '⏸' : '▶'}
+            </button>
+          ) : (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              color: theme.success,
+              fontSize: '18px',
+              fontWeight: 600,
+            }}>
+              <span style={{ fontSize: '24px' }}>✓</span>
+              Video Complete
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <div style={{
+        padding: '16px 24px',
+        background: 'rgba(0,0,0,0.3)',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+        }}>
+          <button
+            onClick={() => setIsPlaying(!isPlaying)}
+            disabled={progress >= 100}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: progress >= 100 ? theme.gray500 : theme.white,
+              cursor: progress >= 100 ? 'default' : 'pointer',
+              fontSize: '18px',
+              padding: '4px',
+            }}
+          >
+            {isPlaying ? '⏸' : '▶'}
+          </button>
+          
+          <div style={{
+            flex: 1,
+            height: '6px',
+            background: 'rgba(255,255,255,0.2)',
+            borderRadius: '3px',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              height: '100%',
+              width: progress + '%',
+              background: progress >= 100 ? theme.success : theme.blue,
+              transition: 'width 0.05s linear',
+              borderRadius: '3px',
+            }} />
+          </div>
+          
+          <span style={{
+            color: theme.gray400,
+            fontSize: '12px',
+            fontFamily: 'monospace',
+            minWidth: '90px',
+            textAlign: 'right',
+          }}>
+            {formatTime(progress)} / {totalTime()}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
+// ASSESSMENT COMPONENT
+// =============================================================================
+
+const AssessmentModule = ({ module, adapter, onComplete, onResponse }) => {
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
+  
+  const question = module.questions[currentQuestion];
+  
+  const handleAnswer = (optionId) => {
+    const latency = Date.now() - questionStartTime;
+    const isCorrect = optionId === question.correctAnswer;
+    
+    const idx = currentQuestion;
+    adapter.LMSSetValue('cmi.interactions.' + idx + '.id', question.id);
+    adapter.LMSSetValue('cmi.interactions.' + idx + '.type', 'choice');
+    adapter.LMSSetValue('cmi.interactions.' + idx + '.student_response', optionId);
+    adapter.LMSSetValue('cmi.interactions.' + idx + '.correct_responses.0.pattern', question.correctAnswer);
+    adapter.LMSSetValue('cmi.interactions.' + idx + '.result', isCorrect ? 'correct' : 'wrong');
+    adapter.LMSSetValue('cmi.interactions.' + idx + '.latency', '0000:00:' + Math.floor(latency/1000).toString().padStart(2,'0') + '.' + Math.floor((latency%1000)/10).toString().padStart(2,'0'));
+    adapter.LMSSetValue('cmi.interactions.' + idx + '.weighting', String(question.weight));
+    adapter.LMSCommit('');
+    
+    onResponse({
+      questionId: question.id,
+      studentResponse: optionId,
+      result: isCorrect ? 'correct' : 'wrong',
+      latency,
+    });
+    
+    setAnswers({ ...answers, [question.id]: optionId });
+    
+    if (currentQuestion < module.questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+      setQuestionStartTime(Date.now());
+    } else {
+      const newAnswers = { ...answers, [question.id]: optionId };
+      let correct = 0;
+      module.questions.forEach(q => {
+        if (newAnswers[q.id] === q.correctAnswer) correct++;
+      });
+      const score = Math.round((correct / module.questions.length) * 100);
+      onComplete(score, correct, module.questions.length);
+    }
+  };
+
+  return (
+    <div style={{
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      background: theme.white,
+      padding: '32px',
+    }}>
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '32px' }}>
+        {module.questions.map((_, idx) => (
+          <div key={idx} style={{
+            flex: 1,
+            height: '6px',
+            borderRadius: '3px',
+            background: idx < currentQuestion ? theme.success : idx === currentQuestion ? theme.blue : theme.gray300,
+          }} />
+        ))}
+      </div>
+      
+      <div style={{ marginBottom: '8px', color: theme.gray500, fontSize: '13px' }}>
+        Question {currentQuestion + 1} of {module.questions.length}
+      </div>
+      <h2 style={{
+        fontSize: '20px',
+        fontWeight: 600,
+        color: theme.gray900,
+        marginBottom: '24px',
+        lineHeight: 1.4,
+      }}>
+        {question.text}
+      </h2>
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {question.options.map((option) => (
+          <button
+            key={option.id}
+            onClick={() => handleAnswer(option.id)}
+            style={{
+              padding: '14px 16px',
+              background: theme.white,
+              border: '1px solid ' + theme.gray300,
+              borderRadius: '6px',
+              textAlign: 'left',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = theme.blue;
+              e.currentTarget.style.background = theme.gray50;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = theme.gray300;
+              e.currentTarget.style.background = theme.white;
+            }}
+          >
+            <div style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              background: theme.navy,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '12px',
+              fontWeight: 600,
+              color: theme.white,
+              flexShrink: 0,
+            }}>
+              {option.id.toUpperCase()}
+            </div>
+            <span style={{ color: theme.gray800, fontSize: '14px' }}>
+              {option.text}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
+// RESULTS SCREEN
+// =============================================================================
+
+const ResultsScreen = ({ score, correct, total, masteryScore, onBackToDashboard }) => {
+  const passed = score >= masteryScore;
+  
+  return (
+    <div style={{
+      flex: 1,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '32px',
+      background: theme.gray100,
+    }}>
+      <div style={{
+        background: theme.white,
+        border: '1px solid ' + theme.gray300,
+        borderRadius: '8px',
+        padding: '32px',
+        maxWidth: '400px',
+        width: '100%',
+        textAlign: 'center',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+      }}>
+        <div style={{
+          width: '72px',
+          height: '72px',
+          borderRadius: '50%',
+          background: passed ? theme.successLight : theme.dangerLight,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 16px',
+          fontSize: '36px',
+        }}>
+          {passed ? '🎉' : '📚'}
+        </div>
+        
+        <h2 style={{ fontSize: '22px', fontWeight: 700, color: theme.gray900, marginBottom: '6px' }}>
+          {passed ? 'Congratulations!' : 'Keep Learning'}
+        </h2>
+        
+        <p style={{ fontSize: '13px', color: theme.gray600, marginBottom: '20px' }}>
+          {passed ? 'You have successfully completed this training!' : 'You scored below the ' + masteryScore + '% passing threshold.'}
+        </p>
+        
+        <div style={{
+          padding: '16px',
+          background: theme.gray50,
+          borderRadius: '8px',
+          marginBottom: '16px',
+          border: '1px solid ' + theme.gray200,
+        }}>
+          <div style={{ fontSize: '42px', fontWeight: 700, color: passed ? theme.success : theme.danger, marginBottom: '4px' }}>
+            {score}%
+          </div>
+          <div style={{ fontSize: '12px', color: theme.gray600 }}>
+            {correct} of {total} correct • Passing: {masteryScore}%
+          </div>
+        </div>
+        
+        {passed && (
+          <div style={{
+            padding: '12px',
+            background: theme.infoLight,
+            borderRadius: '6px',
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            border: '1px solid ' + theme.info,
+          }}>
+            <span style={{ fontSize: '18px' }}>🏆</span>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: theme.navy }}>Milestone Completed</div>
+              <div style={{ fontSize: '11px', color: theme.gray600 }}>CNC Mill Operation → Level 1 Unlocked</div>
+            </div>
+          </div>
+        )}
+        
+        <button
+          onClick={onBackToDashboard}
+          style={{
+            width: '100%',
+            background: passed ? theme.success : theme.blue,
+            border: 'none',
+            color: theme.white,
+            padding: '10px',
+            borderRadius: '6px',
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          {passed ? 'Back to Dashboard' : 'Try Again'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
+// MAIN PLAYER COMPONENT
+// =============================================================================
+
+const SimulatedPlayer = ({ course, playbackMode, onExit }) => {
+  const [apiCalls, setApiCalls] = useState([]);
+  const [responses, setResponses] = useState([]);
+  const [currentModuleIndex, setCurrentModuleIndex] = useState(0);
+  const [completedModules, setCompletedModules] = useState([]);
+  const [showResults, setShowResults] = useState(false);
+  const [results, setResults] = useState(null);
+  const [sessionTimeMs, setSessionTimeMs] = useState(0);
+  const [debugTab, setDebugTab] = useState('calls');
+  
+  const adapterRef = useRef(null);
+  
+  useEffect(() => {
+    const adapter = new SimulatedSCORMAdapter({
+      learnerId: 'EMP-2847',
+      learnerName: 'Garcia, Maria',
+      playbackMode,
+      masteryScore: course.masteryScore,
+    }, (call) => {
+      setApiCalls(prev => [...prev, call]);
+    });
+    
+    adapterRef.current = adapter;
+    adapter.LMSInitialize('');
+    adapter.LMSSetValue('cmi.core.lesson_status', 'incomplete');
+    
+    const timer = setInterval(() => {
+      setSessionTimeMs(adapter.getSessionTimeMs());
+    }, 1000);
+    
+    return () => {
+      clearInterval(timer);
+      if (adapterRef.current && !adapterRef.current.finished) {
+        adapterRef.current.LMSFinish('');
+      }
+    };
+  }, [course.masteryScore, playbackMode]);
+  
+  const handleModuleComplete = () => {
+    const adapter = adapterRef.current;
+    if (!completedModules.includes(currentModuleIndex)) {
+      setCompletedModules([...completedModules, currentModuleIndex]);
+      adapter.LMSSetValue('cmi.core.lesson_location', course.modules[currentModuleIndex].id);
+      adapter.LMSCommit('');
+    }
+  };
+  
+  const handleSelectModule = (idx) => {
+    const canSelect = idx <= Math.max(...completedModules, 0) + 1 && idx <= completedModules.length;
+    if (canSelect || idx === 0) {
+      setCurrentModuleIndex(idx);
+      adapterRef.current.LMSSetValue('cmi.core.lesson_location', course.modules[idx].id);
+      adapterRef.current.LMSCommit('');
+    }
+  };
+  
+  const handlePrevious = () => {
+    if (currentModuleIndex > 0) {
+      handleSelectModule(currentModuleIndex - 1);
+    }
+  };
+  
+  const handleNext = () => {
+    if (currentModuleIndex < course.modules.length - 1) {
+      handleSelectModule(currentModuleIndex + 1);
+    }
+  };
+  
+  const handleResponse = (response) => {
+    setResponses(prev => [...prev, response]);
+  };
+  
+  const handleAssessmentComplete = (score, correct, total) => {
+    const adapter = adapterRef.current;
+    const passed = score >= course.masteryScore;
+    
+    adapter.LMSSetValue('cmi.core.score.raw', String(score));
+    adapter.LMSSetValue('cmi.core.score.min', '0');
+    adapter.LMSSetValue('cmi.core.score.max', '100');
+    adapter.LMSSetValue('cmi.core.lesson_status', passed ? 'passed' : 'failed');
+    adapter.LMSCommit('');
+    adapter.LMSFinish('');
+    
+    setResults({ score, correct, total, passed });
+    setShowResults(true);
+  };
+  
+  const currentModule = course.modules[currentModuleIndex];
+  const latestData = apiCalls.length > 0 ? apiCalls[apiCalls.length - 1].dataSnapshot : {};
+  const contentModules = course.modules.filter(m => m.type !== 'assessment');
+  const allContentComplete = contentModules.every((_, idx) => completedModules.includes(idx));
+  const isCurrentModuleComplete = completedModules.includes(currentModuleIndex);
+  const isLastContentModule = currentModuleIndex === contentModules.length - 1;
+
+  const renderModule = () => {
+    if (showResults) {
+      return (
+        <ResultsScreen
+          score={results.score}
+          correct={results.correct}
+          total={results.total}
+          masteryScore={course.masteryScore}
+          onBackToDashboard={onExit}
+        />
+      );
+    }
+    
+    switch (currentModule.type) {
+      case 'text':
+        return (
+          <TextModule 
+            module={currentModule} 
+            onComplete={handleModuleComplete}
+            isCompleted={isCurrentModuleComplete}
+          />
+        );
+      case 'text-image':
+        return (
+          <TextImageModule 
+            module={currentModule} 
+            onComplete={handleModuleComplete}
+            isCompleted={isCurrentModuleComplete}
+          />
+        );
+      case 'video':
+        return (
+          <VideoModule 
+            module={currentModule} 
+            onComplete={handleModuleComplete}
+            isCompleted={isCurrentModuleComplete}
+          />
+        );
+      case 'assessment':
+        return (
+          <AssessmentModule
+            module={currentModule}
+            adapter={adapterRef.current}
+            onComplete={handleAssessmentComplete}
+            onResponse={handleResponse}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div style={{
+      display: 'flex',
+      height: '100vh',
+      background: theme.gray100,
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{
+          padding: '10px 16px',
+          background: theme.navy,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+        }}>
+          <button
+            onClick={onExit}
+            style={{
+              background: 'rgba(255,255,255,0.1)',
+              border: 'none',
+              color: theme.white,
+              cursor: 'pointer',
+              padding: '6px 12px',
+              fontSize: '12px',
+              borderRadius: '4px',
+            }}
+          >
+            ← Exit
+          </button>
+          <div style={{ flex: 1 }}>
+            <span style={{ color: theme.white, fontWeight: 500, fontSize: '14px' }}>
+              {course.title}
+            </span>
+          </div>
+          {playbackMode === 'REVIEW' && (
+            <span style={{
+              background: theme.warning,
+              color: theme.gray900,
+              fontSize: '10px',
+              fontWeight: 700,
+              padding: '3px 8px',
+              borderRadius: '4px',
+              textTransform: 'uppercase',
+            }}>
+              Review Mode
+            </span>
+          )}
+        </div>
+        
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+            {renderModule()}
+          </div>
+          
+          {currentModule.type !== 'assessment' && !showResults && (
+            <NavigationFooter
+              onPrevious={handlePrevious}
+              onNext={handleNext}
+              canGoPrevious={currentModuleIndex > 0}
+              canGoNext={currentModuleIndex < course.modules.length - 1}
+              isCompleted={isCurrentModuleComplete}
+              isLastModule={isLastContentModule && allContentComplete}
+              moduleType={currentModule.type}
+            />
+          )}
+        </div>
+        
+        <div style={{
+          padding: '8px 16px',
+          background: theme.white,
+          borderTop: '1px solid ' + theme.gray200,
+          display: 'flex',
+          gap: '4px',
+        }}>
+          {course.modules.map((mod, idx) => (
+            <div
+              key={mod.id}
+              style={{
+                flex: 1,
+                height: '4px',
+                borderRadius: '2px',
+                background: completedModules.includes(idx) ? theme.success : idx === currentModuleIndex ? theme.blue : theme.gray300,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+      
+      <div style={{
+        width: '300px',
+        display: 'flex',
+        flexDirection: 'column',
+        borderLeft: '1px solid ' + theme.gray300,
+        background: theme.white,
+      }}>
+        <div style={{ flexShrink: 0 }}>
+          <div style={{
+            padding: '10px 14px',
+            background: theme.navy,
+            color: theme.white,
+            fontSize: '11px',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}>
+            Course Modules
+          </div>
+          <div>
+            {course.modules.map((mod, idx) => {
+              const isCompleted = completedModules.includes(idx);
+              const isCurrent = idx === currentModuleIndex;
+              const isLocked = idx > completedModules.length;
+              const isAssessment = mod.type === 'assessment';
+              const assessmentLocked = isAssessment && !allContentComplete;
+              
+              return (
+                <div
+                  key={mod.id}
+                  onClick={() => !isLocked && !assessmentLocked && handleSelectModule(idx)}
+                  style={{
+                    padding: '12px 14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    cursor: isLocked || assessmentLocked ? 'not-allowed' : 'pointer',
+                    background: isCurrent ? theme.gray50 : theme.white,
+                    borderBottom: '1px solid ' + theme.gray100,
+                    borderLeft: isCurrent ? '3px solid ' + theme.blue : '3px solid transparent',
+                    opacity: isLocked || assessmentLocked ? 0.5 : 1,
+                  }}
+                >
+                  <div style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: isCompleted ? theme.success : isCurrent ? theme.blue : theme.gray200,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: isCompleted || isCurrent ? theme.white : theme.gray500,
+                    flexShrink: 0,
+                  }}>
+                    {isCompleted ? '✓' : isAssessment ? '📝' : idx + 1}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: '13px',
+                      fontWeight: isCurrent ? 600 : 400,
+                      color: theme.gray800,
+                      marginBottom: '2px',
+                    }}>
+                      {mod.title}
+                    </div>
+                    <div style={{ fontSize: '11px', color: theme.gray500, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {mod.type === 'text' && <span>📄</span>}
+                      {mod.type === 'text-image' && <span>🖼️</span>}
+                      {mod.type === 'video' && <span>🎬</span>}
+                      {mod.type === 'assessment' && <span>📝</span>}
+                      <span>{mod.duration}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '180px', borderTop: '1px solid ' + theme.gray200 }}>
+          <div style={{
+            padding: '8px 14px',
+            background: theme.navyLight,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+          }}>
+            <span style={{ fontSize: '11px' }}>🔧</span>
+            <span style={{ color: theme.white, fontWeight: 600, fontSize: '10px' }}>SCORM Debug</span>
+          </div>
+          
+          <div style={{ display: 'flex', borderBottom: '1px solid ' + theme.gray200 }}>
+            {[
+              { id: 'calls', label: 'API Calls' },
+              { id: 'data', label: 'CMI Data' },
+              { id: 'responses', label: 'Responses' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setDebugTab(tab.id)}
+                style={{
+                  flex: 1,
+                  padding: '6px 4px',
+                  border: 'none',
+                  borderBottom: debugTab === tab.id ? '2px solid ' + theme.blue : '2px solid transparent',
+                  fontSize: '9px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  background: theme.white,
+                  color: debugTab === tab.id ? theme.blue : theme.gray500,
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            {debugTab === 'calls' && <ApiCallLog calls={apiCalls} />}
+            {debugTab === 'data' && <DataModelPanel data={latestData} sessionTimeMs={sessionTimeMs} />}
+            {debugTab === 'responses' && <ResponsesPanel responses={responses} />}
+          </div>
+          
+          <div style={{
+            padding: '6px 10px',
+            borderTop: '1px solid ' + theme.gray200,
+            display: 'flex',
+            justifyContent: 'space-between',
+            fontSize: '9px',
+            color: theme.gray500,
+            background: theme.gray50,
+          }}>
+            <span>Calls: {apiCalls.length}</span>
+            <span>Responses: {responses.length}</span>
+            <span>SCORM {course.scormVersion}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
+// DASHBOARD
+// =============================================================================
+
+const Dashboard = ({ onLaunchCourse }) => {
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: theme.gray100,
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    }}>
+      <div style={{
+        background: theme.navy,
+        padding: '10px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '24px',
+      }}>
+        <div style={{
+          background: theme.teal,
+          color: theme.white,
+          padding: '3px 10px',
+          borderRadius: '4px',
+          fontSize: '11px',
+          fontWeight: 700,
+        }}>
+          PROTOTYPE
+        </div>
+        <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px' }}>Map ▾</span>
+        <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px' }}>Manage ▾</span>
+        <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px' }}>Analyze ▾</span>
+      </div>
+      
+      <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 600, color: theme.gray900, marginBottom: '4px' }}>
+          My Learning
+        </h1>
+        <p style={{ color: theme.gray500, fontSize: '13px', marginBottom: '20px' }}>
+          SCORM Player Prototype — Covalent Workforce Intelligence Suite
+        </p>
+        
+        <div style={{
+          background: theme.white,
+          border: '1px solid ' + theme.gray300,
+          borderRadius: '6px',
+          overflow: 'hidden',
+          marginBottom: '20px',
+        }}>
+          <div style={{
+            background: theme.navy,
+            padding: '10px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+            <span style={{ color: theme.white, fontWeight: 600, fontSize: '13px' }}>Assigned Training</span>
+            <span style={{
+              background: theme.warning,
+              color: theme.gray900,
+              fontSize: '9px',
+              fontWeight: 700,
+              padding: '2px 8px',
+              borderRadius: '3px',
+            }}>
+              DUE IN 3 DAYS
+            </span>
+          </div>
+          
+          <div style={{ padding: '20px' }}>
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                background: theme.gray100,
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '24px',
+                border: '1px solid ' + theme.gray200,
+              }}>
+                🔧
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                  <span style={{
+                    background: theme.gray200,
+                    color: theme.gray700,
+                    fontSize: '9px',
+                    fontWeight: 600,
+                    padding: '2px 6px',
+                    borderRadius: '3px',
+                  }}>
+                    SCORM 1.2
+                  </span>
+                  <span style={{ color: theme.gray500, fontSize: '11px' }}>
+                    5 modules • ~20 min
+                  </span>
+                </div>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: theme.gray900, marginBottom: '4px' }}>
+                  {mockCourse.title}
+                </h3>
+                <p style={{ color: theme.gray600, fontSize: '12px', marginBottom: '12px' }}>
+                  Essential safety procedures for CNC milling equipment. Covers PPE, machine guarding, and emergency procedures.
+                </p>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                  <span style={{ fontSize: '11px', color: theme.gray500 }}>📊 Passing: {mockCourse.masteryScore}%</span>
+                  <span style={{
+                    background: theme.infoLight,
+                    color: theme.navy,
+                    fontSize: '10px',
+                    padding: '2px 8px',
+                    borderRadius: '3px',
+                  }}>
+                    CNC Mill Operation → Level 1
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    onClick={() => onLaunchCourse('ASSIGNMENT')}
+                    style={{
+                      background: theme.blue,
+                      border: 'none',
+                      color: theme.white,
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ▶ Start Training
+                  </button>
+                  <button
+                    onClick={() => onLaunchCourse('REVIEW')}
+                    style={{
+                      background: theme.white,
+                      border: '1px solid ' + theme.gray300,
+                      color: theme.gray700,
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Review Mode
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div style={{
+          background: theme.white,
+          border: '1px solid ' + theme.gray300,
+          borderRadius: '6px',
+          overflow: 'hidden',
+        }}>
+          <div style={{ background: theme.navy, padding: '8px 16px' }}>
+            <span style={{ color: theme.white, fontWeight: 600, fontSize: '12px' }}>About This Prototype</span>
+          </div>
+          <div style={{ padding: '16px', fontSize: '12px', color: theme.gray600, lineHeight: 1.6 }}>
+            <p style={{ marginBottom: '12px' }}>
+              This demonstrates varied content types in a SCORM course: <strong>text-only</strong>, <strong>text with images</strong>, 
+              and <strong>video playback</strong>. Each module type has different completion triggers — scroll to complete text, 
+              watch the full video, then pass the assessment.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ padding: '8px 12px', background: theme.gray50, borderRadius: '4px', border: '1px solid ' + theme.gray200 }}>
+                <span style={{ fontSize: '14px', marginRight: '6px' }}>📄</span>
+                <span style={{ fontSize: '11px', color: theme.gray700 }}>Text Module</span>
+              </div>
+              <div style={{ padding: '8px 12px', background: theme.gray50, borderRadius: '4px', border: '1px solid ' + theme.gray200 }}>
+                <span style={{ fontSize: '14px', marginRight: '6px' }}>🖼️</span>
+                <span style={{ fontSize: '11px', color: theme.gray700 }}>Text + Image</span>
+              </div>
+              <div style={{ padding: '8px 12px', background: theme.gray50, borderRadius: '4px', border: '1px solid ' + theme.gray200 }}>
+                <span style={{ fontSize: '14px', marginRight: '6px' }}>🎬</span>
+                <span style={{ fontSize: '11px', color: theme.gray700 }}>Video Module</span>
+              </div>
+              <div style={{ padding: '8px 12px', background: theme.gray50, borderRadius: '4px', border: '1px solid ' + theme.gray200 }}>
+                <span style={{ fontSize: '14px', marginRight: '6px' }}>📝</span>
+                <span style={{ fontSize: '11px', color: theme.gray700 }}>Assessment</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
+// MAIN APP
+// =============================================================================
+
+function SCORMPrototype() {
+  const [view, setView] = useState('dashboard');
+  const [playbackMode, setPlaybackMode] = useState('ASSIGNMENT');
+  
+  return (
+    <React.Fragment>
+      {view === 'dashboard' && (
+        <Dashboard onLaunchCourse={(mode) => {
+          setPlaybackMode(mode);
+          setView('player');
+        }} />
+      )}
+      
+      {view === 'player' && (
+        <SimulatedPlayer
+          course={mockCourse}
+          playbackMode={playbackMode}
+          onExit={() => setView('dashboard')}
+        />
+      )}
+    </React.Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<SCORMPrototype />);
+  </script>
+</body>
+</html>
