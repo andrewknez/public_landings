@@ -98,6 +98,7 @@
     <button id="tab-template-btn">Template</button>
     <button id="tab-employee-btn">Employee example</button>
     <button id="tab-trend-btn">Trend report</button>
+    <button id="tab-coverage-btn">Coverage</button>
   </div>
 
   <div id="view-admin" style="display:block;">
@@ -326,6 +327,54 @@
     </div>
   </div>
 
+  <div id="view-coverage" style="display:none;">
+    <p style="font-size:18px;font-weight:600;margin:0 0 16px;">Skill coverage</p>
+
+    <div class="card">
+      <div class="grid2">
+        <div>
+          <label class="small">Select skill</label>
+          <select id="coverage-skill">
+            <option selected>Carbon arc gouging</option>
+            <option>Flux-Cored Arc - Heavy</option>
+            <option>TIG Pipe/Nuclear</option>
+            <option>Oxy-Fuel Cutting/Bevel</option>
+            <option>Line Heating/Distortion</option>
+            <option>Forklift Operation</option>
+            <option>Overhead Crane Rigging</option>
+          </select>
+        </div>
+        <div>
+          <label class="small">Areas</label>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;padding-top:9px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" class="coverage-area-toggle" value="1" checked />Area 1</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" class="coverage-area-toggle" value="2" checked />Area 2</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" class="coverage-area-toggle" value="3" checked />Area 3</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" class="coverage-area-toggle" value="4" checked />Area 4</label>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--color-text-secondary);margin-top:10px;">Only Carbon arc gouging is wired to live numbers in this prototype — other skills are illustrative.</p>
+    </div>
+
+    <div class="card">
+      <p style="font-weight:600;font-size:14px;margin:0 0 4px;">Headcount coverage by level — inclusive</p>
+      <p style="font-size:12px;color:var(--color-text-secondary);margin:0 0 14px;">L4+ target per area: 3 or more.</p>
+      <table>
+        <thead><tr><th>Area</th><th>Assigned</th><th>L1+</th><th>L2+</th><th>L3+</th><th>L4+</th></tr></thead>
+        <tbody id="coverage-matrix-body"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <p style="font-weight:600;font-size:14px;margin:0 0 4px;">Proficiency band composition</p>
+      <p style="font-size:12px;color:var(--color-text-secondary);margin:0 0 14px;">Headcount by proficiency band per area, 0–5 scale.</p>
+      <svg id="coverage-bar-svg" viewBox="0 0 760 320" style="width:100%;height:auto;display:block;"></svg>
+      <div id="coverage-bar-legend" style="display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;"></div>
+      <p style="font-size:12px;color:var(--color-text-secondary);margin-top:10px;">This is a standalone view in the prototype — flagging coverage gaps automatically will live in the dedicated coverage planning tool rather than duplicated here.</p>
+    </div>
+  </div>
+
 </div>
 <script>
 function showTab(tab){
@@ -333,7 +382,8 @@ function showTab(tab){
   document.getElementById('view-template').style.display = tab==='template' ? 'block' : 'none';
   document.getElementById('view-employee').style.display = tab==='employee' ? 'block' : 'none';
   document.getElementById('view-trend').style.display = tab==='trend' ? 'block' : 'none';
-  [['tab-admin-btn','admin'], ['tab-template-btn','template'], ['tab-employee-btn','employee'], ['tab-trend-btn','trend']].forEach(function(pair){
+  document.getElementById('view-coverage').style.display = tab==='coverage' ? 'block' : 'none';
+  [['tab-admin-btn','admin'], ['tab-template-btn','template'], ['tab-employee-btn','employee'], ['tab-trend-btn','trend'], ['tab-coverage-btn','coverage']].forEach(function(pair){
     var btn = document.getElementById(pair[0]);
     var active = tab === pair[1];
     btn.style.background = active ? 'var(--navy)' : '#fff';
@@ -344,6 +394,7 @@ document.getElementById('tab-admin-btn').addEventListener('click', function(){ s
 document.getElementById('tab-template-btn').addEventListener('click', function(){ showTab('template'); });
 document.getElementById('tab-employee-btn').addEventListener('click', function(){ showTab('employee'); });
 document.getElementById('tab-trend-btn').addEventListener('click', function(){ showTab('trend'); });
+document.getElementById('tab-coverage-btn').addEventListener('click', function(){ showTab('coverage'); });
 
 function setAccState(header, expanded){
   var body = header.nextElementSibling;
@@ -684,6 +735,102 @@ function renderSkillsAdmin(){
 document.getElementById('skills-admin-search').addEventListener('input', renderSkillsAdmin);
 document.getElementById('add-skill-btn').addEventListener('click', function(){ showTab('template'); });
 renderSkillsAdmin();
+
+var coverageAreas = {
+  1: { assigned: 20, bands: [1, 2, 5, 8, 4], cum: [19, 17, 12, 4] },
+  2: { assigned: 15, bands: [0, 1, 4, 7, 3], cum: [15, 14, 10, 3] },
+  3: { assigned: 25, bands: [2, 3, 6, 9, 5], cum: [23, 20, 14, 5] },
+  4: { assigned: 12, bands: [3, 4, 3, 2, 0], cum: [9, 5, 2, 0] }
+};
+var bandColors = ['#2a78d6', '#1baf7a', '#eda100', '#008300', '#4a3aa7'];
+var bandLabels = ['0\u20131', '1\u20132', '2\u20133', '3\u20134', '4\u20135'];
+var minTargetL4 = 3;
+var checkIconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M5 12l5 5 9-9"/></svg>';
+var alertIconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M12 3L2 20h20L12 3z"/><path d="M12 9v5"/><path d="M12 17h.01"/></svg>';
+var failIconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:-2px;margin-right:3px;"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+
+function getCheckedAreas(){
+  return Array.prototype.slice.call(document.querySelectorAll('.coverage-area-toggle:checked'))
+    .map(function(cb){ return Number(cb.value); }).sort();
+}
+
+function renderCoverageMatrix(){
+  var areas = getCheckedAreas();
+  var body = document.getElementById('coverage-matrix-body');
+  if(areas.length === 0){
+    body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">Select at least one area</td></tr>';
+    return;
+  }
+  body.innerHTML = areas.map(function(a){
+    var d = coverageAreas[a];
+    var l4 = d.cum[3];
+    var icon, color;
+    if(l4 < minTargetL4){ icon = failIconSvg; color = 'var(--color-text-danger)'; }
+    else if(l4 === minTargetL4){ icon = alertIconSvg; color = 'var(--color-text-warning)'; }
+    else { icon = checkIconSvg; color = 'var(--color-text-success)'; }
+    return '<tr><td style="font-weight:500;">Area ' + a + '</td><td>' + d.assigned + '</td><td>' + d.cum[0] + '</td><td>' + d.cum[1] + '</td><td>' + d.cum[2] + '</td>' +
+      '<td style="color:' + color + ';font-weight:500;">' + icon + l4 + '</td></tr>';
+  }).join('');
+}
+
+function renderCoverageBars(){
+  var areas = getCheckedAreas();
+  var svg = document.getElementById('coverage-bar-svg');
+  var W = 760, H = 320, padL = 36, padR = 16, padT = 16, padB = 40;
+  var plotW = W - padL - padR, plotH = H - padT - padB;
+
+  if(areas.length === 0){
+    svg.innerHTML = '<text x="' + (W/2) + '" y="' + (H/2) + '" font-size="13" fill="#62625e" text-anchor="middle">Select at least one area</text>';
+    return;
+  }
+
+  var maxAssigned = Math.max.apply(null, areas.map(function(a){ return coverageAreas[a].assigned; }));
+  var niceMax = Math.max(5, Math.ceil(maxAssigned / 5) * 5);
+  var n = areas.length;
+  var gap = 40;
+  var barWidth = (plotW - gap * (n - 1)) / n;
+  function yPos(v){ return padT + plotH - (v / niceMax) * plotH; }
+
+  var parts = [];
+  for(var g = 0; g <= 5; g++){
+    var val = (niceMax / 5) * g;
+    var y = yPos(val);
+    parts.push('<line x1="' + padL + '" y1="' + y + '" x2="' + (W - padR) + '" y2="' + y + '" stroke="rgba(0,0,0,0.08)" stroke-width="1"/>');
+    parts.push('<text x="' + (padL - 8) + '" y="' + (y + 4) + '" font-size="11" fill="#62625e" text-anchor="end">' + Math.round(val) + '</text>');
+  }
+
+  areas.forEach(function(a, i){
+    var d = coverageAreas[a];
+    var x = padL + i * (barWidth + gap);
+    var yCursor = padT + plotH;
+    d.bands.forEach(function(count, bi){
+      var segHeight = (count / niceMax) * plotH;
+      var yTop = yCursor - segHeight;
+      if(segHeight > 0){
+        parts.push('<rect x="' + x + '" y="' + yTop + '" width="' + barWidth + '" height="' + segHeight + '" fill="' + bandColors[bi] + '"><title>Area ' + a + ' \u00b7 ' + bandLabels[bi] + ': ' + count + '</title></rect>');
+      }
+      yCursor = yTop;
+    });
+    parts.push('<text x="' + (x + barWidth / 2) + '" y="' + (H - padB + 20) + '" font-size="11" fill="#62625e" text-anchor="middle">Area ' + a + '</text>');
+  });
+
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  svg.innerHTML = parts.join('');
+}
+
+function renderCoverageLegend(){
+  document.getElementById('coverage-bar-legend').innerHTML = bandLabels.map(function(lab, i){
+    return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-secondary);">' +
+      '<span style="width:10px;height:10px;border-radius:3px;background:' + bandColors[i] + ';display:inline-block;"></span>' + lab + '</span>';
+  }).join('');
+}
+
+document.querySelectorAll('.coverage-area-toggle').forEach(function(cb){
+  cb.addEventListener('change', function(){ renderCoverageMatrix(); renderCoverageBars(); });
+});
+renderCoverageLegend();
+renderCoverageMatrix();
+renderCoverageBars();
 </script>
 </body>
 </html>
