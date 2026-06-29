@@ -94,12 +94,33 @@
 <div class="page">
 
   <div style="display:flex;gap:8px;margin-bottom:18px;">
-    <button id="tab-template-btn" style="background:var(--navy);color:#fff;border-color:var(--navy);">Template</button>
+    <button id="tab-admin-btn" style="background:var(--navy);color:#fff;border-color:var(--navy);">Skills admin</button>
+    <button id="tab-template-btn">Template</button>
     <button id="tab-employee-btn">Employee example</button>
     <button id="tab-trend-btn">Trend report</button>
   </div>
 
-  <div id="view-template" style="display:block;">
+  <div id="view-admin" style="display:block;">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <p style="font-size:18px;font-weight:600;margin:0;">Skills (<span id="skills-admin-count">7</span>)</p>
+        <button id="add-skill-btn" style="background:var(--navy);color:#fff;border-color:var(--navy);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="margin-right:6px;vertical-align:middle;"><path d="M12 5v14M5 12h14"/></svg>Add skills</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <button id="skills-filter-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right:6px;vertical-align:middle;"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="7" cy="18" r="2" fill="currentColor" stroke="none"/></svg>Filter by</button>
+        <input id="skills-admin-search" type="text" placeholder="Search by skill name" style="max-width:280px;" />
+      </div>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table>
+        <thead><tr><th>ID</th><th>Skill name</th><th>Domain(s)</th><th>Location(s)</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+        <tbody id="skills-admin-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="view-template" style="display:none;">
     <p style="font-size:18px;font-weight:600;margin:0 0 16px;">Skill template</p>
 
     <div class="card">
@@ -308,16 +329,18 @@
 </div>
 <script>
 function showTab(tab){
+  document.getElementById('view-admin').style.display = tab==='admin' ? 'block' : 'none';
   document.getElementById('view-template').style.display = tab==='template' ? 'block' : 'none';
   document.getElementById('view-employee').style.display = tab==='employee' ? 'block' : 'none';
   document.getElementById('view-trend').style.display = tab==='trend' ? 'block' : 'none';
-  [['tab-template-btn','template'], ['tab-employee-btn','employee'], ['tab-trend-btn','trend']].forEach(function(pair){
+  [['tab-admin-btn','admin'], ['tab-template-btn','template'], ['tab-employee-btn','employee'], ['tab-trend-btn','trend']].forEach(function(pair){
     var btn = document.getElementById(pair[0]);
     var active = tab === pair[1];
     btn.style.background = active ? 'var(--navy)' : '#fff';
     btn.style.color = active ? '#fff' : 'var(--color-text-primary)';
   });
 }
+document.getElementById('tab-admin-btn').addEventListener('click', function(){ showTab('admin'); });
 document.getElementById('tab-template-btn').addEventListener('click', function(){ showTab('template'); });
 document.getElementById('tab-employee-btn').addEventListener('click', function(){ showTab('employee'); });
 document.getElementById('tab-trend-btn').addEventListener('click', function(){ showTab('trend'); });
@@ -612,6 +635,55 @@ function renderTrendChart(){
 document.getElementById('trend-horizon').addEventListener('change', renderTrendChart);
 renderTrendLegend();
 renderTrendChart();
+
+var skillsAdminData = [
+  { id: 101, name: 'Carbon arc gouging', domains: 'Welding', locations: 'Location A', status: 'Active' },
+  { id: 102, name: 'Flux-Cored Arc - Heavy', domains: 'Welding', locations: 'Location A, Location B', status: 'Active' },
+  { id: 103, name: 'TIG Pipe/Nuclear', domains: 'Welding', locations: 'Location A', status: 'Active' },
+  { id: 104, name: 'Oxy-Fuel Cutting/Bevel', domains: 'Welding', locations: 'Location A, Columbus', status: 'Active' },
+  { id: 105, name: 'Line Heating/Distortion', domains: 'Welding', locations: 'Location A', status: 'Inactive' },
+  { id: 106, name: 'Forklift Operation', domains: 'Material handling', locations: 'Elkhart, Columbus', status: 'Active' },
+  { id: 107, name: 'Overhead Crane Rigging', domains: 'Material handling', locations: 'Elkhart', status: 'Inactive' }
+];
+
+var pencilIconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L20 8l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>';
+var trashIconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></svg>';
+
+function renderSkillsAdmin(){
+  document.getElementById('skills-admin-count').textContent = skillsAdminData.length;
+  var search = document.getElementById('skills-admin-search').value.trim().toLowerCase();
+  var rows = skillsAdminData.filter(function(s){ return !search || s.name.toLowerCase().indexOf(search) !== -1; });
+
+  document.getElementById('skills-admin-body').innerHTML = rows.map(function(s){
+    var badgeBg = s.status === 'Active' ? 'var(--color-background-success)' : 'var(--color-background-secondary)';
+    var badgeCol = s.status === 'Active' ? 'var(--color-text-success)' : 'var(--color-text-secondary)';
+    return '<tr data-id="' + s.id + '">' +
+      '<td>' + s.id + '</td>' +
+      '<td style="color:var(--link);font-weight:500;">' + s.name + '</td>' +
+      '<td>' + s.domains + '</td>' +
+      '<td>' + s.locations + '</td>' +
+      '<td><span class="badge" style="background:' + badgeBg + ';color:' + badgeCol + ';">' + s.status + '</span></td>' +
+      '<td style="text-align:right;">' +
+        '<button class="btn-sm icon-btn skill-edit-btn" aria-label="Edit" title="Edit" style="margin-right:6px;">' + pencilIconSvg + '</button>' +
+        '<button class="btn-sm icon-btn skill-delete-btn" aria-label="Delete" title="Delete">' + trashIconSvg + '</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+
+  document.querySelectorAll('.skill-edit-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){ showTab('template'); });
+  });
+  document.querySelectorAll('.skill-delete-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var id = Number(btn.closest('tr').getAttribute('data-id'));
+      skillsAdminData = skillsAdminData.filter(function(s){ return s.id !== id; });
+      renderSkillsAdmin();
+    });
+  });
+}
+document.getElementById('skills-admin-search').addEventListener('input', renderSkillsAdmin);
+document.getElementById('add-skill-btn').addEventListener('click', function(){ showTab('template'); });
+renderSkillsAdmin();
 </script>
 </body>
 </html>
