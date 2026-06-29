@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Skill proficiency prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --color-background-primary:#ffffff;
+    --color-background-secondary:#f3f4f6;
+    --color-background-tertiary:#eceef1;
+    --color-background-info:#e6f1fb;
+    --color-text-info:#0c447c;
+    --color-background-success:#eaf3de;
+    --color-text-success:#27500a;
+    --color-background-warning:#faeeda;
+    --color-text-warning:#633806;
+    --color-background-danger:#fcebeb;
+    --color-text-danger:#791f1f;
+    --color-text-primary:#1a1a1a;
+    --color-text-secondary:#62625e;
+    --color-text-tertiary:#8c8c87;
+    --color-border-tertiary:rgba(0,0,0,0.10);
+    --color-border-secondary:rgba(0,0,0,0.18);
+    --border-radius-md:8px;
+    --border-radius-lg:12px;
+    --navy:#0d3a6b;
+    --link:#185FA5;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--color-background-secondary);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    font-size:14px;
+    color:var(--color-text-primary);
+    line-height:1.5;
+    padding:32px 16px;
+  }
+  .page{max-width:920px;margin:0 auto;}
+  p{margin:0;}
+  a{text-decoration:none;}
+  input[type=text],input[type=number],select{
+    width:100%;height:36px;padding:0 10px;border:1px solid var(--color-border-tertiary);
+    border-radius:var(--border-radius-md);font-family:inherit;font-size:14px;
+    background:#fff;color:var(--color-text-primary);outline:none;transition:border-color .15s, box-shadow .15s;
+    appearance:none;
+  }
+  select{
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%2362625e' stroke-width='1.5' fill='none' fill-rule='evenodd'/></svg>");
+    background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;
+  }
+  input[type=text]:focus,input[type=number]:focus,select:focus{
+    border-color:var(--link);box-shadow:0 0 0 3px rgba(24,95,165,0.14);
+  }
+  button{
+    height:36px;padding:0 14px;border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);
+    background:#fff;color:var(--color-text-primary);font-family:inherit;font-size:13px;font-weight:500;
+    cursor:pointer;display:inline-flex;align-items:center;transition:background .15s, transform .05s;
+  }
+  button:hover{background:var(--color-background-secondary);}
+  button:active{transform:scale(0.98);}
+  button.btn-sm{height:26px;padding:0 10px;font-size:11px;}
+  button.icon-btn{height:30px;width:30px;padding:0;justify-content:center;}
+  input[type=number].score-input{width:64px;height:30px;display:inline-block;padding:0 8px;}
+  input[type=checkbox]{width:16px;height:16px;accent-color:var(--navy);cursor:pointer;}
+  input[type=range]{-webkit-appearance:none;appearance:none;height:4px;background:var(--color-border-secondary);border-radius:999px;outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--link);cursor:pointer;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,0.12);}
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--link);cursor:pointer;border:2px solid #fff;}
+  label.small{font-size:11px;color:var(--color-text-secondary);display:block;margin-bottom:4px;}
+  .badge{font-size:12px;padding:2px 10px;border-radius:999px;font-weight:500;background:var(--color-background-secondary);color:var(--color-text-secondary);}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--color-background-info);color:var(--color-text-info);border-radius:999px;padding:4px 10px;font-size:13px;margin:0 6px 6px 0;}
+  .card{background:var(--color-background-primary);border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px 18px;margin-bottom:14px;position:relative;box-shadow:0 1px 2px rgba(0,0,0,0.04);}
+  .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+  .acc-header{cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:13px 18px;background:var(--navy);color:#fff;border-radius:var(--border-radius-md);user-select:none;font-size:14px;font-weight:500;}
+  .acc-stack .acc-header{margin-top:14px;}
+  .acc-stack .acc-header:first-child{margin-top:0;}
+  .acc-body{padding:18px;border:1px solid var(--color-border-tertiary);border-top:none;border-radius:0 0 var(--border-radius-md) var(--border-radius-md);background:var(--color-background-primary);box-shadow:0 1px 2px rgba(0,0,0,0.04);}
+  .weight-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .icon-svg{display:inline-block;}
+  .navtab svg{display:block;margin:0 auto 4px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{padding:8px 10px;font-weight:600;background:var(--color-background-secondary);text-align:left;}
+  td{padding:10px 10px;border-top:1px solid var(--color-border-tertiary);}
+  .navtab{text-align:center;color:var(--color-text-secondary);font-size:11px;cursor:default;}
+  .navtab.active{color:var(--navy);font-weight:600;border-bottom:2px solid var(--navy);padding-bottom:8px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div style="display:flex;gap:8px;margin-bottom:18px;">
+    <button id="tab-template-btn" style="background:var(--navy);color:#fff;border-color:var(--navy);">Template</button>
+    <button id="tab-employee-btn">Employee example</button>
+    <button id="tab-trend-btn">Trend report</button>
+  </div>
+
+  <div id="view-template" style="display:block;">
+    <p style="font-size:18px;font-weight:600;margin:0 0 16px;">Skill template</p>
+
+    <div class="card">
+      <label class="small">Skill name</label>
+      <input type="text" value="Carbon arc gouging" style="margin-bottom:14px;font-weight:500;" />
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:13px;color:var(--color-text-secondary);">Proficiency scale</span>
+        <span class="badge" style="background:var(--color-background-info);color:var(--color-text-info);">0–5 standard</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <p style="font-weight:600;font-size:14px;margin:0 0 10px;">Related objectives</p>
+      <div id="objective-chips" style="margin-bottom:8px;">
+        <span class="chip">Annual welding certification <svg class="icon-svg" style="vertical-align:middle;cursor:pointer;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg></span>
+        <span class="chip">Carbon arc safety briefing <svg class="icon-svg" style="vertical-align:middle;cursor:pointer;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg></span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <input id="objective-input" type="text" placeholder="Add a related objective" />
+        <button id="add-objective-btn" aria-label="Add objective"><svg class="icon-svg" style="vertical-align:middle;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+      </div>
+      <p style="font-size:12px;color:var(--color-text-secondary);margin-top:8px;">This skill is assessed wherever any of these objectives are assigned to someone.</p>
+    </div>
+
+    <div class="card">
+      <p style="font-weight:600;font-size:14px;margin:0 0 10px;">Assessments</p>
+      <div id="evals-list"></div>
+      <button id="add-eval-btn"><svg class="icon-svg" style="vertical-align:middle;margin-right:6px;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add assessment</button>
+    </div>
+
+    <div class="card">
+      <p style="font-weight:600;font-size:14px;margin:0 0 10px;">Related jobs &amp; job sets</p>
+      <div id="job-chips" style="margin-bottom:8px;">
+        <span class="chip">Process Weld 1 <svg class="icon-svg" style="vertical-align:middle;cursor:pointer;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg></span>
+        <span class="chip">Process Fabrication 2 <svg class="icon-svg" style="vertical-align:middle;cursor:pointer;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg></span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <input id="job-input" type="text" placeholder="Add a job object (e.g., Process Weld 1)" />
+        <button id="add-job-btn" aria-label="Add job"><svg class="icon-svg" style="vertical-align:middle;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+      </div>
+      <div class="grid2" style="margin-top:12px;">
+        <div><label class="small">Decay starts after (months)</label><input id="decay-start" type="number" min="0" step="1" value="6" /></div>
+        <div><label class="small">Fully decayed by (months)</label><input id="decay-end" type="number" min="1" step="1" value="24" /></div>
+      </div>
+      <p style="font-size:12px;color:var(--color-text-secondary);margin-top:8px;">Decay is driven by whichever related job was performed most recently — any one of them can refresh the score, so only the freshest date counts.</p>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <p style="font-weight:600;font-size:14px;margin:0;">Weighting &amp; scoring logic</p>
+        <span id="weight-total" class="badge">Total: 100%</span>
+      </div>
+      <div id="weight-bar" style="height:10px;border-radius:999px;overflow:hidden;display:flex;background:var(--color-background-secondary);margin-bottom:14px;"></div>
+      <div id="weight-rows"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="width:12px;height:12px;border-radius:3px;background:#1D9E75;flex-shrink:0;"></span>
+        <label style="font-size:13px;flex:1;">Job recency / decay</label>
+        <input id="job-weight" type="range" min="0" max="100" step="5" value="25" style="flex:2;" />
+        <span id="job-weight-out" style="font-size:13px;width:36px;text-align:right;">25%</span>
+      </div>
+      <p style="font-size:12px;color:var(--color-text-secondary);margin-top:4px;">This is the formula every employee with this skill will be scored with — actual scores live in their own record, not here.</p>
+    </div>
+  </div>
+
+  <div id="view-employee" style="display:none;">
+    <div class="card" style="margin-bottom:14px;">
+      <div style="display:flex;gap:32px;flex-wrap:wrap;">
+        <div class="navtab"><svg class="icon-svg" style="vertical-align:middle;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>My actions</div>
+        <div class="navtab"><svg class="icon-svg" style="vertical-align:middle;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Employee info</div>
+        <div class="navtab"><svg class="icon-svg" style="vertical-align:middle;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 12l2 2 4-4"/></svg>Objectives</div>
+        <div class="navtab"><svg class="icon-svg" style="vertical-align:middle;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 12l2 2 4-4"/></svg>Objective groups</div>
+        <div class="navtab active"><svg class="icon-svg" style="vertical-align:middle;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>Skills</div>
+        <div class="navtab"><svg class="icon-svg" style="vertical-align:middle;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/></svg>Jobs</div>
+        <div class="navtab"><svg class="icon-svg" style="vertical-align:middle;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="M9 11h6M9 15h6"/></svg>Stamps</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p style="font-weight:600;font-size:14px;margin:0 0 10px;">Skills (1)</p>
+      <table>
+        <thead><tr><th>Skill name</th><th>Proficiency score</th><th>Updated date</th><th style="text-align:right;">Actions</th></tr></thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--link);font-weight:500;">Carbon arc gouging</td>
+            <td id="skill-row-score">— / 5</td>
+            <td id="skill-row-updated">Mar 12, 2026</td>
+            <td style="text-align:right;">
+              <button id="skill-view-btn" class="btn-sm icon-btn" aria-label="View" title="View"><svg class="icon-svg" style="vertical-align:middle;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="skill-detail" style="display:none;">
+      <div class="card">
+        <p style="font-size:12px;color:var(--color-text-secondary);margin:0 0 4px;">Skill</p>
+        <p style="font-size:18px;font-weight:600;color:var(--link);margin:0 0 14px;">Carbon arc gouging</p>
+        <div class="grid3" style="margin-bottom:16px;">
+          <div><p style="font-size:12px;color:var(--color-text-secondary);margin:0 0 2px;">Employee</p><p style="font-weight:500;margin:0;">Jordan Reyes</p></div>
+          <div><p style="font-size:12px;color:var(--color-text-secondary);margin:0 0 2px;">Related objectives</p><p style="font-weight:500;margin:0;">Annual welding certification, Carbon arc safety briefing</p></div>
+          <div><p style="font-size:12px;color:var(--color-text-secondary);margin:0 0 2px;">Related jobs</p><p style="font-weight:500;margin:0;">Process weld 1, Process fabrication 2</p></div>
+        </div>
+        <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <span style="font-size:13px;color:var(--color-text-secondary);">Composite proficiency score</span>
+          <span style="display:flex;align-items:center;gap:10px;">
+            <span id="emp-composite-status" class="badge">—</span>
+            <span id="emp-composite-score" style="font-size:24px;font-weight:600;">— / 5</span>
+          </span>
+        </div>
+
+        <div class="acc-stack">
+          <div class="acc-header"><span>Assessments</span><svg class="icon-svg chevron" style="vertical-align:middle;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></div>
+          <div class="acc-body" style="display:none;">
+            <table>
+              <thead><tr><th>Assessment</th><th>Status</th><th>Score</th><th>Date completed</th><th></th></tr></thead>
+              <tbody>
+                <tr id="assess-row-supervisor">
+                  <td style="color:var(--link);">Assessment 1 · Supervisor</td>
+                  <td class="status-cell"><span class="badge" style="background:var(--color-background-success);color:var(--color-text-success);">Complete</span></td>
+                  <td class="score-cell" data-score="4.0"><span class="score-display">4.0 / 5</span> <button class="update-score-btn btn-sm">Update score</button></td>
+                  <td>Mar 12, 2026</td>
+                  <td style="text-align:right;"><a href="#" style="color:var(--link);font-size:12px;">Audit trail</a></td>
+                </tr>
+                <tr id="assess-row-sme">
+                  <td style="color:var(--link);">Assessment 2 · Subject matter expert</td>
+                  <td class="status-cell"><span class="badge" style="background:var(--color-background-warning);color:var(--color-text-warning);">In progress</span></td>
+                  <td class="score-cell" data-score=""><span style="font-size:12px;color:var(--color-text-tertiary);">Awaiting subject matter expert</span></td>
+                  <td style="color:var(--color-text-tertiary);">—</td>
+                  <td style="text-align:right;"><a href="#" style="color:var(--link);font-size:12px;">Audit trail</a></td>
+                </tr>
+              </tbody>
+            </table>
+            <p style="font-size:12px;color:var(--color-text-secondary);margin-top:10px;">You're signed in as this employee's supervisor, so you can update the supervisor assessment. Other roles update their own.</p>
+          </div>
+
+          <div class="acc-header"><span>Job history</span><svg class="icon-svg chevron" style="vertical-align:middle;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></div>
+          <div class="acc-body" style="display:none;">
+            <table>
+              <thead><tr><th>Job</th><th>Last performed</th><th></th></tr></thead>
+              <tbody>
+                <tr>
+                  <td style="color:var(--link);">Process weld 1</td>
+                  <td>10 months ago</td>
+                  <td style="text-align:right;"><a href="#" style="color:var(--link);font-size:12px;">Audit trail</a></td>
+                </tr>
+                <tr>
+                  <td style="color:var(--link);">Process fabrication 2</td>
+                  <td>2 months ago</td>
+                  <td style="text-align:right;"><a href="#" style="color:var(--link);font-size:12px;">Audit trail</a></td>
+                </tr>
+              </tbody>
+            </table>
+            <p style="font-size:12px;color:var(--color-text-secondary);margin-top:10px;">Decay is calculated from whichever job above was performed most recently, not each one separately — that's process fabrication 2 at 2 months, so the skill is currently holding steady.</p>
+          </div>
+
+          <div class="acc-header"><span>Related objectives</span><svg class="icon-svg chevron" style="vertical-align:middle;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></div>
+          <div class="acc-body" style="display:none;">
+            <table>
+              <thead><tr><th>Objective name</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td style="color:var(--link);">Annual welding certification</td>
+                  <td><span class="badge" style="background:var(--color-background-success);color:var(--color-text-success);">Active</span></td>
+                </tr>
+                <tr>
+                  <td style="color:var(--link);">Carbon arc safety briefing</td>
+                  <td><span class="badge" style="background:var(--color-background-success);color:var(--color-text-success);">Active</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-trend" style="display:none;">
+    <p style="font-size:18px;font-weight:600;margin:0 0 16px;">Skill proficiency trends</p>
+
+    <div class="card">
+      <div class="grid3">
+        <div><label class="small">Location</label><select id="trend-location"><option selected>Location A</option><option>Location B</option><option>Location C</option><option>All locations</option></select></div>
+        <div><label class="small">Domain</label><select id="trend-domain"><option selected>Welding</option><option>Machining</option><option>Electrical</option><option>All domains</option></select></div>
+        <div><label class="small">Time horizon</label><select id="trend-horizon"><option value="6" selected>Last 6 quarters</option><option value="4">Last 4 quarters</option><option value="2">Last 2 quarters</option></select></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p style="font-weight:600;font-size:14px;margin:0 0 4px;">Average proficiency by skill — Welding, Location A</p>
+      <p style="font-size:12px;color:var(--color-text-secondary);margin:0 0 14px;">Quarterly average proficiency score per skill, 0–5 scale.</p>
+      <svg id="trend-svg" viewBox="0 0 800 340" style="width:100%;height:auto;display:block;"></svg>
+      <div id="trend-legend" style="display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;"></div>
+    </div>
+
+    <div class="card">
+      <p style="font-weight:600;font-size:14px;margin:0 0 10px;">Underlying data</p>
+      <table>
+        <thead><tr id="trend-table-head"></tr></thead>
+        <tbody id="trend-table-body"></tbody>
+      </table>
+      <p style="font-size:12px;color:var(--color-text-secondary);margin-top:10px;">Location and domain filters are illustrative in this prototype — only the time horizon is wired to live data.</p>
+    </div>
+  </div>
+
+</div>
+<script>
+function showTab(tab){
+  document.getElementById('view-template').style.display = tab==='template' ? 'block' : 'none';
+  document.getElementById('view-employee').style.display = tab==='employee' ? 'block' : 'none';
+  document.getElementById('view-trend').style.display = tab==='trend' ? 'block' : 'none';
+  [['tab-template-btn','template'], ['tab-employee-btn','employee'], ['tab-trend-btn','trend']].forEach(function(pair){
+    var btn = document.getElementById(pair[0]);
+    var active = tab === pair[1];
+    btn.style.background = active ? 'var(--navy)' : '#fff';
+    btn.style.color = active ? '#fff' : 'var(--color-text-primary)';
+  });
+}
+document.getElementById('tab-template-btn').addEventListener('click', function(){ showTab('template'); });
+document.getElementById('tab-employee-btn').addEventListener('click', function(){ showTab('employee'); });
+document.getElementById('tab-trend-btn').addEventListener('click', function(){ showTab('trend'); });
+
+function setAccState(header, expanded){
+  var body = header.nextElementSibling;
+  var icon = header.querySelector('.chevron');
+  body.style.display = expanded ? 'block' : 'none';
+  icon.style.transform = expanded ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+document.querySelectorAll('.acc-header').forEach(function(h){
+  var expanded = h.nextElementSibling.style.display !== 'none';
+  setAccState(h, expanded);
+  h.addEventListener('click', function(e){
+    if(e.target.tagName==='INPUT') return;
+    var body = h.nextElementSibling;
+    var isExpanded = body.style.display !== 'none';
+    setAccState(h, !isExpanded);
+  });
+});
+
+function wireChipRemove(chip){
+  chip.querySelector('svg').addEventListener('click', function(){ chip.remove(); });
+}
+document.querySelectorAll('.chip').forEach(wireChipRemove);
+
+function addChip(containerId, inputId, value){
+  if(!value) return;
+  var chip = document.createElement('span');
+  chip.className = 'chip';
+  chip.innerHTML = value + ' <svg class="icon-svg" style="vertical-align:middle;cursor:pointer;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+  wireChipRemove(chip);
+  document.getElementById(containerId).appendChild(chip);
+}
+document.getElementById('add-job-btn').addEventListener('click', function(){
+  var input = document.getElementById('job-input');
+  var val = input.value.trim();
+  addChip('job-chips', 'job-input', val);
+  input.value = '';
+});
+document.getElementById('job-input').addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('add-job-btn').click(); } });
+
+document.getElementById('add-objective-btn').addEventListener('click', function(){
+  var input = document.getElementById('objective-input');
+  var val = input.value.trim();
+  addChip('objective-chips', 'objective-input', val);
+  input.value = '';
+});
+document.getElementById('objective-input').addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('add-objective-btn').click(); } });
+
+var palette = ['#185FA5','#D85A30','#D4537E','#7F77DD','#854F0B'];
+
+function createEvalCard(id, role, recur){
+  var card = document.createElement('div');
+  card.className = 'card eval-card';
+  card.setAttribute('data-id', id);
+  card.innerHTML = '<button class="del-eval" aria-label="Remove assessment" style="position:absolute;top:10px;right:10px;background:none;border:none;cursor:pointer;color:var(--color-text-secondary);font-size:16px;"><svg class="icon-svg" style="vertical-align:middle;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></svg></button>' +
+    '<p class="eval-index-label" style="font-size:12px;color:var(--color-text-secondary);margin:0 0 10px;font-weight:600;">Assessment</p>' +
+    '<div class="grid2">' +
+      '<div><label class="small">Assessor role</label><select class="eval-role"><option'+(role==='Supervisor'?' selected':'')+'>Supervisor</option><option'+(role==='Subject matter expert'?' selected':'')+'>Subject matter expert</option><option'+(role==='Peer'?' selected':'')+'>Peer</option><option'+(role==='Self'?' selected':'')+'>Self</option></select></div>' +
+      '<div><label class="small">Recurrence alert</label><select class="eval-recur"><option'+(recur==='Quarterly'?' selected':'')+'>Quarterly</option><option'+(recur==='Semi-annually'?' selected':'')+'>Semi-annually</option><option'+(recur==='Annually'?' selected':'')+'>Annually</option><option'+(recur==='Every 24 months'?' selected':'')+'>Every 24 months</option><option'+(recur==='One-time'?' selected':'')+'>One-time</option></select></div>' +
+    '</div>';
+  return card;
+}
+function createWeightRow(id, weight){
+  var row = document.createElement('div');
+  row.className = 'weight-row';
+  row.setAttribute('data-id', id);
+  row.innerHTML = '<span class="swatch" style="width:12px;height:12px;border-radius:3px;flex-shrink:0;"></span>' +
+    '<label class="weight-row-label" style="font-size:13px;flex:1;"></label>' +
+    '<input type="range" class="eval-weight-input" min="0" max="100" step="5" value="'+weight+'" style="flex:2;" />' +
+    '<span class="eval-weight-out" style="font-size:13px;width:36px;text-align:right;">'+weight+'%</span>';
+  return row;
+}
+function wireEval(card, row){
+  card.querySelector('.eval-role').addEventListener('change', renumberAll);
+  card.querySelector('.del-eval').addEventListener('click', function(){
+    var id = card.getAttribute('data-id');
+    card.remove();
+    var r = document.querySelector('.weight-row[data-id="'+id+'"]');
+    if(r) r.remove();
+    renumberAll();
+    recalcWeights();
+  });
+  row.querySelector('.eval-weight-input').addEventListener('input', function(){
+    row.querySelector('.eval-weight-out').textContent = this.value + '%';
+    recalcWeights();
+  });
+}
+function renumberAll(){
+  document.querySelectorAll('.eval-card').forEach(function(card, idx){
+    var id = card.getAttribute('data-id');
+    card.querySelector('.eval-index-label').textContent = 'Assessment ' + (idx+1);
+    var row = document.querySelector('.weight-row[data-id="'+id+'"]');
+    if(row){
+      var role = card.querySelector('.eval-role').value;
+      row.querySelector('.weight-row-label').textContent = 'Assessment ' + (idx+1) + ' · ' + role;
+      row.querySelector('.swatch').style.background = palette[idx % palette.length];
+    }
+  });
+}
+function recalcWeights(){
+  var bar = document.getElementById('weight-bar');
+  bar.innerHTML = '';
+  var total = 0;
+  document.querySelectorAll('.weight-row').forEach(function(row, idx){
+    var w = Number(row.querySelector('.eval-weight-input').value) || 0;
+    total += w;
+    var seg = document.createElement('div');
+    seg.style.width = w + '%';
+    seg.style.background = palette[idx % palette.length];
+    bar.appendChild(seg);
+  });
+  var jobWeight = Number(document.getElementById('job-weight').value) || 0;
+  total += jobWeight;
+  var jobSeg = document.createElement('div');
+  jobSeg.style.width = jobWeight + '%';
+  jobSeg.style.background = '#1D9E75';
+  bar.appendChild(jobSeg);
+
+  document.getElementById('job-weight-out').textContent = jobWeight + '%';
+
+  var badge = document.getElementById('weight-total');
+  badge.textContent = 'Total: ' + total + '%';
+  badge.style.background = total===100 ? 'var(--color-background-success)' : 'var(--color-background-warning)';
+  badge.style.color = total===100 ? 'var(--color-text-success)' : 'var(--color-text-warning)';
+}
+
+var nextId = 1;
+function addEval(role, recur, weight){
+  var id = String(nextId++);
+  var card = createEvalCard(id, role, recur);
+  var row = createWeightRow(id, weight);
+  document.getElementById('evals-list').appendChild(card);
+  document.getElementById('weight-rows').appendChild(row);
+  wireEval(card, row);
+}
+document.getElementById('add-eval-btn').addEventListener('click', function(){
+  addEval('Supervisor', 'Annually', 0);
+  renumberAll();
+  recalcWeights();
+});
+
+document.getElementById('job-weight').addEventListener('input', recalcWeights);
+
+addEval('Supervisor', 'Annually', 45);
+addEval('Subject matter expert', 'One-time', 30);
+renumberAll();
+recalcWeights();
+
+function wireUpdateBtn(btn){
+  btn.addEventListener('click', function(){
+    var cell = btn.closest('.score-cell');
+    var current = cell.getAttribute('data-score') || '0';
+    cell.innerHTML = '<input type="number" class="score-input" min="0" max="5" step="0.5" value="'+current+'" /> <button class="save-score-btn btn-sm">Save</button>';
+    cell.querySelector('.save-score-btn').addEventListener('click', function(){
+      var val = Math.min(5, Math.max(0, Number(cell.querySelector('.score-input').value) || 0));
+      cell.setAttribute('data-score', val);
+      var row = cell.closest('tr');
+      var statusCell = row.querySelector('.status-cell');
+      if(statusCell){ statusCell.innerHTML = '<span class="badge" style="background:var(--color-background-success);color:var(--color-text-success);">Complete</span>'; }
+      cell.innerHTML = '<span class="score-display">'+val.toFixed(1)+' / 5</span> <button class="update-score-btn btn-sm">Update score</button>';
+      wireUpdateBtn(cell.querySelector('.update-score-btn'));
+      recalcEmployeeScore();
+      var today = new Date();
+      document.getElementById('skill-row-updated').textContent = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    });
+  });
+}
+document.querySelectorAll('.update-score-btn').forEach(wireUpdateBtn);
+
+function recalcEmployeeScore(){
+  var supCell = document.querySelector('#assess-row-supervisor .score-cell');
+  var smeCell = document.querySelector('#assess-row-sme .score-cell');
+  var supScore = supCell.getAttribute('data-score');
+  var smeScore = smeCell.getAttribute('data-score');
+  var supWeight = 45, smeWeight = 30, jobWeight = 25;
+
+  var weightedSum = 0, weightTotal = 0;
+  if(supScore !== null && supScore !== ''){ weightedSum += Number(supScore) * supWeight; weightTotal += supWeight; }
+  if(smeScore !== null && smeScore !== ''){ weightedSum += Number(smeScore) * smeWeight; weightTotal += smeWeight; }
+  var assessAvg = weightTotal > 0 ? weightedSum / weightTotal : 0;
+
+  var monthsSinceEachJob = [10, 2];
+  var mostRecent = Math.min.apply(null, monthsSinceEachJob);
+  var decayStart = 6, decayEnd = 24;
+  var jobScore, jobStatus;
+  if(mostRecent <= decayStart){ jobScore = assessAvg; jobStatus = 'On track'; }
+  else if(mostRecent >= decayEnd){ jobScore = 0; jobStatus = 'Fully decayed'; }
+  else { var frac = (mostRecent - decayStart) / (decayEnd - decayStart); jobScore = assessAvg * (1 - frac); jobStatus = 'Decaying'; }
+
+  var composite = (assessAvg * (supWeight + smeWeight) + jobScore * jobWeight) / 100;
+  composite = Math.min(5, Math.max(0, composite));
+
+  document.getElementById('emp-composite-score').textContent = composite.toFixed(1) + ' / 5';
+  document.getElementById('skill-row-score').textContent = composite.toFixed(1) + ' / 5';
+  var badge = document.getElementById('emp-composite-status');
+  badge.textContent = jobStatus;
+  var bg = 'var(--color-background-success)', col = 'var(--color-text-success)';
+  if(jobStatus === 'Decaying'){ bg = 'var(--color-background-warning)'; col = 'var(--color-text-warning)'; }
+  if(jobStatus === 'Fully decayed'){ bg = 'var(--color-background-danger)'; col = 'var(--color-text-danger)'; }
+  badge.style.background = bg;
+  badge.style.color = col;
+}
+recalcEmployeeScore();
+
+function openSkillDetail(){
+  var detail = document.getElementById('skill-detail');
+  detail.style.display = 'block';
+  detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+document.getElementById('skill-view-btn').addEventListener('click', openSkillDetail);
+
+var trendQuartersAll = ['Q1-2025','Q2-2025','Q3-2025','Q4-2025','Q1-2026','Q2-2026'];
+var trendSkills = [
+  { code: 'CAG', name: 'Carbon Arc Gouging', color: '#185FA5', data: [2.9, 3.0, 2.8, 3.1, 3.0, 3.2] },
+  { code: 'FCAW-H', name: 'Flux-Cored Arc - Heavy', color: '#D85A30', data: [3.4, 3.5, 3.7, 3.8, 4.0, 4.1] },
+  { code: 'GTAW-P', name: 'TIG Pipe/Nuclear', color: '#D4537E', data: [4.2, 4.1, 3.5, 3.2, 3.6, 3.9] },
+  { code: 'OFC-B', name: 'Oxy-Fuel Cutting/Bevel', color: '#7F77DD', data: [3.8, 3.8, 3.9, 3.9, 3.8, 3.9] },
+  { code: 'LH-D', name: 'Line Heating/Distortion', color: '#854F0B', data: [2.1, 2.3, 2.5, null, null, null] }
+];
+
+function renderTrendLegend(){
+  var legend = document.getElementById('trend-legend');
+  legend.innerHTML = trendSkills.map(function(sk){
+    return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;">' +
+      '<span style="width:10px;height:10px;border-radius:3px;background:' + sk.color + ';display:inline-block;"></span>' +
+      '<span style="font-weight:500;">' + sk.code + '</span>' +
+      '<span style="color:var(--color-text-secondary);">' + sk.name + '</span></span>';
+  }).join('');
+}
+
+function renderTrendChart(){
+  var n = Number(document.getElementById('trend-horizon').value);
+  var startIdx = trendQuartersAll.length - n;
+  var labels = trendQuartersAll.slice(startIdx);
+
+  var W = 800, H = 340, padL = 36, padR = 16, padT = 16, padB = 36;
+  var plotW = W - padL - padR, plotH = H - padT - padB;
+  var stepX = labels.length > 1 ? plotW / (labels.length - 1) : 0;
+  function xPos(i){ return padL + i * stepX; }
+  function yPos(v){ return padT + plotH - (v / 5) * plotH; }
+
+  var parts = [];
+  for(var g = 0; g <= 5; g++){
+    var y = yPos(g);
+    parts.push('<line x1="' + padL + '" y1="' + y + '" x2="' + (W - padR) + '" y2="' + y + '" stroke="rgba(0,0,0,0.08)" stroke-width="1"/>');
+    parts.push('<text x="' + (padL - 8) + '" y="' + (y + 4) + '" font-size="11" fill="#62625e" text-anchor="end">' + g + '</text>');
+  }
+  labels.forEach(function(lab, i){
+    var anchor = 'middle';
+    if(i === 0) anchor = 'start';
+    if(i === labels.length - 1) anchor = 'end';
+    parts.push('<text x="' + xPos(i) + '" y="' + (H - padB + 20) + '" font-size="11" fill="#62625e" text-anchor="' + anchor + '">' + lab + '</text>');
+  });
+
+  trendSkills.forEach(function(sk){
+    var vals = sk.data.slice(startIdx);
+    var pathParts = [];
+    var pointsHtml = [];
+    var drawing = false;
+    vals.forEach(function(v, i){
+      if(v === null || v === undefined){ drawing = false; return; }
+      var x = xPos(i), y = yPos(v);
+      pathParts.push((drawing ? 'L' : 'M') + x + ',' + y);
+      drawing = true;
+      pointsHtml.push('<circle cx="' + x + '" cy="' + y + '" r="4" fill="' + sk.color + '"><title>' + sk.code + ' \u00b7 ' + labels[i] + ': ' + v.toFixed(1) + '</title></circle>');
+    });
+    if(pathParts.length){
+      parts.push('<path d="' + pathParts.join(' ') + '" fill="none" stroke="' + sk.color + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>');
+    }
+    parts.push(pointsHtml.join(''));
+  });
+
+  document.getElementById('trend-svg').setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  document.getElementById('trend-svg').innerHTML = parts.join('');
+
+  var headHtml = '<th>Skill</th>' + labels.map(function(l){ return '<th>' + l + '</th>'; }).join('');
+  var bodyHtml = trendSkills.map(function(sk){
+    var vals = sk.data.slice(startIdx);
+    var cells = vals.map(function(v){
+      return '<td>' + (v === null || v === undefined ? '<span style="color:var(--color-text-tertiary);">\u2014</span>' : v.toFixed(1)) + '</td>';
+    }).join('');
+    return '<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:' + sk.color + ';margin-right:8px;vertical-align:middle;"></span>' +
+      '<span style="color:var(--link);font-weight:500;">' + sk.code + '</span> ' +
+      '<span style="color:var(--color-text-secondary);font-size:12px;">\u2014 ' + sk.name + '</span></td>' + cells + '</tr>';
+  }).join('');
+  document.getElementById('trend-table-head').innerHTML = headHtml;
+  document.getElementById('trend-table-body').innerHTML = bodyHtml;
+}
+
+document.getElementById('trend-horizon').addEventListener('change', renderTrendChart);
+renderTrendLegend();
+renderTrendChart();
+</script>
+</body>
+</html>
