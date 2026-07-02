@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Covalent Networks | Account Executive New Hire Training Framework</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --navy:#0f1f33;
+    --navy-light:#16324f;
+    --steel:#2f6690;
+    --steel-light:#e8f0f6;
+    --amber:#e0973d;
+    --bg:#f5f7fa;
+    --card:#ffffff;
+    --text:#1b2733;
+    --muted:#5b6b7c;
+    --border:#e1e6ec;
+    --green:#3a9d6b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', Helvetica, Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.55;
+  }
+  a{color:var(--steel);}
+  header.hero{
+    background:linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+    color:#fff;
+    padding:48px 40px 36px;
+  }
+  header.hero .eyebrow{
+    text-transform:uppercase;
+    letter-spacing:2px;
+    font-size:12px;
+    color:var(--amber);
+    font-weight:600;
+    margin-bottom:10px;
+  }
+  header.hero h1{
+    margin:0 0 8px;
+    font-size:34px;
+    font-weight:700;
+  }
+  header.hero p.sub{
+    margin:0;
+    font-size:16px;
+    color:#c7d3e0;
+    max-width:760px;
+  }
+  .meta-row{
+    display:flex;
+    gap:28px;
+    flex-wrap:wrap;
+    margin-top:22px;
+  }
+  .meta-item{
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:8px;
+    padding:10px 16px;
+    font-size:13px;
+  }
+  .meta-item strong{display:block; font-size:14px; color:#fff;}
+  .meta-item span{color:#aebccb;}
+
+  nav.tracker{
+    background:var(--navy-light);
+    padding:14px 40px;
+    position:sticky;
+    top:0;
+    z-index:50;
+    box-shadow:0 2px 8px rgba(0,0,0,0.15);
+    overflow-x:auto;
+    white-space:nowrap;
+  }
+  nav.tracker a{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    color:#dbe4ee;
+    text-decoration:none;
+    font-size:12.5px;
+    font-weight:600;
+    margin-right:22px;
+  }
+  nav.tracker a .num{
+    background:rgba(255,255,255,0.12);
+    color:#fff;
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:11px;
+  }
+  nav.tracker a:hover .num{background:var(--amber); color:var(--navy);}
+
+  main{
+    max-width:960px;
+    margin:0 auto;
+    padding:36px 40px 80px;
+  }
+
+  section.step{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:32px 36px;
+    margin-bottom:28px;
+    scroll-margin-top:70px;
+  }
+  section.step .step-head{
+    display:flex;
+    align-items:flex-start;
+    gap:16px;
+    margin-bottom:18px;
+    border-bottom:2px solid var(--steel-light);
+    padding-bottom:16px;
+  }
+  section.step .badge{
+    background:var(--navy);
+    color:#fff;
+    min-width:40px;
+    height:40px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    font-size:17px;
+    flex-shrink:0;
+  }
+  section.step h2{
+    margin:0 0 4px;
+    font-size:22px;
+    color:var(--navy);
+  }
+  section.step p.goal{
+    margin:0;
+    color:var(--muted);
+    font-size:14.5px;
+  }
+  h3.sub{
+    font-size:15.5px;
+    color:var(--steel);
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    margin:26px 0 10px;
+  }
+  h3.sub:first-of-type{margin-top:0;}
+  p{margin:0 0 12px; font-size:15px;}
+  ul, ol{margin:0 0 14px; padding-left:22px;}
+  li{margin-bottom:6px; font-size:15px;}
+  .callout{
+    background:var(--steel-light);
+    border-left:4px solid var(--steel);
+    border-radius:6px;
+    padding:14px 18px;
+    margin:14px 0;
+    font-size:14.5px;
+  }
+  .callout.amber{
+    background:#fbf1e3;
+    border-left-color:var(--amber);
+  }
+  .analogy{
+    font-style:italic;
+    color:var(--muted);
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin:14px 0 18px;
+    font-size:14px;
+  }
+  table th{
+    background:var(--navy);
+    color:#fff;
+    text-align:left;
+    padding:10px 12px;
+    font-size:12.5px;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+  }
+  table td{
+    padding:10px 12px;
+    border-bottom:1px solid var(--border);
+    vertical-align:top;
+  }
+  table tr:nth-child(even) td{background:#fafbfc;}
+  .term-card{
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:14px 16px;
+    margin-bottom:12px;
+    background:#fcfdfe;
+  }
+  .term-card .term-name{
+    font-weight:700;
+    color:var(--navy);
+    font-size:15px;
+    margin-bottom:4px;
+  }
+  .checklist{
+    list-style:none;
+    padding:0;
+  }
+  .checklist li{
+    position:relative;
+    padding-left:30px;
+    margin-bottom:10px;
+  }
+  .checklist input[type=checkbox]{
+    position:absolute;
+    left:0;
+    top:2px;
+    width:16px;
+    height:16px;
+  }
+  .milestone{
+    margin-top:22px;
+    background:var(--navy);
+    color:#fff;
+    border-radius:8px;
+    padding:16px 20px;
+  }
+  .milestone strong{color:var(--amber);}
+  .two-col{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  .stage-card{
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:20px 22px;
+    margin-bottom:16px;
+    background:#fcfdfe;
+  }
+  .stage-card .stage-head{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:14px;
+    padding-bottom:12px;
+    border-bottom:1px solid var(--border);
+  }
+  .stage-card .stage-num{
+    background:var(--steel);
+    color:#fff;
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    font-size:13.5px;
+    flex-shrink:0;
+  }
+  .stage-card h4{
+    margin:0;
+    font-size:17px;
+    color:var(--navy);
+  }
+  .stage-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+  }
+  .stage-block h5{
+    margin:0 0 6px;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    color:var(--steel);
+    font-weight:700;
+  }
+  .stage-block ul{
+    margin:0;
+    padding-left:18px;
+  }
+  .stage-block li{
+    font-size:13.5px;
+    margin-bottom:4px;
+  }
+  @media (max-width:700px){
+    .two-col{grid-template-columns:1fr;}
+    .stage-grid{grid-template-columns:1fr;}
+    main{padding:24px 18px;}
+    header.hero{padding:32px 20px;}
+    nav.tracker{padding:12px 18px;}
+    section.step{padding:22px 20px;}
+  }
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:12.5px;
+    padding:30px 20px 50px;
+  }
+  .fill-in{
+    color:#9aa7b4;
+    font-style:italic;
+  }
+  .print-btn{
+    background:var(--amber);
+    color:var(--navy);
+    border:none;
+    padding:10px 18px;
+    border-radius:6px;
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+    margin-top:18px;
+  }
+  @media print{
+    nav.tracker, .print-btn{display:none;}
+    section.step{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">Covalent Networks | New Hire Training Framework</div>
+  <h1>Account Executive Onboarding Program</h1>
+  <p class="sub">A structured, ten-stage path for bringing a new Account Executive from day one to independently running a full sales cycle, from discovery to closed-won.</p>
+</header>
+
+<nav class="tracker">
+  <a href="#s1"><span class="num">1</span>Company</a>
+  <a href="#s2"><span class="num">2</span>Market</a>
+  <a href="#s3"><span class="num">3</span>Product</a>
+  <a href="#s4"><span class="num">4</span>Customer</a>
+  <a href="#s5"><span class="num">5</span>Sales Process</a>
+  <a href="#s6"><span class="num">6</span>Messaging</a>
+  <a href="#s7"><span class="num">7</span>Tools</a>
+  <a href="#s8"><span class="num">8</span>Role Skills</a>
+  <a href="#s9"><span class="num">9</span>Competency</a>
+  <a href="#s10"><span class="num">10</span>Selling + Coaching</a>
+</nav>
+
+<main>
+
+<section class="step" id="s1">
+  <div class="step-head">
+    <div class="badge">1</div>
+    <div>
+      <h2>Understand the Company</h2>
+      <p class="goal">Learn what Covalent is, why it exists, and how to explain it simply before you ever explain it to a VP of Operations.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">What Covalent does, in plain English</h3>
+  <p>Picture a factory floor. Every job on that floor, running a machine, torquing a bolt, signing off on a part, needs someone who is trained and currently able to do it safely and correctly. Most factories still track this with paper checklists, binders, and messy spreadsheets. When a supervisor needs to know who can do what, they have to guess or go dig through paperwork.</p>
+  <p>Covalent replaces all of that paper and all of those spreadsheets with one live system. It keeps track of who is trained, who is qualified right now, who is about to expire, and who is actually available on shift, all updated in real time.</p>
+
+  <div class="callout">
+    <strong>The one-liner.</strong> Use this any time someone asks "what does Covalent do?"<br><br>
+    "We help industrial companies manage training, qualification, and assignment of work at scale. We replace paper, Excel and tribal knowledge with a modern system to track who's qualified to work on what."
+  </div>
+
+  <p>Follow it with the proof: <strong>we ramp new operators about 30% faster</strong> and <strong>save each worker around 10 minutes of unproductive time per shift</strong>, which adds up to roughly <strong>$300K per line per year</strong> in savings. Covalent currently manages qualifications for <strong>50,000+ workers</strong> across its customer base, and documented results in comparable environments include approximately <strong>5% gains in shift output</strong> and reduced quality escapes.</p>
+
+  <h3 class="sub">How Covalent thinks about its building blocks</h3>
+  <p>As an AE, you will be the one explaining these concepts to VPs, quality directors, and IT leads, often in the same call. You need to be able to move fluidly between a simple explanation and the technical version.</p>
+
+  <div class="term-card">
+    <div class="term-name">Objective</div>
+    One single thing a person needs to learn or prove they can do. Think of it as one line on a checklist, for example "can this person safely run this machine." An Objective can require a video, a quiz, a certain number of supervised hours, or a trainer's sign-off before it counts as done. Objectives can be scoped tightly, down to a specific location, part, machine, or process, and can require role-based sign-off, so only a Level 3 technician might be allowed to sign off a Level 1 Objective, for example.
+  </div>
+  <div class="term-card">
+    <div class="term-name">Objective Group</div>
+    A bundle of Objectives, like a folder holding several checklist items together. For example, "Certified Level 2 Machinist" might bundle five separate Objectives. The status of the parent group is derived entirely from the status of its children. If even one item inside expires or was never completed, the whole folder shows as "not qualified" until it's fixed. Objectives and Objective Groups can also be chained into prerequisites and structured pathways, for example Level 1 must be complete before Level 2 can start.
+  </div>
+  <div class="term-card">
+    <div class="term-name">Skills Matrix</div>
+    The master scoreboard. A real time, filterable grid where the rows are people and the columns are Objectives or Objective Groups, color coded green, yellow, or red (a "stoplight" view), so a supervisor can look at one screen and instantly see who is ready for what across a department, shift, or entire site.
+  </div>
+  <div class="term-card">
+    <div class="term-name">Process Control (gating)</div>
+    A guardrail that plugs into the customer's MES and physically blocks or flags an unqualified worker from being assigned to or signing off on a task. This is the capability that turns Covalent from a nice-to-have training system into an operational control that prevents bad outcomes before they happen.
+  </div>
+  <div class="term-card">
+    <div class="term-name">Performance-based Proficiency</div>
+    Being qualified is not a one time checkbox. Covalent uses live operational data, not just training completions, to know whether someone is still sharp. If someone hasn't actually performed a job in a defined window, they can be automatically flagged for a refresher or requalification, driven by an MES or similar integration.
+  </div>
+  <div class="term-card">
+    <div class="term-name">Coverage Planning</div>
+    A forward-looking staffing model. It answers "we have to hit an aggressive production target by a certain date, do we have the manpower, what's our biggest risk, and where do we need to cross-train or hire." This is a key value driver for Ops and Plant leadership.
+  </div>
+  <div class="term-card">
+    <div class="term-name">Workforce Availability</div>
+    Knowing not just who is qualified on paper, but who is actually clocked in right now (via a Time &amp; Attendance integration), so a supervisor can plug a gap immediately instead of guessing.
+  </div>
+  <div class="term-card">
+    <div class="term-name">Renewal</div>
+    Like a license or certification, Objectives can expire and need to be redone on a schedule. Renewal logic can differ from the original Objective, for example a trainee needs 100 hours of OJT to originally earn an Objective, but only an annual supervisor observation to maintain it.
+  </div>
+  <div class="term-card">
+    <div class="term-name">Audit trail and versioning</div>
+    Every action taken on an Objective, by any user, is logged immutably with a digital signature and timestamp. Objectives themselves can be versioned over time, and prior versions remain visible so a regulator can see exactly what a worker was qualified against at any point in history.
+  </div>
+
+  <h3 class="sub">Company snapshot</h3>
+  <p>Covalent is a growing enterprise SaaS company selling into complex manufacturing environments, especially aerospace and defense, automotive, and industrial. Per the FY2027 plan, the company is scaling from roughly $5.0M starting ARR toward a $7.7M year end target, which is about $2.7M in net new ARR for the year, built quarter over quarter with an expectation of maintaining roughly 4x pipeline coverage entering each quarter. The go to market team is small and high leverage, meaning your individual pipeline generation and close rate have an outsized impact on the company's plan.</p>
+
+  <h3 class="sub">Why Covalent exists</h3>
+  <p>Manufacturers are losing their most experienced workers to retirement faster than they can train replacements. At the same time, customers like Boeing and regulators like the FAA and DCMA expect airtight, auditable proof that every worker on a job was actually qualified to do it. Paper and spreadsheets cannot keep up with either problem, and no single existing vendor category solves both training and real time operational enforcement together. Covalent exists to close that gap end to end.</p>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> Explain the one-liner, then walk through Objective, Objective Group, Skills Matrix, Process Control, Performance-based Proficiency, and Coverage Planning as though you were teaching them to a new SDR, and again as though you were briefing a Quality Director.
+  </div>
+</section>
+
+<section class="step" id="s2">
+  <div class="step-head">
+    <div class="badge">2</div>
+    <div>
+      <h2>Understand the Market</h2>
+      <p class="goal">Know the ICP, the buying environment, and exactly where Covalent sits relative to every other system already in a prospect's stack.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">Who we sell to</h3>
+  <table>
+    <tr><th>Industry</th><th>Why they buy</th><th>Example accounts</th></tr>
+    <tr><td>Aerospace &amp; Defense / MRO / engines</td><td>Heavy regulatory burden (FAA, DCMA, AS9100, ITAR), safety critical work, deep supply chains</td><td>Boeing, GE, RTX / Pratt &amp; Whitney sites and their suppliers</td></tr>
+    <tr><td>Automotive / Powersports / Trailers</td><td>Fast line changeovers, high turnover, need to staff shifts quickly with qualified people</td><td>Polaris, Great Dane</td></tr>
+    <tr><td>Broader discrete manufacturing</td><td>Standardizing training across multiple sites, replacing manual and paper based tracking, meeting ISO/AS9100 style audits</td><td>Milliken, Kimberly-Clark Mexico</td></tr>
+  </table>
+
+  <h3 class="sub">Why now</h3>
+  <ul>
+    <li>Experienced workers are retiring faster than replacements can be trained, a structural labor problem, not a cyclical one.</li>
+    <li>Customers and regulators increasingly demand audit ready proof of qualification, not just training records, especially in AS9100, ITAR, and DCMA/FAA regulated environments.</li>
+    <li>Existing systems (MES, LMS, HRIS) each hold a piece of the puzzle but none of them connect training, qualification, and real time task assignment together, leaving the burden of stitching them together on the customer.</li>
+  </ul>
+
+  <h3 class="sub">The competitive landscape and why "assemble it yourself" fails</h3>
+  <p>This is core to how you handle competitive and build-vs-buy conversations. No combination of point solutions owns workforce readiness end to end, and no single vendor in these categories is accountable for the full outcome.</p>
+  <table>
+    <tr><th>Category</th><th>Example vendors</th><th>What they're missing</th></tr>
+    <tr><td>MES platforms</td><td>Siemens Opcenter, Rockwell Plex, Dassault DELMIA, iBaseT</td><td>Identify what work must be done, but carry no granular qualification data, skill based task allocation, or training program administration</td></tr>
+    <tr><td>Learning management systems (LMS)</td><td>Cornerstone, SAP SuccessFactors, Workday Learning</td><td>Track classroom and eLearning completions, but no job level proficiency tracking, MES integration, or assignment optimization</td></tr>
+    <tr><td>Workforce management / HR</td><td>UKG, ADP, Workday</td><td>Handle timekeeping, payroll, and shift scheduling, but no proficiency based assignment logic or manufacturing integration</td></tr>
+    <tr><td>Connected worker platforms</td><td>Poka, Augmentir, Parsable</td><td>Provide digital work instructions and floor data capture, but shallow in large scale training administration and lack qualification based work gating</td></tr>
+    <tr><td>Frontline skills management</td><td>Kahuna, AG5, DeepHow</td><td>Visualize skill matrices and qualification gaps, but lack live operational integration and dynamic assignment optimization</td></tr>
+    <tr><td>PLM / smart manufacturing suites</td><td>Teamcenter, Windchill, 3DEXPERIENCE</td><td>Treat workforce capability as peripheral, focused on long, heavy product lifecycle deployments</td></tr>
+  </table>
+
+  <h3 class="sub">Systems Covalent complements, not competes with</h3>
+  <div class="two-col">
+    <div class="callout"><strong>MRO systems</strong> (EmpowerMX, AMOS, iBaseT): manage work orders, aircraft records, parts, and maintenance scheduling. Covalent adds task level qualification of record, structured OJT with multi-party sign-off, FAA grade requalification history, and a hard eligibility gate before release.</div>
+    <div class="callout"><strong>LMS systems</strong> (Cornerstone, SAP SuccessFactors, Workday Learning): deliver eLearning and track completions. Covalent converts completions into task level job eligibility, tracks on-floor proficiency (not just classroom records), and ties training data to live MES task assignment.</div>
+    <div class="callout"><strong>HRIS systems</strong> (Workday, UKG, SAP HCM): manage headcount, payroll, timekeeping, and shift scheduling. Covalent adds operational skill context to every employee record and enables proficiency based task assignment, not just headcount math.</div>
+  </div>
+
+  <h3 class="sub">The sole source argument</h3>
+  <p>For procurement heavy accounts (especially A&amp;D), you will sometimes need to justify a single-vendor decision rather than a competitive bid. The core argument: Covalent is the only platform that unifies training administration, performance based proficiency, workforce planning, and skill based task assignment in one system, with direct MES integration that enforces qualification at the point of work. See the Sole Source Justification template in your tools section.</p>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> Given a prospect's current tech stack (an MES, an LMS, and an HRIS), explain in under two minutes why none of them solve the problem alone and why stitching them together yourself still leaves a gap.
+  </div>
+</section>
+
+<section class="step" id="s3">
+  <div class="step-head">
+    <div class="badge">3</div>
+    <div>
+      <h2>Understand the Product</h2>
+      <p class="goal">Develop true product depth. You need to run a credible demo, answer hard technical questions, and know when to loop in Product or Engineering.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">The core workflow, start to finish</h3>
+  <ol>
+    <li>A trainee is assigned one or more Objectives or Objective Groups, individually or in bulk, for example everyone in a location or business unit.</li>
+    <li>The trainee works through the Objective: hosted or hyperlinked content, interactive checklists, logging units/hours/parts completed, and embedded evaluations that may be objective/programmatic or subjective in grading.</li>
+    <li>Multiple stakeholders can be involved: trainee, trainer, evaluator, and admin, each with role based permissions.</li>
+    <li>Once complete, the Objective (and any parent Objective Group) shows as qualified on the Skills Matrix in real time, filterable by people or Objective related attributes, and scopable by department and location.</li>
+    <li>If configured, Process Control integration with the customer's MES gates or flags work if an unqualified person is assigned, and can recommend optimal assignments based on proficiency.</li>
+    <li>Over time, Objectives require Renewal on their own expiration logic, and Performance-based Proficiency can auto-flag or auto-disqualify someone based on how recently they've actually worked the job, using MES or similar data.</li>
+    <li>Everything is captured in an immutable audit trail with digital signatures, viewable by internal and external regulators on a read-only basis.</li>
+  </ol>
+
+  <h3 class="sub">Advanced capabilities to know cold</h3>
+  <ul>
+    <li><strong>Coverage Planning:</strong> models required resources against current qualifications to expose production risk and cross-training needs ahead of time.</li>
+    <li><strong>Process Control:</strong> hard eligibility gating tied to badge-in or buy-off actions on the shop floor via MES integration.</li>
+    <li><strong>Performance-based Proficiency:</strong> proficiency driven by actual work history, not just training completion, also requires MES-style integration.</li>
+    <li><strong>Workforce Availability:</strong> filters Skills Matrices and reports by who's actually clocked in, via a Time &amp; Attendance integration.</li>
+    <li><strong>Pay-for-skills:</strong> Objective data can inform promotion or wage progression programs.</li>
+    <li><strong>Bulk operations and API access:</strong> bulk import of people, Objectives, and historical proficiency data; API connections for Workday HR, Workday Learning, SSO, MES, and QMS systems.</li>
+    <li><strong>Custom roles and views:</strong> configurable roles and default dashboards by role, with permission gated administration of Objectives.</li>
+  </ul>
+
+  <div class="callout amber">You should be comfortable enough with these concepts to run a live demo, but always confirm complex or edge case technical questions (deep MES integration specifics, data migration scope, security architecture) with Product, Engineering, or your Sales Engineer rather than guessing.</div>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> Deliver a 15-minute product demo covering Objective assignment, the Skills Matrix, and at least one advanced capability, without a script.
+  </div>
+</section>
+
+<section class="step" id="s4">
+  <div class="step-head">
+    <div class="badge">4</div>
+    <div>
+      <h2>Understand the Customer</h2>
+      <p class="goal">Know the full buying committee, not just the first person who picks up the phone, and how to navigate all of them through a deal.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">Personas and hooks</h3>
+  <table>
+    <tr><th>Persona</th><th>Their pain</th><th>Opening hook</th></tr>
+    <tr><td>Training Manager</td><td>Paper OJT forms, spreadsheet tracked certifications, audit scramble</td><td>"How does your team currently track whether a tech is certified for a specific task or job?"</td></tr>
+    <tr><td>Ops / Plant Manager</td><td>No live view of who's qualified when someone calls out or a line ramps up</td><td>"When a technician calls out on short notice, how quickly can your supervisors find a qualified replacement without disrupting flow?"</td></tr>
+    <tr><td>Quality Director</td><td>Slow, manual pull of qualification records for auditors</td><td>"When an auditor walks in, how long does it take your team to pull together qualification records for a specific technician or work order?"</td></tr>
+    <tr><td>Digital / IT lead</td><td>MES has no idea whether a worker is actually certified for the work order they're assigned</td><td>"Is your MES currently connected to any system that knows whether a worker is actually certified for the work order they're being assigned?"</td></tr>
+  </table>
+
+  <h3 class="sub">Mapping the buying committee</h3>
+  <table>
+    <tr><th>Role</th><th>Typical title</th><th>What they care about</th></tr>
+    <tr><td>Economic buyer</td><td>COO, VP Operations, Site Director</td><td>Production output, staffing risk, ROI, budget authority</td></tr>
+    <tr><td>Champion</td><td>Training Manager, Quality Director</td><td>Solving their daily operational pain, looking good to leadership</td></tr>
+    <tr><td>Technical validator</td><td>Digital / IT Director</td><td>Integration feasibility, security, data residency, SSO</td></tr>
+    <tr><td>End users</td><td>Supervisors, operators, trainers</td><td>Ease of use, whether it actually makes their day easier</td></tr>
+    <tr><td>Procurement / Legal</td><td>Procurement lead, Legal counsel</td><td>Contract terms, sole source justification, competitive process requirements</td></tr>
+  </table>
+
+  <h3 class="sub">Proof points and reference customers</h3>
+  <ul>
+    <li><strong>A&amp;D / MRO:</strong> 125+ Boeing, GE, and RTX sites use Covalent for workforce qualification, shop floor OJT, and audit ready records for DCMA and FAA.</li>
+    <li><strong>Auto / manufacturing:</strong> Great Dane and Polaris replaced paper forms and spreadsheets with a live system that helps staff lines faster.</li>
+    <li><strong>Milliken:</strong> standardized training across sites, digitized paper forms, and grew critical skills coverage from 150 to 272 at one site alone. 1,866 OJT processes built with over 36,500 trainings assigned, and over 29,000 evaluations completed.</li>
+    <li><strong>Kimberly-Clark Mexico:</strong> digitized qualification and requalification workflows with OJT hour tracking, automated skill matrices by shift, cell, and process, and migrated historical training records at go-live.</li>
+  </ul>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> Given a hypothetical account, map out all five roles in the buying committee and identify your likely champion and your likely technical or procurement blocker.
+  </div>
+</section>
+
+<section class="step" id="s5">
+  <div class="step-head">
+    <div class="badge">5</div>
+    <div>
+      <h2>Learn the Sales Process</h2>
+      <p class="goal">Own the full cycle, from a qualified meeting handed to you by an SDR through signature, PO, and kickoff.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">The full deal stages</h3>
+  <p>This is Covalent's official deal flow, the same eight stages used across the go to market team. Each stage below shows what you're trying to accomplish, what needs to happen before you move on, and who should be in the room on both sides.</p>
+
+  <div class="stage-card">
+    <div class="stage-head"><div class="stage-num">1</div><h4>Introductory Meeting</h4></div>
+    <div class="stage-grid">
+      <div class="stage-block">
+        <h5>Key Objectives</h5>
+        <ul>
+          <li>Understand the customer's high-level needs, with emphasis on the business problem, not the product</li>
+          <li>Evaluate potential fit for a Covalent partnership</li>
+          <li>Assess the basics: timeline, project plan, key stakeholders, and business and technical requirements</li>
+        </ul>
+      </div>
+      <div class="stage-block">
+        <h5>Follow Up Required</h5>
+        <ul>
+          <li>Send a short overview video and a brief leave-behind deck if applicable</li>
+          <li>Lock a placeholder date on the calendar for the platform demo</li>
+        </ul>
+      </div>
+      <div class="stage-block">
+        <h5>Covalent Team Members</h5>
+        <ul><li>Sales / GTM</li></ul>
+      </div>
+      <div class="stage-block">
+        <h5>Prospect Team Members</h5>
+        <ul><li>Main point(s) of contact</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-card">
+    <div class="stage-head"><div class="stage-num">2</div><h4>Platform Demo</h4></div>
+    <div class="stage-grid">
+      <div class="stage-block">
+        <h5>Key Objectives</h5>
+        <ul>
+          <li>Deliver a live demo of the Covalent platform, covering both the internal user and operator experience</li>
+          <li>Touch on customer-specific use cases as needed</li>
+        </ul>
+      </div>
+      <div class="stage-block">
+        <h5>Follow Up Required</h5>
+        <ul><li>Lock a placeholder date on the calendar for the checkpoint and MAP review</li></ul>
+      </div>
+      <div class="stage-block">
+        <h5>Covalent Team Members</h5>
+        <ul><li>Sales / GTM</li><li>Technical (if needed)</li></ul>
+      </div>
+      <div class="stage-block">
+        <h5>Prospect Team Members</h5>
+        <ul><li>Main point(s) of contact</li><li>Other stakeholders (training, IT, ops, etc.)</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-card">
+    <div class="stage-head"><div class="stage-num">3</div><h4>Checkpoint &amp; MAP Review</h4></div>
+    <div class="stage-grid">
+      <div class="stage-block">
+        <h5>Key Objectives</h5>
+        <ul>
+          <li>Gather feedback from internal Covalent discussions and align on potential initial scope</li>
+          <li>Build and review a shared Mutual Action Plan (MAP) covering workstreams, owners, and target dates</li>
+          <li>Confirm the emerging champion and identify who else needs to be involved in the value workshop</li>
+        </ul>
+      </div>
+      <div class="stage-block">
+        <h5>Follow Up Required</h5>
+        <ul>
+          <li>Send the draft MAP for review and sign-off from both sides</li>
+          <li>Schedule the value workshop with the right mix of stakeholders (ops, training, quality, IT)</li>
+        </ul>
+      </div>
+      <div class="stage-block">
+        <h5>Covalent Team Members</h5>
+        <ul><li>Sales / GTM</li></ul>
+      </div>
+      <div class="stage-block">
+        <h5>Prospect Team Members</h5>
+        <ul><li>Main point(s) of contact</li><li>Emerging champion</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-card">
+    <div class="stage-head"><div class="stage-num">4</div><h4>Value Workshop</h4></div>
+    <div class="stage-grid">
+      <div class="stage-block">
+        <h5>Key Objectives</h5>
+        <ul>
+          <li>Work directly with the prospect to quantify the business impact of Covalent using their own headcount, hourly cost, and production assumptions</li>
+          <li>Validate priority use cases and critical outcomes against what was discussed in discovery</li>
+          <li>Build out the Value Workbook together so the ROI case reflects the prospect's real numbers, not Covalent's assumptions</li>
+        </ul>
+      </div>
+      <div class="stage-block">
+        <h5>Follow Up Required</h5>
+        <ul>
+          <li>Finalize the Value Workbook with inputs validated by the prospect's finance or ops team</li>
+          <li>Confirm the business case is ready to support a proposal</li>
+        </ul>
+      </div>
+      <div class="stage-block">
+        <h5>Covalent Team Members</h5>
+        <ul><li>Sales / GTM</li><li>Technical (if needed)</li></ul>
+      </div>
+      <div class="stage-block">
+        <h5>Prospect Team Members</h5>
+        <ul><li>Economic buyer or budget holder</li><li>Champion</li><li>Finance or ops representative to validate assumptions</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-card">
+    <div class="stage-head"><div class="stage-num">5</div><h4>Proposal Creation &amp; Readout</h4></div>
+    <div class="stage-grid">
+      <div class="stage-block">
+        <h5>Key Objectives</h5>
+        <ul>
+          <li>Translate the validated MAP and Value Workbook into a formal proposal covering solution scope, implementation timeline, pricing, and payment terms</li>
+          <li>Walk the proposal through with the champion and economic buyer before it moves to procurement</li>
+        </ul>
+      </div>
+      <div class="stage-block">
+        <h5>Follow Up Required</h5>
+        <ul>
+          <li>Incorporate any feedback from the readout</li>
+          <li>Confirm next steps toward a Statement of Work and begin routing to IT/InfoSec and procurement as needed</li>
+        </ul>
+      </div>
+      <div class="stage-block">
+        <h5>Covalent Team Members</h5>
+        <ul><li>Sales / GTM</li></ul>
+      </div>
+      <div class="stage-block">
+        <h5>Prospect Team Members</h5>
+        <ul><li>Economic buyer</li><li>Champion</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-card">
+    <div class="stage-head"><div class="stage-num">6</div><h4>IT &amp; InfoSec Approvals</h4></div>
+    <div class="stage-grid">
+      <div class="stage-block">
+        <h5>Key Objectives</h5>
+        <ul>
+          <li>Respond to the prospect's IT security questionnaire (data residency, encryption at rest and in transit, SOC 2 Type II, penetration testing cadence)</li>
+          <li>Complete SSO/SAML or OIDC configuration in a test environment</li>
+          <li>Support any remaining integration scoping questions (MES, HRIS, SSO)</li>
+        </ul>
+      </div>
+      <div class="stage-block">
+        <h5>Follow Up Required</h5>
+        <ul>
+          <li>Track InfoSec and architecture review sign-off closely, this is frequently the critical path to contract</li>
+          <li>Confirm any outstanding integration documentation has been delivered</li>
+        </ul>
+      </div>
+      <div class="stage-block">
+        <h5>Covalent Team Members</h5>
+        <ul><li>Sales / GTM</li><li>Technical / Solutions Engineering</li></ul>
+      </div>
+      <div class="stage-block">
+        <h5>Prospect Team Members</h5>
+        <ul><li>IT / Digital lead</li><li>InfoSec team</li><li>Relevant system admins (MES, HRIS)</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-card">
+    <div class="stage-head"><div class="stage-num">7</div><h4>Paperwork Execution</h4></div>
+    <div class="stage-grid">
+      <div class="stage-block">
+        <h5>Key Objectives</h5>
+        <ul>
+          <li>Finalize and execute the MSA and SOW</li>
+          <li>Route the contract through the prospect's legal and procurement process</li>
+          <li>Confirm final payment terms and PO details</li>
+        </ul>
+      </div>
+      <div class="stage-block">
+        <h5>Follow Up Required</h5>
+        <ul>
+          <li>Send the signed MSA and SOW to all parties</li>
+          <li>Confirm PO issuance and connect Covalent's finance/AP contact with the prospect's AP contact</li>
+        </ul>
+      </div>
+      <div class="stage-block">
+        <h5>Covalent Team Members</h5>
+        <ul><li>Sales / GTM</li><li>Legal</li></ul>
+      </div>
+      <div class="stage-block">
+        <h5>Prospect Team Members</h5>
+        <ul><li>Economic buyer</li><li>Legal / procurement</li><li>Finance / AP contact</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-card">
+    <div class="stage-head"><div class="stage-num">8</div><h4>Project Kickoff</h4></div>
+    <div class="stage-grid">
+      <div class="stage-block">
+        <h5>Key Objectives</h5>
+        <ul>
+          <li>Establish project governance, RACI, and communication cadence</li>
+          <li>Confirm rollout sequence and site or department prioritization</li>
+          <li>Align on go-live milestone dates per site or department</li>
+        </ul>
+      </div>
+      <div class="stage-block">
+        <h5>Follow Up Required</h5>
+        <ul>
+          <li>Send the kickoff deck and project plan</li>
+          <li>Hand off cleanly from Sales to the Implementation / Customer Success team</li>
+        </ul>
+      </div>
+      <div class="stage-block">
+        <h5>Covalent Team Members</h5>
+        <ul><li>Sales / GTM</li><li>Implementation / Customer Success</li></ul>
+      </div>
+      <div class="stage-block">
+        <h5>Prospect Team Members</h5>
+        <ul><li>Champion</li><li>Project sponsor</li><li>Site or department leads</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">The Mutual Action Plan (MAP) is introduced at the Checkpoint &amp; MAP Review stage and should stay updated through Project Kickoff, keeping both sides aligned on workstreams, owners, and target dates. See your tools section for the MAP template.</div>
+
+  <h3 class="sub">Qualification and forecasting discipline</h3>
+  <ul>
+    <li>Maintain roughly 4x pipeline coverage against your quarterly target at all times, consistent with the company's FY2027 planning model.</li>
+    <li>Qualify hard on economic buyer access, a validated champion, and a real compelling event (an audit cycle, a program ramp, or a leadership mandate), not just interest.</li>
+    <li>Use the value workbook to quantify ROI early, not just at the end, so the business case is being built alongside the technical evaluation.</li>
+    <li>Flag anything that could stall on IT security review or procurement early. These items are frequently the critical path to a signed contract, not the commercial terms.</li>
+  </ul>
+
+  <h3 class="sub">Handling procurement and competitive bids</h3>
+  <p>For accounts wanting to run a competitive process, use the sole source argument: no combination of MES, LMS, HRIS, connected worker, frontline skills, or PLM point solutions delivers unified workforce readiness with a single accountable vendor. The Sole Source Justification template gives you a ready-made document to hand to procurement.</p>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> Walk through a full deal from discovery to signature using a real or mock MAP, and explain what would need to be true at each stage to stay on track for the target close date.
+  </div>
+</section>
+
+<section class="step" id="s6">
+  <div class="step-head">
+    <div class="badge">6</div>
+    <div>
+      <h2>Master the Messaging</h2>
+      <p class="goal">Go beyond the elevator pitch into a full value narrative and business case you can defend in front of an executive.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">The one-liner and proof, as your foundation</h3>
+  <div class="callout">"We help industrial companies manage training, qualification, and assignment of work at scale. We replace paper, Excel and tribal knowledge with a modern system to track who's qualified to work on what."<br><br>
+  Proof: ~30% faster operator ramp, ~10 minutes saved per operator per shift, ~$300K per line in annual savings, ~5% gains in shift output in comparable environments.</div>
+
+  <h3 class="sub">Building the business case</h3>
+  <p>Where an SDR stops at the one-liner, you need to turn that into a quantified business case. Use the value workbook to translate the customer's own headcount, hourly cost, and production assumptions into a defensible ROI number, the way the Acme Corporation example in the MAP template shows ($1.2M annual labor efficiency gain across three sites, in that case). Always get the customer's finance or ops team to validate the underlying assumptions rather than presenting your own numbers as fact.</p>
+
+  <h3 class="sub">Call to action ladder for executive conversations</h3>
+  <ol>
+    <li>"Can I send over a 2-minute video on how the platform works?" (lightest, useful for warming up a new stakeholder mid-cycle)</li>
+    <li>"Would you be open to a quick benchmarking call, 20 minutes to compare how peers are handling this?"</li>
+    <li>"How does [Company] currently manage whether a technician is qualified for a specific job?" (a question hook that surfaces the real pain)</li>
+    <li>"We'll be in [city] next month implementing at [Boeing/GE site], worth grabbing 20 minutes while we're there?"</li>
+  </ol>
+
+  <h3 class="sub">Objection handling, including advanced and competitive objections</h3>
+  <table>
+    <tr><th>Objection</th><th>Response</th></tr>
+    <tr><td>"We use an LMS"</td><td>Covalent isn't an LMS replacement. It handles the on the floor workflows, task level sign offs, and readiness data the LMS can't capture. Most customers run both.</td></tr>
+    <tr><td>"We use Solumina / SAP"</td><td>That's exactly the environment we work in. Covalent integrates with Solumina and SAP to gate ineligible workers at buy off and feed qualification data back into the system. Happy to show you how Pratt &amp; Whitney runs it.</td></tr>
+    <tr><td>"Not the right time"</td><td>Totally understand. The teams that get the most out of it usually start during a ramp or ahead of an audit cycle. When does that picture look a bit clearer for you?</td></tr>
+    <tr><td>"We're going to run a competitive bid across a few vendors"</td><td>Happy to participate, though worth knowing up front: no other vendor unifies training administration, performance based proficiency, workforce planning, and skill based assignment in one platform with MES enforcement. Most competitive processes end up recommending a sole source path once that gap becomes clear. I can share the market survey we've put together so your team has it early.</td></tr>
+    <tr><td>"We'll just build this ourselves internally"</td><td>Totally understandable instinct. The build cost isn't usually the training tracker piece, it's the MES integration, the performance based proficiency logic, and keeping an audit ready trail current as regulations change. That's typically a multi-year investment for a team that isn't in the business of maintaining software.</td></tr>
+  </table>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> In a mock executive conversation, deliver a full value narrative including a rough ROI estimate, and handle both a competitive bid objection and a build vs buy objection convincingly.
+  </div>
+</section>
+
+<section class="step" id="s7">
+  <div class="step-head">
+    <div class="badge">7</div>
+    <div>
+      <h2>Learn the Tools</h2>
+      <p class="goal">Get fluent in every system and template that carries a deal from first call to signature.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">Your day to day stack</h3>
+  <table>
+    <tr><th>Tool</th><th>What you use it for</th></tr>
+    <tr><td>CRM</td><td>System of record for accounts, opportunities, forecasting, and pipeline coverage tracking</td></tr>
+    <tr><td>Apollo.io</td><td>Contact and account intelligence, sequences for multi-threading and re-engagement</td></tr>
+    <tr><td>Calendly</td><td>Scheduling discovery calls, demos, and executive meetings</td></tr>
+    <tr><td>Mutual Action Plan (MAP) template</td><td>Shared, color coded deal plan tracking workstreams, owners, status, and target dates across Covalent and the customer</td></tr>
+    <tr><td>Value Workbook template</td><td>Multi-tab ROI model quantifying the economic value of Covalent for a specific account</td></tr>
+    <tr><td>Proposal Deck template</td><td>Executive proposal format covering initiative summary, value overview, commercials, and appendix</td></tr>
+    <tr><td>Sole Source Justification template</td><td>Procurement-ready document justifying a single-vendor decision for accounts avoiding a competitive bid</td></tr>
+    <tr><td>Covalent Cold Call Cheat Sheet</td><td>Elevator pitches by persona and industry, plus objection handling language</td></tr>
+    <tr><td>Closed-Lost Re-Engagement Campaign template</td><td>7-touch sequence for reviving stalled or closed-lost opportunities in your own book</td></tr>
+  </table>
+
+  <h3 class="sub">Key internal links &amp; bookmarks</h3>
+  <p>This is the master list of internal links you'll use regularly.</p>
+  <table>
+    <tr><th>Category</th><th>Resource</th><th>Link</th></tr>
+    <tr><td>CRM</td><td>Salesforce (Covalent CRM)</td><td><a href="https://covalentnetworks.lightning.force.com/" target="_blank" rel="noopener">covalentnetworks.lightning.force.com</a></td></tr>
+    <tr><td>Prospecting</td><td>Apollo.io</td><td><a href="https://app.apollo.io/" target="_blank" rel="noopener">app.apollo.io</a></td></tr>
+    <tr><td>Prospects</td><td>Prospects G-Drive folder</td><td><a href="https://drive.google.com/drive/folders/1nYzKvGGHcSwirOu5uvPL2l7_VXzFQ57D" target="_blank" rel="noopener">Google Drive folder</a></td></tr>
+    <tr><td>Customers</td><td>Customers G-Drive folder</td><td><a href="https://drive.google.com/drive/folders/1ii-KshtiDlZD5_eLDMdOmbsHueBJT3Fu" target="_blank" rel="noopener">Google Drive folder</a></td></tr>
+    <tr><td>Mid-funnel resources</td><td>Mid funnel resources G-Drive folder</td><td><a href="https://drive.google.com/drive/folders/10bLxo8o4G1eAvrNoehGVwNgBYm_XxZqp" target="_blank" rel="noopener">Google Drive folder</a></td></tr>
+    <tr><td>Proposals</td><td>PandaDoc</td><td><a href="https://app.pandadoc.com/" target="_blank" rel="noopener">app.pandadoc.com</a></td></tr>
+    <tr><td>Messaging</td><td>Covalent Pitch Talk Track</td><td><a href="https://docs.google.com/document/d/1Oj5Iv16dBMF_7gFQQGc09-4bryAr_CCWnLRIGm7dt3I/edit?tab=t.2vukgzbq5tap#heading=h.gwr424b32f7v" target="_blank" rel="noopener">Google Doc</a></td></tr>
+    <tr><td>Messaging</td><td>Covalent Pitch Slide Deck</td><td><a href="https://docs.google.com/presentation/d/1F2c87AIPV4Q1Ggkh7G5f-USTXxtyF4i9NQVTuGVNPhY/edit?slide=id.g3a8c0acdcfe_0_54#slide=id.g3a8c0acdcfe_0_54" target="_blank" rel="noopener">Google Slides</a></td></tr>
+    <tr><td>Knowledge base</td><td>Company Knowledgebase</td><td><a href="https://covalentnetworks.zendesk.com/hc/en-us/categories/360002123073" target="_blank" rel="noopener">Zendesk</a></td></tr>
+    <tr><td class="fill-in">Add category</td><td class="fill-in">Add resource</td><td class="fill-in">Add link</td></tr>
+  </table>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> Build a complete MAP and a first-draft value workbook for a live or mock account without help.
+  </div>
+</section>
+
+<section class="step" id="s8">
+  <div class="step-head">
+    <div class="badge">8</div>
+    <div>
+      <h2>Develop Role-Specific Skills</h2>
+      <p class="goal">Build the advanced muscle memory that separates a good AE from a great one.</p>
+    </div>
+  </div>
+
+  <div class="term-card"><div class="term-name">Deeper product expertise</div>Go beyond the simple version into real fluency: integrations, Process Control, Performance-based Proficiency, and how each maps to a specific persona's pain. Practice: field ten rapid-fire product questions from your manager with no notes.</div>
+  <div class="term-card"><div class="term-name">Discovery methodology</div>Run a structured discovery call that uncovers pain, quantifies impact, and identifies the real economic buyer and compelling event. Practice: run a mock discovery call and have your manager grade it against a discovery scorecard.</div>
+  <div class="term-card"><div class="term-name">Demo delivery</div>Tailor a live demo to the specific persona in the room instead of running a generic script. Practice: deliver the same product in three different demos, one for Ops, one for Quality, one for IT.</div>
+  <div class="term-card"><div class="term-name">Multi-threading and account strategy</div>Build relationships across the full buying committee instead of relying on a single champion. Practice: map a real account's org chart and identify a specific outreach plan for each stakeholder.</div>
+  <div class="term-card"><div class="term-name">Business case development</div>Turn a prospect's own numbers into a defensible ROI case using the value workbook. Practice: build a full value workbook for a mock account and present it to your manager as if they were the economic buyer.</div>
+  <div class="term-card"><div class="term-name">Negotiation and closing</div>Hold your ground on value while navigating procurement, legal, and pricing pressure. Practice: run a mock negotiation where your manager plays a tough procurement lead pushing for a discount.</div>
+  <div class="term-card"><div class="term-name">Forecast management</div>Keep an honest, accurate forecast and maintain 4x pipeline coverage against your target. Practice: submit a weekly forecast for four consecutive weeks and review variance against actuals with your manager.</div>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> Your manager observes a full mock cycle, discovery through a mock negotiation, and signs off that each skill above was demonstrated at a passing level.
+  </div>
+</section>
+
+<section class="step" id="s9">
+  <div class="step-head">
+    <div class="badge">9</div>
+    <div>
+      <h2>Prove Competency</h2>
+      <p class="goal">Demonstrate you're ready to own a full pipeline and quota independently.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">Certification checklist</h3>
+  <ul class="checklist">
+    <li><input type="checkbox"> Deliver the Covalent one-liner, proof points, and a rough ROI narrative from memory</li>
+    <li><input type="checkbox"> Explain Objective, Objective Group, Skills Matrix, Process Control, Performance-based Proficiency, and Coverage Planning to both a technical and a non-technical audience</li>
+    <li><input type="checkbox"> Run a full mock discovery call, scored against a discovery scorecard</li>
+    <li><input type="checkbox"> Deliver a persona-tailored demo reviewed by your manager or a Sales Engineer</li>
+    <li><input type="checkbox"> Build a complete Mutual Action Plan and Value Workbook for a live or mock account</li>
+    <li><input type="checkbox"> Shadow at least three live AE calls or deals in progress</li>
+    <li><input type="checkbox"> Complete a mock negotiation exercise handling a discount request and a competitive bid threat</li>
+    <li><input type="checkbox"> Submit four consecutive weeks of accurate forecast with acceptable variance</li>
+    <li><input type="checkbox"> Manager sign-off to carry an independent quota</li>
+  </ul>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> All boxes above checked and signed off by your manager before entering Stage 10.
+  </div>
+</section>
+
+<section class="step" id="s10">
+  <div class="step-head">
+    <div class="badge">10</div>
+    <div>
+      <h2>Begin Selling, with Coaching</h2>
+      <p class="goal">Ramp into a full independent book of business with active coaching, not on your own.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">30-60-90 day ramp</h3>
+  <table>
+    <tr><th>Phase</th><th>Focus</th></tr>
+    <tr><td>Days 1-30</td><td>Complete Stages 1-9 above, shadow live deals, build your first MAP and Value Workbook on a real or mock account</td></tr>
+    <tr><td>Days 31-60</td><td>Take ownership of inbound and SDR-sourced meetings with active coaching on discovery and demo delivery, begin building your own pipeline</td></tr>
+    <tr><td>Days 61-90</td><td>Run full deal cycles independently with regular pipeline and forecast reviews, working toward full quota carrying status</td></tr>
+  </table>
+
+  <h3 class="sub">Coaching cadence</h3>
+  <ul>
+    <li>Weekly 1:1 with your manager covering pipeline health, forecast accuracy, and deal strategy</li>
+    <li>Regular call and demo reviews, including recordings where available</li>
+    <li>Deal reviews on any opportunity approaching a key stage (executive demo, security review, proposal, or negotiation)</li>
+    <li>Quarterly business review of your territory, win/loss patterns, and messaging effectiveness</li>
+  </ul>
+
+  <div class="callout amber">Maintain roughly 4x pipeline coverage against your quarterly target at all times. If coverage falls short, flag it to your manager immediately rather than waiting for the quarter to close.</div>
+
+  <button class="print-btn" onclick="window.print()">Print this framework</button>
+</section>
+
+</main>
+
+<footer>Covalent Networks | Internal use only | jsavoia@covalentnetworks.com</footer>
+
+</body>
+</html>
