@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Covalent Networks | SDR/BDR New Hire Training Framework</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --navy:#0f1f33;
+    --navy-light:#16324f;
+    --steel:#2f6690;
+    --steel-light:#e8f0f6;
+    --amber:#e0973d;
+    --bg:#f5f7fa;
+    --card:#ffffff;
+    --text:#1b2733;
+    --muted:#5b6b7c;
+    --border:#e1e6ec;
+    --green:#3a9d6b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', Helvetica, Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.55;
+  }
+  a{color:var(--steel);}
+  header.hero{
+    background:linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+    color:#fff;
+    padding:48px 40px 36px;
+  }
+  header.hero .eyebrow{
+    text-transform:uppercase;
+    letter-spacing:2px;
+    font-size:12px;
+    color:var(--amber);
+    font-weight:600;
+    margin-bottom:10px;
+  }
+  header.hero h1{
+    margin:0 0 8px;
+    font-size:34px;
+    font-weight:700;
+  }
+  header.hero p.sub{
+    margin:0;
+    font-size:16px;
+    color:#c7d3e0;
+    max-width:760px;
+  }
+  .meta-row{
+    display:flex;
+    gap:28px;
+    flex-wrap:wrap;
+    margin-top:22px;
+  }
+  .meta-item{
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:8px;
+    padding:10px 16px;
+    font-size:13px;
+  }
+  .meta-item strong{display:block; font-size:14px; color:#fff;}
+  .meta-item span{color:#aebccb;}
+
+  nav.tracker{
+    background:var(--navy-light);
+    padding:14px 40px;
+    position:sticky;
+    top:0;
+    z-index:50;
+    box-shadow:0 2px 8px rgba(0,0,0,0.15);
+    overflow-x:auto;
+    white-space:nowrap;
+  }
+  nav.tracker a{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    color:#dbe4ee;
+    text-decoration:none;
+    font-size:12.5px;
+    font-weight:600;
+    margin-right:22px;
+  }
+  nav.tracker a .num{
+    background:rgba(255,255,255,0.12);
+    color:#fff;
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:11px;
+  }
+  nav.tracker a:hover .num{background:var(--amber); color:var(--navy);}
+
+  main{
+    max-width:960px;
+    margin:0 auto;
+    padding:36px 40px 80px;
+  }
+
+  section.step{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:32px 36px;
+    margin-bottom:28px;
+    scroll-margin-top:70px;
+  }
+  section.step .step-head{
+    display:flex;
+    align-items:flex-start;
+    gap:16px;
+    margin-bottom:18px;
+    border-bottom:2px solid var(--steel-light);
+    padding-bottom:16px;
+  }
+  section.step .badge{
+    background:var(--navy);
+    color:#fff;
+    min-width:40px;
+    height:40px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    font-size:17px;
+    flex-shrink:0;
+  }
+  section.step h2{
+    margin:0 0 4px;
+    font-size:22px;
+    color:var(--navy);
+  }
+  section.step p.goal{
+    margin:0;
+    color:var(--muted);
+    font-size:14.5px;
+  }
+  h3.sub{
+    font-size:15.5px;
+    color:var(--steel);
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    margin:26px 0 10px;
+  }
+  h3.sub:first-of-type{margin-top:0;}
+  p{margin:0 0 12px; font-size:15px;}
+  ul, ol{margin:0 0 14px; padding-left:22px;}
+  li{margin-bottom:6px; font-size:15px;}
+  .callout{
+    background:var(--steel-light);
+    border-left:4px solid var(--steel);
+    border-radius:6px;
+    padding:14px 18px;
+    margin:14px 0;
+    font-size:14.5px;
+  }
+  .callout.amber{
+    background:#fbf1e3;
+    border-left-color:var(--amber);
+  }
+  .analogy{
+    font-style:italic;
+    color:var(--muted);
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin:14px 0 18px;
+    font-size:14px;
+  }
+  table th{
+    background:var(--navy);
+    color:#fff;
+    text-align:left;
+    padding:10px 12px;
+    font-size:12.5px;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+  }
+  table td{
+    padding:10px 12px;
+    border-bottom:1px solid var(--border);
+    vertical-align:top;
+  }
+  table tr:nth-child(even) td{background:#fafbfc;}
+  .term-card{
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:14px 16px;
+    margin-bottom:12px;
+    background:#fcfdfe;
+  }
+  .term-card .term-name{
+    font-weight:700;
+    color:var(--navy);
+    font-size:15px;
+    margin-bottom:4px;
+  }
+  .checklist{
+    list-style:none;
+    padding:0;
+  }
+  .checklist li{
+    position:relative;
+    padding-left:30px;
+    margin-bottom:10px;
+  }
+  .checklist input[type=checkbox]{
+    position:absolute;
+    left:0;
+    top:2px;
+    width:16px;
+    height:16px;
+  }
+  .milestone{
+    margin-top:22px;
+    background:var(--navy);
+    color:#fff;
+    border-radius:8px;
+    padding:16px 20px;
+  }
+  .milestone strong{color:var(--amber);}
+  .two-col{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  @media (max-width:700px){
+    .two-col{grid-template-columns:1fr;}
+    main{padding:24px 18px;}
+    header.hero{padding:32px 20px;}
+    nav.tracker{padding:12px 18px;}
+    section.step{padding:22px 20px;}
+  }
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:12.5px;
+    padding:30px 20px 50px;
+  }
+  .fill-in{
+    color:#9aa7b4;
+    font-style:italic;
+  }
+  .print-btn{
+    background:var(--amber);
+    color:var(--navy);
+    border:none;
+    padding:10px 18px;
+    border-radius:6px;
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+    margin-top:18px;
+  }
+  @media print{
+    nav.tracker, .print-btn{display:none;}
+    section.step{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">Covalent Networks | New Hire Training Framework</div>
+  <h1>SDR / BDR Onboarding Program</h1>
+  <p class="sub">A structured, ten-stage path for bringing a new Sales or Business Development Representative from day one to fully ramped, quota-carrying pipeline generator.</p>
+</header>
+
+<nav class="tracker">
+  <a href="#s1"><span class="num">1</span>Company</a>
+  <a href="#s2"><span class="num">2</span>Market</a>
+  <a href="#s3"><span class="num">3</span>Product</a>
+  <a href="#s4"><span class="num">4</span>Customer</a>
+  <a href="#s5"><span class="num">5</span>Sales Process</a>
+  <a href="#s6"><span class="num">6</span>Messaging</a>
+  <a href="#s7"><span class="num">7</span>Tools</a>
+  <a href="#s8"><span class="num">8</span>Role Skills</a>
+  <a href="#s9"><span class="num">9</span>Competency</a>
+  <a href="#s10"><span class="num">10</span>Selling + Coaching</a>
+</nav>
+
+<main>
+
+<section class="step" id="s1">
+  <div class="step-head">
+    <div class="badge">1</div>
+    <div>
+      <h2>Understand the Company</h2>
+      <p class="goal">Learn what Covalent is, why it exists, and how to explain it simply before you ever explain it to a prospect.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">What Covalent does, in plain English</h3>
+  <p>Picture a factory floor. Every job on that floor, running a machine, torquing a bolt, signing off on a part, needs someone who is trained and currently able to do it safely and correctly. Most factories still track this with paper checklists, binders, and messy spreadsheets. When a supervisor needs to know who can do what, they have to guess or go dig through paperwork.</p>
+  <p>Covalent replaces all of that paper and all of those spreadsheets with one live system. It keeps track of who is trained, who is qualified right now, who is about to expire, and who is actually available on shift, all updated in real time.</p>
+
+  <div class="callout">
+    <strong>The one-liner.</strong> Use this any time someone asks "what does Covalent do?"<br><br>
+    "We help industrial companies manage training, qualification, and assignment of work at scale. We replace paper, Excel and tribal knowledge with a modern system to track who's qualified to work on what."
+  </div>
+
+  <p>Follow it with the proof: <strong>we ramp new operators about 30% faster</strong> and <strong>save each worker around 10 minutes of unproductive time per shift</strong>, which adds up to roughly <strong>$300K per line per year</strong> in savings. Covalent currently manages qualifications for <strong>50,000+ workers</strong> across its customer base.</p>
+
+  <h3 class="sub">How Covalent thinks about its building blocks</h3>
+  <p>You will hear these words constantly in meetings, in the product, and on calls. None of them are complicated once you have the right picture in your head.</p>
+
+  <div class="term-card">
+    <div class="term-name">Objective</div>
+    One single thing a person needs to learn or prove they can do. Think of it as one line on a checklist, for example "can this person safely run this machine." An Objective can require a video, a quiz, a certain number of supervised hours, or a trainer's sign-off before it counts as done.
+  </div>
+  <div class="term-card">
+    <div class="term-name">Objective Group</div>
+    A bundle of Objectives, like a folder holding several checklist items together. For example, "Certified Level 2 Machinist" might bundle five separate Objectives. If even one item inside expires or was never completed, the whole folder shows as "not qualified" until it's fixed. <span class="analogy">Think of a video game "achievement" that only unlocks once you have finished every smaller task inside it.</span>
+  </div>
+  <div class="term-card">
+    <div class="term-name">Skills Matrix</div>
+    The master scoreboard. A big grid where the rows are people and the columns are Objectives or Objective Groups, color coded green, yellow, or red, so a supervisor can look at one screen and instantly see who is ready for what.
+  </div>
+  <div class="term-card">
+    <div class="term-name">Process Control (gating)</div>
+    A guardrail that plugs into the shop floor system and physically blocks someone from being assigned or signing off on a job they aren't qualified for. <span class="analogy">Like a bouncer checking IDs, but the door is a specific task on the production line.</span>
+  </div>
+  <div class="term-card">
+    <div class="term-name">Performance-based Proficiency</div>
+    Being qualified is not a one time checkbox. If someone hasn't actually done a job in a while, Covalent can flag that they need a refresher. <span class="analogy">Like a driver's license: you technically still have it, but if you haven't driven in two years, you're probably rusty.</span>
+  </div>
+  <div class="term-card">
+    <div class="term-name">Coverage Planning</div>
+    A staffing forecast. It answers "do we have enough qualified people to hit our production target by a certain date, and where are we short?"
+  </div>
+  <div class="term-card">
+    <div class="term-name">Workforce Availability</div>
+    Knowing not just who is qualified on paper, but who is actually clocked in right now, so a supervisor can plug a gap immediately instead of guessing.
+  </div>
+  <div class="term-card">
+    <div class="term-name">Renewal</div>
+    Like a license or certification, Objectives can expire and need to be redone on a schedule to stay current.
+  </div>
+
+  <h3 class="sub">Company snapshot</h3>
+  <p>Covalent is a growing enterprise SaaS company selling into complex manufacturing environments, especially aerospace and defense, automotive, and industrial. As of the FY2027 plan, the company is scaling from roughly $5.0M in starting ARR toward a $7.7M year end target, adding a small, high leverage go to market team along the way. You do not need to memorize these numbers, but understand that this is a fast growing, still lean organization where your individual contribution matters a lot.</p>
+
+  <h3 class="sub">Why Covalent exists</h3>
+  <p>Manufacturers are losing their most experienced workers to retirement faster than they can train replacements. At the same time, customers like Boeing and regulators like the FAA and DCMA expect airtight, auditable proof that every worker on a job was actually qualified to do it. Paper and spreadsheets cannot keep up with either problem. Covalent exists to close that gap.</p>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> By the end of this stage, you should be able to explain Covalent's one-liner from memory, describe an Objective and an Objective Group in your own words without notes, and name two proof points (ramp speed, time saved, or dollars saved).
+  </div>
+</section>
+
+<section class="step" id="s2">
+  <div class="step-head">
+    <div class="badge">2</div>
+    <div>
+      <h2>Understand the Market</h2>
+      <p class="goal">Know who Covalent sells to, why now, and where Covalent fits against everything else already sitting in a customer's tech stack.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">Who we sell to</h3>
+  <table>
+    <tr><th>Industry</th><th>Why they buy</th><th>Example accounts</th></tr>
+    <tr><td>Aerospace &amp; Defense / MRO / engines</td><td>Heavy regulatory burden (FAA, DCMA, AS9100, ITAR), safety critical work, deep supply chains</td><td>Boeing, GE, RTX / Pratt &amp; Whitney sites and their suppliers</td></tr>
+    <tr><td>Automotive / Powersports / Trailers</td><td>Fast line changeovers, high turnover, need to staff shifts quickly with qualified people</td><td>Polaris, Great Dane</td></tr>
+    <tr><td>Broader discrete manufacturing</td><td>Standardizing training across multiple sites, replacing manual and paper based tracking</td><td>Milliken, Kimberly-Clark Mexico</td></tr>
+  </table>
+
+  <h3 class="sub">Why now</h3>
+  <ul>
+    <li>Experienced workers are retiring faster than replacements can be trained.</li>
+    <li>Customers and regulators demand audit ready proof of qualification, not just training records.</li>
+    <li>Existing systems (MES, LMS, HRIS) each hold a piece of the puzzle but none of them connect training, qualification, and real time task assignment together.</li>
+  </ul>
+
+  <h3 class="sub">The competitive landscape</h3>
+  <p>No single competitor does what Covalent does end to end. Each category below solves a slice of the problem.</p>
+  <table>
+    <tr><th>Category</th><th>Example vendors</th><th>What they're missing</th></tr>
+    <tr><td>MES platforms</td><td>Siemens Opcenter, Rockwell Plex, Dassault DELMIA, iBaseT</td><td>Know what work must be done, but no qualification data or skill based task allocation</td></tr>
+    <tr><td>Learning management systems (LMS)</td><td>Cornerstone, SAP SuccessFactors, Workday Learning</td><td>Track course completions, but no job level proficiency or shop floor integration</td></tr>
+    <tr><td>Workforce management / HR</td><td>UKG, ADP, Workday</td><td>Handle payroll and scheduling, but no proficiency based assignment logic</td></tr>
+    <tr><td>Connected worker platforms</td><td>Poka, Augmentir, Parsable</td><td>Digital work instructions, but shallow training administration</td></tr>
+    <tr><td>Frontline skills management</td><td>Kahuna, AG5, DeepHow</td><td>Visualize skills gaps, but no live operational integration</td></tr>
+    <tr><td>PLM / smart manufacturing suites</td><td>Teamcenter, Windchill, 3DEXPERIENCE</td><td>Focused on product data, treat workforce capability as an afterthought</td></tr>
+  </table>
+
+  <h3 class="sub">Systems Covalent complements, not competes with</h3>
+  <p>These are systems Covalent plugs into rather than replaces. Knowing this helps you avoid a common early objection: "we already have an LMS" or "we already have an MES."</p>
+  <div class="two-col">
+    <div class="callout"><strong>MRO systems</strong> (EmpowerMX, AMOS, iBaseT): manage work orders and maintenance scheduling. Covalent adds task level qualification and audit ready evidence.</div>
+    <div class="callout"><strong>LMS systems</strong> (Cornerstone, SAP SuccessFactors, Workday Learning): deliver eLearning and track completions. Covalent turns those completions into real job eligibility.</div>
+    <div class="callout"><strong>HRIS systems</strong> (Workday, UKG, SAP HCM): manage headcount and payroll. Covalent adds operational skill context to every employee record.</div>
+  </div>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> You should be able to name Covalent's three core industry segments, explain why "we already use an LMS" is not a real blocker, and place at least four competitor names into the right category from memory.
+  </div>
+</section>
+
+<section class="step" id="s3">
+  <div class="step-head">
+    <div class="badge">3</div>
+    <div>
+      <h2>Understand the Product</h2>
+      <p class="goal">Go one level deeper than the simple version so you can hold a real conversation about how the platform actually works.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">The core workflow, start to finish</h3>
+  <ol>
+    <li>A trainee is assigned one or more Objectives or Objective Groups, individually or in bulk (for example, everyone in a location or role).</li>
+    <li>The trainee works through the Objective: watching content, completing checklists, logging hours or parts, and being observed or signed off by a trainer or evaluator.</li>
+    <li>Once complete, the Objective (and any parent Objective Group) shows as qualified on the Skills Matrix in real time.</li>
+    <li>If the role requires it, Covalent's Process Control integration with the customer's MES can gate or flag work if an unqualified person is assigned to it.</li>
+    <li>Over time, Objectives can expire or require Renewal, and Performance-based Proficiency can flag someone as rusty if they haven't actually done the job recently.</li>
+  </ol>
+
+  <h3 class="sub">Capabilities worth knowing at your level</h3>
+  <ul>
+    <li><strong>Skills Matrix:</strong> real time, filterable view of who is qualified for what, across a whole workforce.</li>
+    <li><strong>Coverage Planning:</strong> helps leaders answer "do we have enough trained people to hit our production target."</li>
+    <li><strong>Immutable audit trail:</strong> every action is time stamped and signed, which is exactly what auditors from the FAA or DCMA ask for.</li>
+    <li><strong>Integrations:</strong> Covalent connects to MES, LMS, HRIS, and SSO systems rather than replacing them.</li>
+  </ul>
+
+  <div class="callout amber">You do not need to be a product expert as an SDR. You need enough fluency to ask a smart discovery question and recognize when a prospect's pain matches something Covalent solves. Save the deep technical detail for the AE and the demo.</div>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> Walk your manager through the core workflow above without reading from this document, start to finish.
+  </div>
+</section>
+
+<section class="step" id="s4">
+  <div class="step-head">
+    <div class="badge">4</div>
+    <div>
+      <h2>Understand the Customer</h2>
+      <p class="goal">Know who picks up the phone, what keeps them up at night, and what to say to get them talking.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">Personas and hooks</h3>
+  <table>
+    <tr><th>Persona</th><th>Their pain</th><th>Opening hook</th></tr>
+    <tr><td>Training Manager</td><td>Paper OJT forms, spreadsheet tracked certifications, audit scramble</td><td>"How does your team currently track whether a tech is certified for a specific task or job?"</td></tr>
+    <tr><td>Ops / Plant Manager</td><td>No live view of who's qualified when someone calls out or a line ramps up</td><td>"When a technician calls out on short notice, how quickly can your supervisors find a qualified replacement without disrupting flow?"</td></tr>
+    <tr><td>Quality Director</td><td>Slow, manual pull of qualification records for auditors</td><td>"When an auditor walks in, how long does it take your team to pull together qualification records for a specific technician or work order?"</td></tr>
+    <tr><td>Digital / IT lead</td><td>MES has no idea whether a worker is actually certified for the work order they're assigned</td><td>"Is your MES currently connected to any system that knows whether a worker is actually certified for the work order they're being assigned?"</td></tr>
+  </table>
+
+  <h3 class="sub">Proof points to reference by customer type</h3>
+  <ul>
+    <li><strong>A&amp;D / MRO:</strong> 125+ Boeing, GE, and RTX sites use Covalent for workforce qualification, shop floor OJT, and audit ready records for DCMA and FAA.</li>
+    <li><strong>Auto / manufacturing:</strong> Great Dane and Polaris replaced paper forms and spreadsheets with a live system that helps staff lines faster.</li>
+    <li><strong>Multi-site manufacturers:</strong> Milliken standardized training across sites and grew critical skills coverage from 150 to 272 at one site alone.</li>
+    <li><strong>Suppliers:</strong> because Boeing, GE, and RTX rely on Covalent internally, their key suppliers face the same qualification and audit readiness challenges.</li>
+  </ul>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> Pick a persona at random from a manager quiz and deliver the matching pitch and hook without hesitation.
+  </div>
+</section>
+
+<section class="step" id="s5">
+  <div class="step-head">
+    <div class="badge">5</div>
+    <div>
+      <h2>Learn the Sales Process</h2>
+      <p class="goal">Understand where your job starts and ends, and exactly how a lead flows from first touch to a booked, qualified meeting.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">Your role in the funnel</h3>
+  <p>As an SDR or BDR, you own the top of the funnel. Your job is to generate outbound conversations, qualify interest, and hand off clean, well documented meetings to an Account Executive. You are not expected to run a demo or negotiate a deal.</p>
+
+  <h3 class="sub">The outbound cadence</h3>
+  <ol>
+    <li><strong>Research:</strong> confirm the account fits the ICP (aerospace/defense, automotive, or complex discrete manufacturing) and identify the right persona.</li>
+    <li><strong>Multi-touch outreach:</strong> combine email, LinkedIn, and phone across a sequence rather than a single touch. Reference the Closed-Lost Re-Engagement Campaign template for a full example of a structured, multi-step sequence.</li>
+    <li><strong>Qualify:</strong> confirm there is a real pain (paper or spreadsheet based tracking, audit exposure, staffing visibility gaps), a relevant role, and rough timing.</li>
+    <li><strong>Book the meeting:</strong> lock in a discovery call with the right persona and pass it to an AE.</li>
+    <li><strong>Handoff:</strong> log clear, complete notes so the AE walks into the call prepared, not cold.</li>
+  </ol>
+
+  <h3 class="sub">A simple qualification bar</h3>
+  <table>
+    <tr><th>Check</th><th>What you're confirming</th></tr>
+    <tr><td>Pain</td><td>They currently rely on paper, spreadsheets, or a system that doesn't talk to their MES/LMS for qualification tracking</td></tr>
+    <tr><td>Fit</td><td>They are in an ICP industry and are a manufacturer of meaningful scale</td></tr>
+    <tr><td>Authority</td><td>You are talking to, or can get to, someone with real influence: training, ops, quality, or digital/IT leadership</td></tr>
+    <tr><td>Timing</td><td>There is a reason to act soon: an audit cycle, a ramp, a new program, or a leadership mandate</td></tr>
+  </table>
+
+  <h3 class="sub">What a clean handoff looks like</h3>
+  <ul>
+    <li>Persona and title of the contact</li>
+    <li>The specific pain they described, in their own words if possible</li>
+    <li>Any objections already raised and how you addressed them</li>
+    <li>Confirmed meeting time and who from the customer side will attend</li>
+  </ul>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> Successfully book and hand off a meeting where the AE tells you the notes were clear enough that they didn't need to ask you a single follow up question.
+  </div>
+</section>
+
+<section class="step" id="s6">
+  <div class="step-head">
+    <div class="badge">6</div>
+    <div>
+      <h2>Master the Messaging</h2>
+      <p class="goal">Have the exact language ready so you never fumble the "what does Covalent do" moment or a common objection.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">The one-liner</h3>
+  <div class="callout">"We help industrial companies manage training, qualification, and assignment of work at scale. We replace paper, Excel and tribal knowledge with a modern system to track who's qualified to work on what."<br><br>
+  Follow with: "We ramp new operators about 30% faster and save each worker around 10 minutes of unproductive time per shift. Worth a quick call to see how it compares to what you're doing today?"</div>
+
+  <h3 class="sub">Call to action ladder, lightest first</h3>
+  <ol>
+    <li>"Can I send over a 2-minute video on how the platform works?"</li>
+    <li>"Would you be open to a quick benchmarking call, 20 minutes to compare how peers are handling this?"</li>
+    <li>"How does [Company] currently manage whether a technician is qualified for a specific job?" (a question hook, great for getting them talking)</li>
+    <li>"We'll be in [city] next month implementing at [Boeing/GE site], worth grabbing 20 minutes while we're there?"</li>
+  </ol>
+
+  <h3 class="sub">Objection handling</h3>
+  <table>
+    <tr><th>Objection</th><th>Response</th></tr>
+    <tr><td>"We use an LMS"</td><td>Covalent isn't an LMS replacement. It handles the on the floor workflows, task level sign offs, and readiness data the LMS can't capture. Most customers run both.</td></tr>
+    <tr><td>"We use Solumina / SAP"</td><td>That's exactly the environment we work in. Covalent integrates with Solumina and SAP to gate ineligible workers at buy off and feed qualification data back into the system. Happy to show you how Pratt &amp; Whitney runs it.</td></tr>
+    <tr><td>"Not the right time"</td><td>Totally understand. The teams that get the most out of it usually start during a ramp or ahead of an audit cycle. When does that picture look a bit clearer for you?</td></tr>
+  </table>
+
+  <div class="callout amber">Full reference: see the <strong>Covalent Cold Call Cheat Sheet</strong> in the tools section below for industry specific pitches and additional persona language.</div>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> Deliver the one-liner and handle all three objections above cold, with no notes, in front of your manager.
+  </div>
+</section>
+
+<section class="step" id="s7">
+  <div class="step-head">
+    <div class="badge">7</div>
+    <div>
+      <h2>Learn the Tools</h2>
+      <p class="goal">Get fluent in the systems you'll live in every day.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">Your day to day stack</h3>
+  <table>
+    <tr><th>Tool</th><th>What you use it for</th></tr>
+    <tr><td>CRM</td><td>System of record for accounts, contacts, and opportunity handoff to AEs</td></tr>
+    <tr><td>Apollo.io</td><td>Prospecting, contact and account data, email and outreach sequences, task management</td></tr>
+    <tr><td>Calendly</td><td>Scheduling discovery calls and demos with prospects</td></tr>
+    <tr><td>Covalent Cold Call Cheat Sheet</td><td>Elevator pitches by persona and industry, objection handles, and call to action language</td></tr>
+    <tr><td>Closed-Lost Re-Engagement Campaign template</td><td>A full 7-touch sequence for reviving stalled or closed-lost opportunities</td></tr>
+  </table>
+
+  <h3 class="sub">Key internal links &amp; bookmarks</h3>
+  <p>This is the master list of internal links you'll use regularly.</p>
+  <table>
+    <tr><th>Category</th><th>Resource</th><th>Link</th></tr>
+    <tr><td>CRM</td><td>Salesforce (Covalent CRM)</td><td><a href="https://covalentnetworks.lightning.force.com/" target="_blank" rel="noopener">covalentnetworks.lightning.force.com</a></td></tr>
+    <tr><td>Prospecting</td><td>Apollo.io</td><td><a href="https://app.apollo.io/" target="_blank" rel="noopener">app.apollo.io</a></td></tr>
+    <tr><td>Prospects</td><td>Prospects G-Drive folder</td><td><a href="https://drive.google.com/drive/folders/1nYzKvGGHcSwirOu5uvPL2l7_VXzFQ57D" target="_blank" rel="noopener">Google Drive folder</a></td></tr>
+    <tr><td>Customers</td><td>Customers G-Drive folder</td><td><a href="https://drive.google.com/drive/folders/1ii-KshtiDlZD5_eLDMdOmbsHueBJT3Fu" target="_blank" rel="noopener">Google Drive folder</a></td></tr>
+    <tr><td>Mid-funnel resources</td><td>Mid funnel resources G-Drive folder</td><td><a href="https://drive.google.com/drive/folders/10bLxo8o4G1eAvrNoehGVwNgBYm_XxZqp" target="_blank" rel="noopener">Google Drive folder</a></td></tr>
+    <tr><td>Proposals</td><td>PandaDoc</td><td><a href="https://app.pandadoc.com/" target="_blank" rel="noopener">app.pandadoc.com</a></td></tr>
+    <tr><td>Messaging</td><td>Covalent Pitch Talk Track</td><td><a href="https://docs.google.com/document/d/1Oj5Iv16dBMF_7gFQQGc09-4bryAr_CCWnLRIGm7dt3I/edit?tab=t.2vukgzbq5tap#heading=h.gwr424b32f7v" target="_blank" rel="noopener">Google Doc</a></td></tr>
+    <tr><td>Messaging</td><td>Covalent Pitch Slide Deck</td><td><a href="https://docs.google.com/presentation/d/1F2c87AIPV4Q1Ggkh7G5f-USTXxtyF4i9NQVTuGVNPhY/edit?slide=id.g3a8c0acdcfe_0_54#slide=id.g3a8c0acdcfe_0_54" target="_blank" rel="noopener">Google Slides</a></td></tr>
+    <tr><td>Knowledge base</td><td>Company Knowledgebase</td><td><a href="https://covalentnetworks.zendesk.com/hc/en-us/categories/360002123073" target="_blank" rel="noopener">Zendesk</a></td></tr>
+    <tr><td class="fill-in">Add category</td><td class="fill-in">Add resource</td><td class="fill-in">Add link</td></tr>
+  </table>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> Log a fully worked prospect (research, sequence enrollment, and a booked meeting) through the CRM and Apollo without help.
+  </div>
+</section>
+
+<section class="step" id="s8">
+  <div class="step-head">
+    <div class="badge">8</div>
+    <div>
+      <h2>Develop Role-Specific Skills</h2>
+      <p class="goal">Build the muscle memory that separates a good SDR from a great one.</p>
+    </div>
+  </div>
+
+  <div class="term-card"><div class="term-name">High-volume prospecting</div>Build and work a full pipeline of accounts daily, not just the easy ones. Practice: build a target list of 25 accounts in one ICP segment and prioritize by fit.</div>
+  <div class="term-card"><div class="term-name">Cold calling fundamentals</div>Confident opens, a clear reason for the call, and a genuine question that invites a real answer. Practice: record yourself doing five practice cold calls and review with your manager.</div>
+  <div class="term-card"><div class="term-name">Email and LinkedIn outreach</div>Write outreach that reads like a person wrote it, not a template. Practice: draft a 3-email sequence for a specific persona and get feedback before sending live.</div>
+  <div class="term-card"><div class="term-name">Qualification</div>Quickly and respectfully confirm pain, fit, authority, and timing on a live call. Practice: role-play a qualification call with a peer playing a skeptical prospect.</div>
+  <div class="term-card"><div class="term-name">Objection handling</div>Stay calm and curious rather than defensive when you hear "we already use an LMS" or "not the right time." Practice: drill the three core objections until the response is automatic.</div>
+  <div class="term-card"><div class="term-name">Booking meetings</div>Lock in a specific time, confirm attendees, and set expectations for what the call will cover. Practice: book five meetings and track show rate.</div>
+  <div class="term-card"><div class="term-name">Clean CRM hygiene</div>Every touch, note, and status update logged accurately and on time. Practice: have your manager audit a week of your CRM activity for completeness.</div>
+  <div class="term-card"><div class="term-name">Effective handoff to AEs</div>Give the AE everything they need so the first real sales conversation feels like a continuation, not a cold start. Practice: get direct feedback from an AE after your first three handoffs.</div>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> Your manager observes you complete one full cycle, prospecting through handoff, and signs off that each skill above was demonstrated.
+  </div>
+</section>
+
+<section class="step" id="s9">
+  <div class="step-head">
+    <div class="badge">9</div>
+    <div>
+      <h2>Prove Competency</h2>
+      <p class="goal">Demonstrate you're ready to run outbound independently before you're handed a full pipeline.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">Certification checklist</h3>
+  <ul class="checklist">
+    <li><input type="checkbox"> Deliver the Covalent one-liner and all three core objection responses from memory</li>
+    <li><input type="checkbox"> Explain an Objective, an Objective Group, and the Skills Matrix in your own words</li>
+    <li><input type="checkbox"> Pass a mock cold call reviewed by your manager</li>
+    <li><input type="checkbox"> Shadow at least three live calls with a senior SDR or AE</li>
+    <li><input type="checkbox"> Book your first live meeting with a manager listening in or reviewing the recording</li>
+    <li><input type="checkbox"> Demonstrate clean CRM hygiene across one full week of activity</li>
+    <li><input type="checkbox"> Complete a clean handoff confirmed as sufficient by the receiving AE</li>
+    <li><input type="checkbox"> Manager sign-off to move to full independent ramp</li>
+  </ul>
+
+  <div class="milestone">
+    <strong>Milestone check:</strong> All boxes above checked and signed off by your manager before entering Stage 10.
+  </div>
+</section>
+
+<section class="step" id="s10">
+  <div class="step-head">
+    <div class="badge">10</div>
+    <div>
+      <h2>Begin Selling, with Coaching</h2>
+      <p class="goal">Ramp into full production with a safety net, not on your own.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">30-60-90 day ramp</h3>
+  <table>
+    <tr><th>Phase</th><th>Focus</th></tr>
+    <tr><td>Days 1-30</td><td>Complete Stages 1-9 above, shadow live calls, run supervised practice reps</td></tr>
+    <tr><td>Days 31-60</td><td>Run your own outbound cadence with regular call reviews, ramp toward a partial activity and meeting target</td></tr>
+    <tr><td>Days 61-90</td><td>Operate independently at full expected activity and booked meeting volume, with ongoing coaching</td></tr>
+  </table>
+
+  <h3 class="sub">Coaching cadence</h3>
+  <ul>
+    <li>Weekly 1:1 with your manager to review pipeline, activity, and call recordings</li>
+    <li>Regular call shadowing and reverse shadowing in both directions</li>
+    <li>Monthly review of messaging effectiveness and objection handling against real call outcomes</li>
+  </ul>
+
+  <div class="callout amber">Targets (meetings booked per week, calls per day, sequences enrolled per week) are set by your manager based on current team benchmarks. Ask for these numbers on day one and revisit them at each ramp milestone.</div>
+
+  <button class="print-btn" onclick="window.print()">Print this framework</button>
+</section>
+
+</main>
+
+<footer>Covalent Networks | Internal use only | jsavoia@covalentnetworks.com</footer>
+
+</body>
+</html>
