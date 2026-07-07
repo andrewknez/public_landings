@@ -484,6 +484,7 @@
       <button class="filter-chip" data-filter="prototypes" type="button">Prototypes</button>
       <button class="filter-chip" data-filter="explainers" type="button">Explainers</button>
       <button class="filter-chip" data-filter="partnerships" type="button">Partnerships</button>
+      <button class="filter-chip" data-filter="integration" type="button">Integration</button>
       <button class="filter-chip filter-reset is-hidden" id="filterReset" type="button">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1027,8 +1028,8 @@
 
     <div class="grid">
 
-      <!-- Solumina Playbook -->
-      <a class="card" href="https://pages.covalentworkforce.com/covalent-solumina-playbook/" target="_blank" rel="noopener" data-category="partnerships" data-tags="solumina ibase-t playbook partnership evaluation marketing">
+      <!-- Covalent MES Playbook -->
+      <a class="card" href="https://pages.covalentworkforce.com/covalent-solumina-playbook/" target="_blank" rel="noopener" data-category="integration" data-tags="mes integration solumina ibase-t playbook evaluation work gating">
         <div class="card-thumb">
           <svg viewBox="0 0 480 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
             <defs>
@@ -1044,35 +1045,68 @@
             <rect width="480" height="300" fill="url(#m1)"/>
             <rect width="480" height="300" fill="url(#mgrain1)"/>
 
-            <!-- Two interlocking circles (partnership / covalent bond motif) -->
-            <circle cx="205" cy="150" r="62" fill="none" stroke="#FF9B36" stroke-width="6" opacity="0.9"/>
-            <circle cx="275" cy="150" r="62" fill="none" stroke="#2563EB" stroke-width="6" opacity="0.9"/>
+            <!-- Left: Covalent panel (qualifications) -->
+            <g transform="translate(44, 78)">
+              <rect width="150" height="144" rx="10" fill="#FFFFFF"/>
+              <rect x="0" y="0" width="150" height="28" rx="10" fill="#06448E"/>
+              <rect x="0" y="18" width="150" height="10" fill="#06448E"/>
+              <text x="14" y="19" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="10" font-weight="800" letter-spacing="0.04em">COVALENT</text>
+              <!-- Qualification rows with checks -->
+              <circle cx="20" cy="48" r="6" fill="#10B981"/>
+              <path d="M17 48 L19.5 50.5 L23 46" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="34" y="45" width="86" height="6" rx="3" fill="#0F1729"/>
+              <circle cx="20" cy="74" r="6" fill="#10B981"/>
+              <path d="M17 74 L19.5 76.5 L23 72" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="34" y="71" width="72" height="6" rx="3" fill="#0F1729"/>
+              <circle cx="20" cy="100" r="6" fill="#10B981"/>
+              <path d="M17 100 L19.5 102.5 L23 98" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="34" y="97" width="94" height="6" rx="3" fill="#0F1729"/>
+              <circle cx="20" cy="126" r="6" fill="#E2E8F0"/>
+              <rect x="34" y="123" width="64" height="6" rx="3" fill="#94A3B8"/>
+            </g>
 
-            <!-- Playbook document in front -->
-            <g transform="translate(160, 86)">
-              <rect width="160" height="128" rx="10" fill="#FFFFFF"/>
-              <!-- Doc header bar -->
-              <rect x="0" y="0" width="160" height="30" rx="10" fill="#06448E"/>
-              <rect x="0" y="20" width="160" height="10" fill="#06448E"/>
-              <rect x="14" y="12" width="70" height="7" rx="3.5" fill="#FFFFFF"/>
-              <!-- Doc lines -->
-              <rect x="14" y="44" width="100" height="6" rx="3" fill="#0F1729"/>
-              <rect x="14" y="58" width="132" height="5" rx="2.5" fill="#94A3B8"/>
-              <rect x="14" y="69" width="118" height="5" rx="2.5" fill="#94A3B8"/>
-              <rect x="14" y="80" width="126" height="5" rx="2.5" fill="#94A3B8"/>
-              <!-- Checklist items -->
-              <circle cx="19" cy="100" r="5" fill="#10B981"/>
-              <path d="M16.5 100 L18.5 102 L21.5 98.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-              <rect x="30" y="97" width="80" height="6" rx="3" fill="#475569"/>
-              <circle cx="19" cy="114" r="5" fill="#10B981"/>
-              <path d="M16.5 114 L18.5 116 L21.5 112.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-              <rect x="30" y="111" width="64" height="6" rx="3" fill="#475569"/>
+            <!-- Right: MES panel (work orders) -->
+            <g transform="translate(286, 78)">
+              <rect width="150" height="144" rx="10" fill="#FFFFFF"/>
+              <rect x="0" y="0" width="150" height="28" rx="10" fill="#334155"/>
+              <rect x="0" y="18" width="150" height="10" fill="#334155"/>
+              <text x="14" y="19" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="10" font-weight="800" letter-spacing="0.04em">MES</text>
+              <!-- Work order rows -->
+              <rect x="14" y="42" width="122" height="22" rx="5" fill="#F8FAFC"/>
+              <rect x="22" y="50" width="52" height="6" rx="3" fill="#0F1729"/>
+              <circle cx="124" cy="53" r="5" fill="#10B981"/>
+              <rect x="14" y="70" width="122" height="22" rx="5" fill="#F8FAFC"/>
+              <rect x="22" y="78" width="64" height="6" rx="3" fill="#0F1729"/>
+              <circle cx="124" cy="81" r="5" fill="#10B981"/>
+              <rect x="14" y="98" width="122" height="22" rx="5" fill="#FEF3C7"/>
+              <rect x="22" y="106" width="46" height="6" rx="3" fill="#0F1729"/>
+              <circle cx="124" cy="109" r="5" fill="#F59E0B"/>
+              <rect x="14" y="126" width="122" height="10" rx="5" fill="#F8FAFC"/>
+            </g>
+
+            <!-- Center: bidirectional integration flow -->
+            <g>
+              <!-- Top arrow: Covalent -> MES -->
+              <path d="M198 128 L278 128" stroke="#FF9B36" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <path d="M270 122 L280 128 L270 134" stroke="#FF9B36" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="216" cy="128" r="3.5" fill="#FF9B36"/>
+              <circle cx="238" cy="128" r="3.5" fill="#FF9B36"/>
+
+              <!-- Bottom arrow: MES -> Covalent -->
+              <path d="M282 172 L202 172" stroke="#2563EB" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <path d="M210 166 L200 172 L210 178" stroke="#2563EB" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="264" cy="172" r="3.5" fill="#2563EB"/>
+              <circle cx="242" cy="172" r="3.5" fill="#2563EB"/>
+
+              <!-- Labels above arrows -->
+              <text x="240" y="116" text-anchor="middle" fill="#94A3B8" font-family="Inter, sans-serif" font-size="8" font-weight="700" letter-spacing="0.08em">QUALIFICATIONS</text>
+              <text x="240" y="192" text-anchor="middle" fill="#94A3B8" font-family="Inter, sans-serif" font-size="8" font-weight="700" letter-spacing="0.08em">WORK ORDERS</text>
             </g>
           </svg>
-          <span class="card-tag">Partnership</span>
+          <span class="card-tag">Integration</span>
         </div>
         <div class="card-title-row">
-          <h3 class="card-title">Covalent &times; Solumina Playbook</h3>
+          <h3 class="card-title">Covalent MES Playbook</h3>
           <span class="card-arrow">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <line x1="7" y1="17" x2="17" y2="7"></line>
