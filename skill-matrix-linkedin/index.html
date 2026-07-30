@@ -5,6 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Covalent — Workforce Operations Platform for Industrial Teams</title>
   <meta name="description" content="Covalent helps industrial teams replace paper OJT and spreadsheets with real-time workforce visibility — see who's qualified, close coverage gaps, and keep audit-ready proof in one system." />
+  <!-- OpenAI Ads Measurement Pixel -->
+  <script>
+    (function (w, d, s, u) {
+      if (w.oaiq) return;
+      var q = function () { q.q.push(arguments); };
+      q.q = [];
+      w.oaiq = q;
+      var js = d.createElement(s);
+      js.async = true;
+      js.src = u;
+      var f = d.getElementsByTagName(s)[0];
+      f.parentNode.insertBefore(js, f);
+    })(window, document, "script", "https://bzrcdn.openai.com/sdk/oaiq.min.js");
+
+    oaiq("init", {
+      pixelId: "FniMUD3sJrJ7Vc6z19vuxg"
+    });
+  </script>
+
 
   <!-- Tailwind via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -851,6 +870,16 @@
     // ===== Calendly popup =====
     function openCalendly(e) {
       if (e) e.preventDefault();
+
+      // Track every click that opens the Calendly booking experience.
+      if (typeof window.oaiq === 'function') {
+        window.oaiq(
+          "measure",
+          "custom",
+          { type: "custom" },
+          { custom_event_name: "calendly_button_clicked" }
+        );
+      }
       if (window.Calendly && typeof window.Calendly.initPopupWidget === 'function') {
         window.Calendly.initPopupWidget({
           url: 'https://calendly.com/d/cxtw-9kw-jv8/manufacturing-skills-matrix-overview'
