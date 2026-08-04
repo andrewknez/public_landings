@@ -421,43 +421,40 @@ function Why() {
             </div>
           ))}
         </div>
+        <div className="sor-caption" style={{marginTop: '24px'}}>
+          A note on the MES itself: the platform provides the execution framework that runs the plant, and it does that well. What it does not provide is frontline process visibility, the granular view of how each role actually configures and performs work in the system at a specific site. That is the layer Covalent captures, and it is what turns an execution framework into training and adoption that hold up on the floor.
+        </div>
       </div>
     </section>
   );
 }
 
-function Timeline() {
-  const [phase, setPhase] = useState(0);
-  const current = PHASES[phase];
+function PartnershipValue() {
   return (
     <section>
       <div className="container">
-        <div className="section-eyebrow">Phased Rollout</div>
-        <h2 className="section-title">18 Month Rollout</h2>
-        <p className="section-lede">The transformation spans 18 months across four phases. Click a phase to see what it produces. No phase starts before its predecessor delivers.</p>
-        <div className="timeline-wrap">
-          <div className="hphase-row">
-            {PHASES.map((p, i) => (
-              <button key={p.id} className={`hphase ${phase === i ? 'active' : ''}`} onClick={() => setPhase(i)}>
-                <div className="hphase-name">{p.name}</div>
-                <div className="hphase-label">{p.label}</div>
-                <div className="hphase-months">{p.months}</div>
-              </button>
-            ))}
+        <div className="section-eyebrow">Partnership Value</div>
+        <h2 className="section-title">Covalent + MES: a tandem, not a tradeoff</h2>
+        <p className="section-lede">MES providers build a powerful execution framework, but they rarely have visibility into how each customer actually configures that framework to run their specific business processes. That gap is most acute in on-premise implementations, where every deployment is tailored to the plant. The result is that MES teams struggle to build end-user training that reflects how the system is really used on the floor.</p>
+        <div className="thesis-grid">
+          <div className="thesis-card navy">
+            <div className="label">The MES training gap</div>
+            <h3>They cannot see the configuration</h3>
+            <p>MES providers lack visibility into how customers configure their processes, especially in on-premise implementations. Their LMS delivers generic, product-level training that does not mirror the customer's actual setup, so adoption stalls after go-live.</p>
           </div>
-          <div className="timeline-detail-wide">
-            <div className="detail-eyebrow">{current.name} · {current.months}</div>
-            <div className="detail-grid">
-              <div className="detail-left">
-                <h3 className="detail-title">{current.label}</h3>
-                <p className="detail-desc">{current.desc}</p>
-              </div>
-              <div className="detail-right">
-                <div className="detail-deliverables-label">Key deliverables</div>
-                <div className="detail-deliverables-text">{current.deliverables}</div>
-              </div>
-            </div>
+          <div className="thesis-card accent">
+            <div className="label">The Gemba lens</div>
+            <h3>Covalent documents the real process</h3>
+            <p>Covalent captures and operationalizes the specific way each customer configures and performs work: the gemba, the actual place where the work happens. It turns tribal, site-specific knowledge into structured, task-level training tied to how the MES is really used.</p>
           </div>
+          <div className="thesis-card orange">
+            <div className="label">Together</div>
+            <h3>Training that mirrors the user's setup</h3>
+            <p>Covalent gives MES providers the frontline process context they have never had. Training can finally reflect each customer's real configuration, closing the end-user adoption gap that no LMS can address on its own.</p>
+          </div>
+        </div>
+        <div className="sor-caption" style={{marginTop: '28px'}}>
+          The shift is from "Covalent vs. MES" to "Covalent + MES." The MES owns execution. Covalent owns the frontline process visibility that makes execution trainable, adoptable, and auditable at each specific site. That is the granular context MES providers lack today, and the reason the tandem approach solves their end-user training adoption problem.
         </div>
       </div>
     </section>
@@ -654,7 +651,7 @@ function App() {
       <Hero />
       <Thesis />
       <Why />
-      <Timeline />
+      <PartnershipValue />
       <Stepper />
       <SystemOfRecord />
       <KPI />
