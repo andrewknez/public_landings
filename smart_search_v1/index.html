@@ -216,6 +216,7 @@
       <span class="example-chip" onclick="useExample(this)">Senior techs certified in the last 6 months</span>
       <span class="example-chip" onclick="useExample(this)">Assembly Tech II in Columbus Production</span>
       <span class="example-chip" onclick="useExample(this)">Who is one objective away from FDC eligibility?</span>
+      <span class="example-chip" onclick="useExample(this)">Who has the same skills as John Alvarez?</span>
     </div>
     <div class="searching-state" id="searchingState">
       <div class="spinner"></div>
@@ -237,7 +238,7 @@
     <div class="filter-chip"><div class="filter-label">Employee Location</div><button class="filter-btn">IS ANY VALUE</button></div>
     <div class="filter-chip"><div class="filter-label">Employee Department</div><button class="filter-btn">IS ANY VALUE</button></div>
     <div class="filter-chip"><div class="filter-label">Employee Status</div><button class="filter-btn active">IS NOT EXCLUDED</button></div>
-    <div class="filter-chip"><div class="filter-label">Employee Role</div><button class="filter-btn">IS ANY VALUE</button></div>
+    <div class="filter-chip"><div class="filter-label">Employee Title</div><button class="filter-btn">IS ANY VALUE</button></div>
     <div class="filter-chip"><div class="filter-label">Employee Archived</div><button class="filter-btn active">IS FALSE</button></div>
     <div class="filter-chip"><button class="filter-btn" style="border-style:dashed;color:#2563a8;margin-top:14px">+ ADD FILTER</button></div>
   </div>
@@ -308,12 +309,12 @@ const searchScenarios = {
         { label: "NV5-FDC-SUB1 ✓", cls: "tag-green" },
         { label: "NV5-FDC-SUB2 ✓", cls: "tag-green" },
         { label: "Recent reps", cls: "tag-green" },
-        { label: "Senior role", cls: "tag-green" },
+        { label: "Similar title", cls: "tag-green" },
       ]},
       { idx: 2, pct: 91, tier: "high", tags: [
         { label: "NV5-FDC-SUB1 ✓", cls: "tag-green" },
         { label: "NV5-FDC-SUB2 ✓", cls: "tag-green" },
-        { label: "Senior role", cls: "tag-green" },
+        { label: "Similar title", cls: "tag-green" },
       ]},
       { idx: 1, pct: 74, tier: "med", tags: [
         { label: "NV5-FDC-SUB1 ✓", cls: "tag-green" },
@@ -338,8 +339,8 @@ const searchScenarios = {
   senior: {
     keywords: ["senior", "certified", "6 months", "last"],
     scores: [
-      { idx: 0, pct: 99, tier: "high", tags: [{ label: "Senior role", cls: "tag-green" }, { label: "Certified 3mo ago", cls: "tag-green" }]},
-      { idx: 2, pct: 93, tier: "high", tags: [{ label: "Senior role", cls: "tag-green" }, { label: "Certified 5mo ago", cls: "tag-green" }]},
+      { idx: 0, pct: 99, tier: "high", tags: [{ label: "Similar title", cls: "tag-green" }, { label: "Certified 3mo ago", cls: "tag-green" }]},
+      { idx: 2, pct: 93, tier: "high", tags: [{ label: "Similar title", cls: "tag-green" }, { label: "Certified 5mo ago", cls: "tag-green" }]},
       { idx: 1, pct: 61, tier: "med", tags: [{ label: "Tech III", cls: "tag-amber" }, { label: "Certified 4mo ago", cls: "tag-green" }]},
     ]
   },
@@ -359,6 +360,16 @@ const searchScenarios = {
       { idx: 3, pct: 64, tier: "med", tags: [{ label: "2 obj away", cls: "tag-amber" }]},
       { idx: 7, pct: 48, tier: "low", tags: [{ label: "3 obj away", cls: "tag-gray" }]},
     ]
+  },
+  johndoe: {
+    keywords: ["john doe", "same skills"],
+    scores: [
+      { idx: 1, pct: 96, tier: "high", tags: [{ label: "7/8 shared objs", cls: "tag-green" }, { label: "Same zone", cls: "tag-green" }, { label: "Tech III", cls: "tag-green" }]},
+      { idx: 0, pct: 88, tier: "high", tags: [{ label: "6/8 shared objs", cls: "tag-green" }, { label: "Similar title", cls: "tag-green" }, { label: "Columbus ✓", cls: "tag-green" }]},
+      { idx: 2, pct: 81, tier: "high", tags: [{ label: "6/8 shared objs", cls: "tag-green" }, { label: "Similar title", cls: "tag-green" }]},
+      { idx: 7, pct: 63, tier: "med", tags: [{ label: "5/8 shared objs", cls: "tag-amber" }, { label: "Nashville site", cls: "tag-amber" }]},
+      { idx: 8, pct: 52, tier: "med", tags: [{ label: "4/8 shared objs", cls: "tag-amber" }, { label: "Tech II", cls: "tag-amber" }]},
+    ]
   }
 };
 
@@ -367,6 +378,7 @@ let activeScenario = null;
 
 function detectScenario(query) {
   const q = query.toLowerCase();
+  if (q.match(/john alvarez|same skills|skills as/)) return 'johndoe';
   if (q.match(/v500|fdc|sub.?module|sub1|sub2/)) return 'fdc';
   if (q.match(/senior|6 month|recent|last.*month/)) return 'senior';
   if (q.match(/columbus|tech ii|assembly tech ii/)) return 'columbus';
@@ -428,7 +440,7 @@ function renderSearchResults(query, scenario) {
     <th style="width:32px;color:#9ca3af">#</th>
     <th>Employee Name</th>
     <th>Employee Number</th>
-    <th>Role</th>
+    <th>Title</th>
     <th>Location</th>
     <th>Supervisor</th>
     <th>Zone</th>
@@ -463,7 +475,7 @@ function renderSearchResults(query, scenario) {
       <td style="color:#9ca3af">${i + 1}</td>
       <td class="emp-name">${emp.name}</td>
       <td class="emp-number">${emp.number}</td>
-      <td style="color:#6b7280">${emp.role || '—'}</td>
+      <td style="color:#6b7280">${emp.title || '—'}</td>
       <td style="color:#6b7280">${emp.location || '—'}</td>
       <td style="color:#6b7280">${emp.supervisor || '—'}</td>
       <td style="color:#6b7280">${emp.zone || '—'}</td>
