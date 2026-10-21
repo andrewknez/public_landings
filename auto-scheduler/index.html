@@ -1,340 +1,1469 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Training Scheduling Optimization — Covalent Networks</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Auto-Schedule MRO</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #F4F6F9; }
-  #root { min-height: 100vh; }
+/* Layout: Covalent product chrome (MUI-style, light only) with a stepped Auto-schedule workspace inside a white paper.
+   Single light theme on purpose: the product has no dark mode, so every color is set explicitly. */
+:root {
+  --primary: #05448E;
+  --primary-wash: #E2ECF9;
+  --ai: #2B63B5;
+  --ai-wash: #E2EFFD;
+  --text: #1C1C1C;
+  --muted: #5F6672;
+  --page: #F0F0F0;
+  --paper: #FFFFFF;
+  --divider: #E0E0E0;
+  --head: #F5F6F8;
+  --good: #167F36; --good-bg: #DCFCE5;
+  --warn: #B74E06; --warn-bg: #FFF2C6;
+  --bad: #B00020; --bad-bg: #FFD6D9;
+  --renew: #7540E7; --renew-bg: #EFE8FD;
+  --proto: #1E2633; --proto-hi: #F59E0B;
+  --font: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box }
+body { background: var(--page); color: var(--text); font-family: var(--font); font-size: 13px; line-height: 1.4 }
+.num { font-variant-numeric: tabular-nums }
+.muted { color: var(--muted); font-weight: 400 }
+.small { font-size: 12px }
+.sub { display: block; font-size: 11px; color: var(--muted); font-weight: 400 }
+.spacer { flex: 1 }
+button { font-family: inherit }
+:focus-visible { outline: 2px solid var(--ai); outline-offset: 2px }
+
+.proto { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; background: var(--proto); color: #D6DCE5; font-size: 12px; padding-block: 6px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+.proto b { color: var(--proto-hi) }
+.proto button { margin-left: auto; background: transparent; color: #fff; border: 1px solid #4A5568; border-radius: 4px; padding: 2px 10px; cursor: pointer }
+.appbar { display: flex; align-items: center; gap: 14px; background: var(--primary); color: #fff; height: 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+.brand { font-weight: 700; letter-spacing: .02em; font-size: 16px }
+.env { background: #1F87ED; border-radius: 10px; padding: 1px 8px; font-size: 11px; font-weight: 600 }
+.appbar nav { display: flex; gap: 18px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em }
+.appbar nav span { opacity: .8 }
+.appbar nav .on { opacity: 1; font-weight: 600; border-bottom: 2px solid #fff; padding-bottom: 2px }
+.avatar { width: 30px; height: 30px; border-radius: 50%; background: #1976D2; display: grid; place-items: center; font-size: 12px; font-weight: 600 }
+
+.main { padding-block: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+.paper { background: var(--paper); border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.12); padding: 16px; position: relative; min-width: 0 }
+.page-head { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: flex-start; margin-bottom: 12px }
+h1 { font-size: 22px; font-weight: 400; margin: 0; text-wrap: balance }
+.objname { display: block; font-size: 14px; color: var(--muted); margin-top: 2px }
+h2 { font-size: 15px; font-weight: 500; margin: 0 0 12px }
+h3 { font-size: 13px; font-weight: 500; margin: 16px 0 8px }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.search { display: flex; gap: 8px; align-items: center; border: 1px solid #C4C4C4; border-radius: 4px; padding: 6px 10px; color: #8A8F98; min-width: 0; width: 240px; max-width: 100% }
+.search span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; border-radius: 4px; padding: 6px 12px; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .03em; cursor: pointer; border: 1px solid transparent; background: none; white-space: nowrap }
+.btn:disabled { cursor: not-allowed; opacity: .5 }
+.btn-primary { background: var(--primary); color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.2) }
+.btn-primary:disabled { background: var(--divider); color: #9E9E9E; opacity: 1; box-shadow: none }
+.btn-out { border-color: var(--primary); color: var(--primary) }
+.btn-text { color: var(--primary); padding: 4px 6px }
+.btn-ai { background: var(--ai-wash); color: var(--ai); border-color: var(--ai) }
+.btn-ai:not(:disabled):hover { background: var(--ai); color: #fff }
+.btn-ai.big { width: 100%; justify-content: center; padding: 10px; font-size: 13px; background: var(--ai); color: #fff; margin-top: 12px }
+.btn.inv { color: #fff }
+.iconbtn { margin-left: auto; border: 0; background: none; color: var(--muted); cursor: pointer; padding: 2px; border-radius: 4px }
+.iconbtn:hover { background: var(--head); color: var(--bad) }
+.crumb { padding-left: 0; margin-bottom: 4px }
+
+.filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px }
+.fcol { display: flex; flex-direction: column; gap: 4px; min-width: 0 }
+.fcol label, .flabel { font-size: 12px; font-weight: 500 }
+.fsel { border: 1px solid var(--primary); color: var(--primary); border-radius: 4px; padding: 5px 8px; font-size: 11px; font-weight: 500; text-transform: uppercase; background: var(--paper); max-width: 260px; font-family: inherit }
+.fsel.on { background: var(--primary); color: #fff }
+.fsel.fake { display: inline-block }
+
+.hint { display: flex; gap: 8px; align-items: flex-start; background: var(--ai-wash); color: #1F3D66; border-radius: 4px; padding: 8px 12px; margin-bottom: 10px }
+.hint svg { color: var(--ai); flex: none; margin-top: 1px }
+.hint-plain { background: var(--head); color: var(--muted) }
+.hint-plain svg { color: var(--muted) }
+.tabs { display: flex; gap: 20px; border-bottom: 1px solid var(--divider); margin-bottom: 10px }
+.tab { padding: 8px 2px; font-size: 12px; font-weight: 500; text-transform: uppercase; color: var(--muted) }
+.tab.on { color: var(--primary); border-bottom: 2px solid var(--primary) }
+.subtabs { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; margin-bottom: 8px }
+.seg { display: inline-flex; background: var(--head); border-radius: 4px; padding: 3px; flex-wrap: wrap }
+.segb { border: 0; background: none; padding: 5px 10px; font-size: 11px; font-weight: 500; text-transform: uppercase; color: var(--primary); border-radius: 3px; cursor: pointer }
+.segb.on { background: var(--paper); box-shadow: 0 1px 2px rgba(0,0,0,.15) }
+
+.tablewrap { overflow-x: auto; min-width: 0 }
+table { border-collapse: collapse; width: 100% }
+.grid th { background: var(--head); text-align: left; font-weight: 500; font-size: 12px; padding: 10px; border-bottom: 1px solid var(--divider); white-space: nowrap }
+.grid td { padding: 9px 10px; border-bottom: 1px solid var(--divider); vertical-align: middle; white-space: nowrap }
+.grid tr.flash td { animation: flash 2.4s ease-out }
+@keyframes flash { from { background: var(--ai-wash) } to { background: transparent } }
+.grid .pin { position: sticky; right: 0; background: var(--paper); border-left: 1px solid var(--divider) }
+.grid th.pin { background: var(--head) }
+.lnk { color: var(--primary); cursor: pointer; text-decoration: none }
+.lnk.act { display: inline-flex; gap: 4px; align-items: center; font-size: 11px; font-weight: 500; text-transform: uppercase }
+.empty { text-align: center; color: var(--muted); padding: 24px }
+.pager { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; padding-top: 10px }
+.pg { display: flex; gap: 8px; align-items: center }
+
+.chip { display: inline-flex; align-items: center; border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 600; white-space: nowrap }
+.chip-plain { background: var(--head); color: var(--muted) }
+.chip-good { background: var(--good-bg); color: var(--good) }
+.chip-warn { background: var(--warn-bg); color: var(--warn) }
+.chip-bad { background: var(--bad-bg); color: var(--bad) }
+.chip-renew { background: var(--renew-bg); color: var(--renew) }
+.chip-zone { background: var(--primary-wash); color: var(--primary) }
+.sched { display: inline-block; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600 }
+.sched-unscheduled { background: #EEEEEE; color: #424242 }
+.sched-draft { border: 1px dashed var(--primary); color: var(--primary); background: var(--paper) }
+.sched-scheduled { background: var(--primary-wash); color: var(--primary) }
+.sched-completed { background: var(--good-bg); color: var(--good) }
+.ostat { display: inline-block; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600 }
+.ostat-assigned { background: var(--primary-wash); color: #0F5FBD }
+.ostat-inprogress { background: var(--warn-bg); color: var(--warn) }
+.ostat-active { background: var(--good-bg); color: var(--good) }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: #263238; color: #fff; border-radius: 4px; padding: 10px 14px; display: flex; gap: 10px; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,.25); max-width: calc(100% - 32px); z-index: 5 }
+.toast svg { color: #7EE2A0; flex: none }
+
+.stepper { display: flex; flex-wrap: wrap; gap: 6px 18px; list-style: none; margin: 0; padding: 0; align-self: center }
+.stepper li { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 12px; font-weight: 500 }
+.stepper .dot { width: 20px; height: 20px; border-radius: 50%; background: var(--divider); color: var(--muted); display: grid; place-items: center; font-size: 11px }
+.stepper li.on { color: var(--text) }
+.stepper li.on .dot { background: var(--primary); color: #fff }
+.stepper li.done .dot { background: var(--good-bg); color: var(--good) }
+
+.card { border: 1px solid var(--divider); border-radius: 4px; padding: 14px; background: var(--paper); min-width: 0 }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start }
+.form { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0 }
+.field.wide { grid-column: 1 / -1 }
+.field label, .flabel2 { font-size: 12px; color: var(--muted) }
+input[type=number], input[type=date], .field input, select { font-family: inherit; font-size: 13px; color: var(--text); border: 1px solid #C4C4C4; border-radius: 4px; padding: 7px 8px; background: var(--paper); min-width: 0; max-width: 100% }
+input[readonly] { background: var(--head); color: var(--muted) }
+.help { font-size: 11px; color: var(--muted) }
+.cb { display: flex; gap: 6px; align-items: center; font-size: 13px; padding-top: 6px }
+.reslist { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px }
+.res { display: flex; gap: 8px; align-items: center; border: 1px solid var(--divider); border-radius: 4px; padding: 8px 10px; cursor: pointer }
+.res:has(input:checked) { border-color: var(--primary); background: #F7FAFE }
+.res .rn { flex: 1; min-width: 0; font-weight: 500 }
+.res .rb { font-size: 11px; color: var(--muted); text-align: right }
+.side h2 { margin-bottom: 10px }
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px }
+.kpis div, .kstrip div { display: flex; flex-direction: column; gap: 2px }
+.kl { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 500 }
+.kv { font-size: 20px; font-weight: 400 }
+.kv.warn { color: var(--warn) } .kv.bad { color: var(--bad) }
+.mini th { text-align: left; font-size: 11px; font-weight: 500; color: var(--muted); padding: 6px 4px; border-bottom: 1px solid var(--divider) }
+.mini td { padding: 6px 4px; border-bottom: 1px solid var(--divider) }
+.mini .r { text-align: right }
+.mini.wide td, .mini.wide th { padding: 8px; white-space: nowrap }
+.warnt { color: var(--warn); font-weight: 600 }
+.zones { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 }
+.cap { border-radius: 4px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; margin-top: 8px }
+.cap.ok { background: var(--good-bg); color: var(--good) }
+.cap.short { background: var(--warn-bg); color: var(--warn) }
+.rules ol { margin: 0; padding-left: 18px; color: var(--muted); font-size: 12px; display: grid; gap: 4px }
+
+.running { display: flex; gap: 14px; align-items: center; padding: 40px 16px; justify-content: center }
+.running div { display: flex; flex-direction: column; gap: 2px }
+.spin { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--ai-wash); border-top-color: var(--ai); animation: spin .8s linear infinite }
+@keyframes spin { to { transform: rotate(360deg) } }
+@media (prefers-reduced-motion: reduce) { .spin, .grid tr.flash td { animation: none } }
+
+.kstrip { display: flex; flex-wrap: wrap; gap: 12px 28px; padding: 10px 14px; background: var(--head); border-radius: 4px; margin-bottom: 12px }
+.banner { border-radius: 4px; padding: 10px 12px; margin-bottom: 12px }
+.banner.warn { background: var(--warn-bg); color: #7A3604 }
+.review { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start }
+.dlist { display: flex; flex-direction: column; gap: 10px }
+.dcard { border: 1px dashed var(--primary); border-radius: 4px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; background: var(--paper); transition: background .15s }
+.dcard.hot { background: #F3F8FF }
+.dcard header { display: flex; gap: 8px; align-items: center }
+.when { font-weight: 500 }
+.drow { display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 8px; align-items: center }
+.drow label, .drow .lab { font-size: 12px; color: var(--muted) }
+.drow select { padding: 4px 6px; font-size: 12px }
+.note.warn { font-size: 11px; color: var(--warn); background: var(--warn-bg); border-radius: 4px; padding: 4px 6px }
+.dfoot { display: flex; justify-content: space-between; border-top: 1px solid var(--divider); padding-top: 4px }
+.why { background: var(--head); border-radius: 4px; padding: 8px 10px; font-size: 12px }
+.why p { margin: 0 0 6px }
+.why ul { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 6px }
+.why li { color: var(--muted) }
+.why li span { display: block; color: var(--text); font-weight: 500 }
+.tlcard { padding: 12px }
+.tlhead { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: baseline }
+.legend { display: flex; gap: 12px; font-size: 11px; color: var(--muted) }
+.legend span { display: inline-flex; gap: 4px; align-items: center }
+.lg { display: inline-block; width: 14px; height: 10px; border-radius: 2px }
+.lg.booked { background: #BFD4EE }
+.lg.draft { border: 1px dashed var(--primary); background: var(--paper) }
+.lg.shift { width: 2px; background: #B0B7C3 }
+.tlwrap { overflow-x: auto }
+.tl { display: flex; flex-direction: column }
+.trow { display: grid; grid-template-columns: 170px; grid-auto-flow: column; grid-auto-columns: minmax(104px, 1fr); border-bottom: 1px solid var(--divider); min-height: 38px }
+.tlabel { padding: 6px 8px 6px 0; font-size: 12px; font-weight: 500 }
+.tcell { position: relative; border-left: 1px solid var(--divider) }
+.tcell.th { padding: 4px 6px 14px; font-size: 11px; color: var(--muted) }
+.tcell.th b { color: var(--text) }
+.axis { position: absolute; left: 0; right: 0; bottom: 1px; display: flex; justify-content: space-between; padding: 0 3px; font-size: 9px; color: #8A8F98 }
+.axis i { font-style: normal }
+.axis i:nth-child(2) { position: absolute; left: 50%; transform: translateX(-50%) }
+.thead { min-height: 0 }
+.tgroup { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 500; padding: 10px 0 4px; border-bottom: 1px solid var(--divider) }
+.shiftline { position: absolute; top: 0; bottom: 0; width: 1px; background: #D5DAE1 }
+.blk { position: absolute; top: 7px; bottom: 7px; border-radius: 3px; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; overflow: hidden }
+.blk.booked { background: #BFD4EE }
+.blk.draft { border: 1.5px dashed var(--primary); background: var(--paper); color: var(--primary); cursor: default }
+.blk.draft.hot { background: var(--primary); color: #fff; border-style: solid }
+
+.footer { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-top: 1px solid var(--divider); margin-top: 16px; padding-top: 12px }
+.footer.flat { margin-top: 12px }
+.lede { color: var(--muted); margin: 0 0 12px; max-width: 72ch }
+.fill { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start }
+.slist { display: flex; flex-direction: column; gap: 12px; min-width: 0 }
+.scard { padding: 0 }
+.scard header { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--divider); background: var(--head) }
+.seatct { margin-left: auto; font-weight: 600; color: var(--primary) }
+.seatct.full { color: var(--good) }
+.seats { table-layout: fixed; min-width: 760px }
+.seats td { padding: 7px 12px; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid var(--divider); vertical-align: middle; white-space: nowrap }
+.seats tr:last-child td { border-bottom: 0 }
+.seats .notes { display: flex; flex-wrap: wrap; gap: 4px; white-space: normal }
+.seats select { width: 100% }
+.seats .r { text-align: right }
+.seats select { font-size: 12px; padding: 4px 6px }
+.openseat td { color: #8A8F98; font-style: italic; background: repeating-linear-gradient(135deg, var(--paper) 0 8px, #FAFBFC 8px 16px) }
+.pool { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px }
+.pool li { border: 1px solid var(--divider); border-radius: 4px; padding: 8px 10px; display: flex; flex-direction: column; gap: 4px }
+.prow { display: flex; justify-content: space-between; gap: 8px; align-items: center }
+.why2 { font-size: 12px; color: var(--warn) }
+.pool select { font-size: 12px; padding: 4px 6px }
+.confirm { max-width: 980px }
+.effects { margin: 14px 0 0; padding-left: 18px; display: grid; gap: 4px }
+
+@media (max-width: 1100px) {
+  .two, .fill, .review { grid-template-columns: minmax(0, 1fr) }
+}
+@media (max-width: 600px) {
+  .appbar nav { display: none }
+  .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)) }
+  .reslist { grid-template-columns: minmax(0, 1fr) }
+}
+
+:root { --free: #167F36; --free-bg: #DCFCE5; --faint: #8A8F98; --off: #9FBDE3; --along: #D6E4F6; --shift: #EDEFF2; --leave: #F7D58A }
+/* Status dots: the same four states everywhere */
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none }
+.dot-free { background: var(--free) }
+.dot-offshift { background: #fff; border: 1.5px solid var(--faint) }
+.dot-booked { background: var(--bad) }
+.dot-leave { background: #D08A00 }
+.t-free { color: var(--free) }
+.t-offshift { color: var(--muted) }
+.t-booked { color: var(--bad) }
+.t-leave { color: #8A5A00 }
+
+/* The day strip */
+.strip { position: relative; background: var(--paper); border-radius: 3px; overflow: hidden; border: 1px solid var(--divider) }
+.strip-sm { height: 10px; margin: 4px 0 }
+.strip-md { height: 18px; margin: 4px 0 }
+.strip-lg { height: 40px; border: 0; border-radius: 0 }
+.strip.clickable { cursor: copy }
+.strip .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: #D5DAE1 }
+.seg.offshift { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, var(--shift) 0 4px, #F8F9FA 4px 8px) }
+.strip .seg { position: absolute; top: 0; bottom: 0; padding: 0; border-radius: 0 }
+.seg.leave { background: repeating-linear-gradient(135deg, var(--leave) 0 5px, #FFF4D6 5px 10px); display: flex; align-items: center; padding-left: 6px }
+.seg.leave em { font-style: normal; font-size: 11px; font-weight: 500; color: #6B4500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.seg.sess { border: 0; cursor: default; display: flex; align-items: center; overflow: hidden; text-align: left }
+.strip-lg .seg.sess { top: 5px; bottom: 5px; border-radius: 3px; cursor: pointer; padding: 0 5px }
+.seg.sess.off { background: var(--off); border-left: 3px solid var(--primary) }
+.seg.sess.alongside { background: repeating-linear-gradient(90deg, var(--along) 0 6px, #E9F0FA 6px 12px); border-left: 3px solid #5B87C2 }
+.seg.sess.draft { background: var(--paper); border: 1.5px dashed var(--primary) }
+.seg.sess.conflict { box-shadow: inset 0 0 0 2px var(--bad) }
+.seg.sess .sl { font-size: 11px; font-weight: 500; color: #0D2C57; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.strip-lg .seg.sess:hover { filter: brightness(.96) }
+.seg.win { z-index: 2; background: transparent; pointer-events: none }
+.win-free { box-shadow: inset 0 0 0 2px var(--free); background: rgba(23,162,65,.12) }
+.win-offshift { box-shadow: inset 0 0 0 2px var(--faint) }
+.win-booked { box-shadow: inset 0 0 0 2px var(--bad); background: rgba(176,0,32,.10) }
+.win-leave { box-shadow: inset 0 0 0 2px #B07400 }
+.axis { position: relative; display: flex; justify-content: space-between; font-size: 10px; color: var(--faint); margin-top: 2px }
+.axis .mid { position: absolute; left: 50%; transform: translateX(-50%) }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 11.5px; color: var(--muted); margin-bottom: 10px; align-items: center }
+.legend span { display: inline-flex; align-items: center; gap: 6px }
+.legend .hint { margin-left: auto; color: var(--faint) }
+.lg { display: inline-block; width: 18px; height: 10px; border-radius: 2px }
+.lg-off { background: var(--off); border-left: 3px solid var(--primary) }
+.lg-along { background: repeating-linear-gradient(90deg, var(--along) 0 4px, #E9F0FA 4px 8px); border-left: 3px solid #5B87C2 }
+.lg-draft { border: 1.5px dashed var(--primary) }
+.lg-offshift { background: repeating-linear-gradient(135deg, var(--shift) 0 3px, #F8F9FA 3px 6px); border: 1px solid var(--divider) }
+.lg-leave { background: repeating-linear-gradient(135deg, var(--leave) 0 3px, #FFF4D6 3px 6px) }
+.lg-conf { box-shadow: inset 0 0 0 2px var(--bad) }
+.gscroll { overflow-x: auto; border: 1px solid var(--divider); border-radius: 4px }
+.g { display: grid; grid-template-columns: 230px repeat(var(--cols), minmax(150px, 1fr)); min-width: calc(230px + var(--cols) * 150px) }
+.gh { background: var(--head); padding: 8px 8px 4px; border-bottom: 1px solid var(--divider); border-left: 1px solid var(--divider); font-size: 12px }
+
+/* r2 additions */
+.osub { display: block; font-size: 11px; color: var(--muted); font-weight: 400 }
+.gh.corner { border-left: 0; font-weight: 500; position: sticky; left: 0; z-index: 3 }
+.glabel { display: flex; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--divider); background: var(--paper); position: sticky; left: 0; z-index: 2; min-height: 48px }
+.gname { font-weight: 500; font-size: 12px; min-width: 0 }
+.gcell { border-bottom: 1px solid var(--divider); border-left: 1px solid var(--divider); padding: 4px 0; display: flex; align-items: center }
+.gcell .strip { flex: 1 }
+.ggroup { background: var(--paper); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 500; padding: 10px 10px 4px; border-bottom: 1px solid var(--divider); position: sticky; left: 0 }
+.g { grid-template-columns: 180px repeat(var(--cols), minmax(104px, 1fr)); min-width: calc(180px + var(--cols) * 104px) }
+.strip-lg { height: 34px }
+.seg.sess.draft { z-index: 1 }
+.seg.sess.draft.preview { border-color: #B45309; background: #FFF7E8 }
+.seg.sess.draft.preview .sl { color: #8A3B00 }
+.seg.sess.draft.hot { background: var(--primary); border-style: solid }
+.seg.sess.draft.hot .sl { color: #fff }
+.strip-lg .seg.sess { justify-content: center; padding: 0 2px }
+.lg-prev { border: 1.5px dashed #B45309; background: #FFF7E8 }
+.chip-ai { background: var(--ai-wash); color: var(--ai) }
+.chip-hard { background: #EEF1F5; color: #39475B }
+.chip-soft { background: #F3EEFD; color: #6236C8 }
+.mt { margin-top: 20px }
+.crumb { display: block; font-size: 12px; color: var(--primary); margin-bottom: 4px }
+.stepper .sdot { width: 20px; height: 20px; border-radius: 50%; background: var(--divider); color: var(--muted); display: grid; place-items: center; font-size: 11px }
+.stepper li.on .sdot { background: var(--primary); color: #fff }
+.stepper li.done .sdot { background: var(--good-bg); color: var(--good) }
+.form { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)) }
+.rules { display: flex; flex-direction: column; border: 1px solid var(--divider); border-radius: 4px; margin-top: 8px }
+.rgroup { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 500; padding: 10px 12px 4px; background: var(--head) }
+.rule { display: grid; grid-template-columns: minmax(0, 1fr) auto 130px; gap: 6px 12px; align-items: center; padding: 8px 12px; border-top: 1px solid var(--divider) }
+.rule.locked .rl { color: var(--muted) }
+.rl { font-size: 13px; min-width: 0 }
+.rnote { display: block; font-size: 11px; color: var(--warn) }
+.rv { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: flex-end }
+.rs { font-size: 11px; color: var(--muted); text-align: right }
+.rule.tall { align-items: start }
+.areas { max-width: 380px }
+.area { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--muted); background: var(--head); border-radius: 4px; padding: 2px 4px 2px 8px }
+.numin { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted) }
+.numin input { width: 54px; padding: 4px 6px; font-size: 13px; border: 1px solid #C4C4C4; border-radius: 4px; font-family: inherit }
+.muted { color: var(--muted); font-weight: 400 }
+.tot td { font-weight: 500; background: var(--head) }
+.who { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px }
+.who li { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px }
+.who .dot { margin-top: 5px }
+.sq { width: 10px; height: 10px; border-radius: 2px; background: var(--primary-wash); border: 1px solid var(--primary); margin-top: 3px; flex: none }
+.sq.kit { background: #FFF4D6; border-color: #D08A00 }
+.warnt { color: var(--warn) }
+.review { grid-template-columns: 320px minmax(0, 1fr) }
+.dcard.isnew { border-color: #B45309; background: #FFFBF3 }
+.dcard.locked { border-style: solid }
+.dcard.blocked { border: 1px solid var(--bad); background: #FFF8F8 }
+.sched-blocked { background: var(--bad-bg); color: var(--bad); border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600 }
+.kv2 { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 3px 8px; font-size: 12px }
+.kv2 span { color: var(--muted) }
+.kv2 b { font-weight: 500 }
+.plan { font-size: 11.5px; color: var(--muted) }
+.bl { margin: 0; font-size: 12.5px }
+.reasons { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 12px }
+.reasons li { display: grid; grid-template-columns: 60px minmax(0, 1fr); gap: 2px 8px; align-items: center }
+.reasons .src { grid-column: 2 }
+.bar { height: 6px; background: var(--head); border-radius: 3px; overflow: hidden }
+.bar i { display: block; height: 100%; background: var(--bad) }
+.src { font-style: normal; font-size: 10.5px; color: var(--muted) }
+details summary { cursor: pointer; font-size: 12px; color: var(--primary) }
+.ex { margin: 6px 0 0; padding-left: 0; list-style: none; display: grid; gap: 6px; font-size: 11.5px; color: var(--muted) }
+.ex span, .why li span { display: block; color: var(--text); font-weight: 500 }
+.fixes { border: 1px solid var(--ai); border-radius: 4px; padding: 10px 12px; background: #F7FAFF; display: flex; flex-direction: column; gap: 8px }
+.fixes h3 { margin: 0 }
+.fix { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; text-align: left; border: 1px solid var(--divider); background: var(--paper); border-radius: 4px; padding: 8px 10px; cursor: pointer }
+.fix:hover { border-color: var(--ai) }
+.ft { font-weight: 500; font-size: 13px }
+.fe { grid-column: 1; font-size: 12px; color: var(--good) }
+.fp { grid-row: 1 / 3; grid-column: 2; align-self: center; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--ai) }
+.banner.preview { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; background: #FFF7E8; border: 1px solid #E8B36B; color: #5C3300; border-radius: 4px; padding: 10px 12px; margin-bottom: 12px }
+.bact { display: flex; gap: 8px }
+.notes { display: flex; flex-wrap: wrap; gap: 4px }
+.small { font-size: 12px }
+.gscroll { overflow-x: auto; border: 1px solid var(--divider); border-radius: 4px; margin-top: 8px }
+.tlhead .legend { margin: 0 }
+.proto .scenes button.on { border-color: var(--proto-hi); color: var(--proto-hi) }
+@media (max-width: 700px) { .rule { grid-template-columns: minmax(0, 1fr) } .rv, .rs { justify-content: flex-start; text-align: left } }
+.mini { font-size: 12.5px } .mini td, .mini th { padding: 5px 4px }
+
+/* r3: calmer layout, one answer per step */
+.narrow { max-width: 820px }
+.result-wrap { margin: 4px 0 20px }
+.result { font-size: 22px; line-height: 1.3; font-weight: 400; margin: 0; max-width: 46ch; text-wrap: balance }
+.result.r-good { color: #0F5A27 }
+.result.r-warn { color: #7A3604 }
+.result-sub { margin: 6px 0 0; color: var(--muted); font-size: 14px; max-width: 70ch }
+.block { border-top: 1px solid var(--divider); padding: 18px 0 }
+.sentence { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; font-size: 16px }
+.sentence input[type=date] { font-family: inherit; font-size: 15px; border: 1px solid #C4C4C4; border-radius: 4px; padding: 6px 8px }
+.sentence .numin input { width: 64px; font-size: 16px; padding: 6px 8px }
+.fitline { margin: 12px 0 0; font-size: 13.5px; padding: 8px 12px; border-radius: 4px; max-width: 70ch }
+.fitline.ok { background: var(--good-bg); color: #0F5A27 }
+.fitline.short { background: var(--warn-bg); color: #7A3604 }
+.rshead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px }
+.rshead h2 { margin: 0 0 2px }
+.quiet { color: var(--muted); font-size: 13px; margin: 0 }
+.keyrules { margin: 12px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13.5px }
+.rulelist { margin-top: 14px; border: 1px solid var(--divider); border-radius: 6px }
+.rrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--divider); font-size: 13.5px }
+.rrow.wrap { flex-wrap: wrap }
+.rrow .areas { display: flex; flex-wrap: wrap; gap: 6px; max-width: none }
+.always { padding: 10px 14px }
+.cta { padding-top: 8px }
+.btn.big { padding: 11px 22px; font-size: 13px }
+.blocker { border: 1px solid #E8B36B; background: #FFF9EF; border-radius: 6px; padding: 14px 16px; margin-bottom: 18px; display: grid; gap: 10px; max-width: 820px }
+.blocker p { margin: 0; font-size: 14px }
+.fixlist { display: grid; gap: 8px }
+.fix { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; align-items: baseline; text-align: left; border: 1px solid var(--divider); background: var(--paper); border-radius: 6px; padding: 10px 14px; cursor: pointer; font-size: 14px }
+.fix:hover, .fix:focus-visible { border-color: var(--primary) }
+.ft { font-weight: 500 }
+.fe { color: var(--good); font-size: 13px }
+.previewbar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; background: #FFF7E8; border: 1px solid #E8B36B; color: #5C3300; border-radius: 6px; padding: 10px 14px; margin-bottom: 18px }
+.previewbar p { margin: 0 }
+.viewbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px }
+.viewbar h2 { margin: 0 }
+.slist2, .pubrows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--divider) }
+.srow, .pubrows li { border-bottom: 1px solid var(--divider) }
+.sline, .pubrows li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 12px 4px }
+.srow.isnew { background: #FFF9EF }
+.srow.locked .slabel { background: var(--primary); color: #fff }
+.slabel { display: inline-grid; place-items: center; min-width: 30px; height: 22px; border: 1.5px dashed var(--primary); border-radius: 4px; font-size: 11.5px; font-weight: 600; color: var(--primary) }
+.swhen { font-size: 14px; min-width: 210px }
+.swho { color: var(--muted); font-size: 13.5px; flex: 1; min-width: 200px }
+.sseats { font-size: 13px; color: var(--muted) }
+.sacts { display: flex; gap: 2px; margin-left: auto }
+.btn-text.danger { color: var(--bad) }
+.why { margin: 0 4px 12px 50px; background: var(--head); border-radius: 6px; padding: 10px 14px; font-size: 13px; max-width: 70ch }
+.why p { margin: 0 0 6px }
+.why ul { margin: 0; padding-left: 16px; display: grid; gap: 4px; color: var(--muted) }
+.why li .num { color: var(--text); font-weight: 500 }
+.gscroll .legend { padding: 8px 10px; margin: 0 }
+.fill2 { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start }
+.sessions { display: grid; gap: 16px; min-width: 0 }
+.sess2 { border: 1px solid var(--divider); border-radius: 6px }
+.sess2 header { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 10px 14px; border-bottom: 1px solid var(--divider) }
+.count { margin-left: auto; font-size: 13px; font-weight: 500; color: var(--primary) }
+.count.full { color: var(--good) }
+.people { list-style: none; margin: 0; padding: 0 }
+.people li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 14px; border-bottom: 1px solid #F0F0F0 }
+.people li:last-child { border-bottom: 0 }
+.people li.breaks { background: #FFF6F6 }
+.pname { flex: 1; min-width: 160px; font-size: 13.5px }
+.pflags { display: flex; flex-wrap: wrap; gap: 4px }
+.people select, .waiting select { font-size: 12.5px; padding: 4px 6px; border: 1px solid #C4C4C4; border-radius: 4px; font-family: inherit; background: var(--paper) }
+.openseat2 { color: var(--faint); font-style: italic; font-size: 13px }
+.waiting h2 { margin-top: 0 }
+.waiting ul { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 12px }
+.waiting li { display: grid; gap: 3px; border-left: 3px solid #E8B36B; padding-left: 10px }
+.why2 { font-size: 12.5px; color: #7A3604 }
+.effects { margin: 16px 0 0; padding-left: 18px; display: grid; gap: 6px; font-size: 13.5px; color: var(--muted) }
+@media (max-width: 860px) { .fill2 { grid-template-columns: minmax(0, 1fr) } .why { margin-left: 4px } .sacts { margin-left: 0 } }
+.people select { border: 0; background: transparent; color: var(--primary); font-weight: 500; cursor: pointer }
+.people select:hover, .people select:focus-visible { background: var(--primary-wash) }
+.waiting { position: sticky; top: 16px }
+
+/* r4: problem navigator, provenance, drag */
+.pbar { position: sticky; top: 0; z-index: 6; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; background: var(--paper); border: 1px solid var(--divider); border-radius: 6px; padding: 8px 12px; margin-bottom: 18px; box-shadow: 0 2px 6px rgba(0,0,0,.06) }
+.pbar.clear { color: var(--good); font-size: 13px; box-shadow: none }
+.pcount { display: flex; gap: 12px; font-size: 13px; font-weight: 500 }
+.pcount > span { display: inline-flex; align-items: center; gap: 6px }
+.pdot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: middle }
+.pcount .pdot { margin-right: 0 }
+.pdot.issue { background: var(--bad) }
+.pdot.warning { background: #D08A00 }
+.pdot.ok { background: var(--good) }
+.pitem { flex: 1; min-width: 220px; text-align: left; border: 0; background: none; font-size: 13.5px; cursor: pointer; padding: 4px 6px; border-radius: 4px; border-left: 3px solid transparent }
+.pitem.issue { border-left-color: var(--bad) }
+.pitem.warning { border-left-color: #D08A00 }
+.pitem:hover { background: var(--head) }
+.pnav { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--muted) }
+.focus { animation: focusflash 2.2s ease-out }
+@keyframes focusflash { 0%, 40% { box-shadow: 0 0 0 3px var(--primary); background-color: var(--primary-wash) } 100% { box-shadow: 0 0 0 0 transparent } }
+@media (prefers-reduced-motion: reduce) { .focus { animation: none; box-shadow: 0 0 0 3px var(--primary) } }
+.prov { color: var(--muted); font-size: 12px; margin-left: 4px }
+.prov::before { content: '('; } .prov::after { content: ')'; }
+.srow.broken { background: #FFF6F6 }
+.why.bad { background: #FFF0F0 }
+.dragline { margin: 0 0 8px; font-size: 13px; color: var(--muted); min-height: 20px }
+.dragline .ok { color: var(--good); font-weight: 500 }
+.dragline .bad { color: var(--bad); font-weight: 500 }
+.seg.sess.draft.grab { cursor: grab; touch-action: none }
+.gscroll.dragging, .gscroll.dragging * { cursor: grabbing !important; user-select: none }
+.seg.sess.draft.lifted { opacity: .35 }
+.seg.sess.draft.broken { border-color: var(--bad); background: #FFF0F0 }
+.seg.fitband { top: auto; bottom: 0; height: 5px; z-index: 0 }
+.seg.fitband.ok { background: #46B868 }
+.seg.fitband.bad { background: #F2B8BF }
+.seg.ghost { top: 4px; bottom: 4px; border-radius: 3px; z-index: 4; display: flex; align-items: center; justify-content: center; pointer-events: none }
+.seg.ghost.ok { background: rgba(23,162,65,.18); border: 2px solid var(--good) }
+.seg.ghost.bad { background: rgba(176,0,32,.14); border: 2px solid var(--bad) }
+.seg.ghost .sl { color: var(--text) }
+.lg-fit { background: #46B868; height: 5px !important }
+
+/* r4.1: warning and issue bar colours with icons */
+button { color: inherit }
+.pbar.has-warning { background: #FFE6C7; border: 1.5px solid #E8890C; color: #6B2F00 }
+.pbar.has-issue { background: #FFF1F1; border-color: #E68A94; color: #7F0016 }
+.pbar.clear { background: var(--good-bg); border-color: #9ED9AE; color: #0F5A27 }
+.pc { display: inline-flex; align-items: center; gap: 6px; font-weight: 600 }
+.pc.issue { color: #B00020 }
+.pc.warning { color: #B45309 }
+.pc.ok { color: #167F36 }
+.picon { flex: none }
+.pitem { display: inline-flex; align-items: flex-start; gap: 8px; color: inherit; border-left: 0; background: rgba(255,255,255,.7) }
+.pitem .picon { margin-top: 1px }
+.pitem.issue .picon { color: #B00020 }
+.pitem.warning .picon { color: #B45309 }
+.pitem:hover { background: #fff }
+.pbar .iconbtn { color: inherit }
+.pnav { color: inherit }
+
+/* r5: resolve panel */
+.pwrap { position: sticky; top: 0; z-index: 6; margin-bottom: 18px }
+.pwrap .pbar { position: static; margin-bottom: 0 }
+.pextra { display: inline-flex; gap: 2px; margin-left: 4px }
+.pextra .btn-text { color: inherit; text-transform: none; font-size: 12.5px; text-decoration: underline; letter-spacing: 0 }
+.pclear { flex: 1 }
+.btn-fix { color: #fff; border: 0; padding: 6px 14px }
+.btn-fix.warning { background: #B45309 }
+.btn-fix.issue { background: #B00020 }
+.ppanel { background: var(--paper); border: 1px solid var(--divider); border-top: 0; border-radius: 0 0 6px 6px; padding: 14px 16px; display: grid; gap: 12px; box-shadow: 0 6px 16px rgba(0,0,0,.08) }
+.ppanel.warning { border-left: 4px solid #E8890C }
+.ppanel.issue { border-left: 4px solid #B00020 }
+.pwhy { margin: 0; font-size: 13.5px; color: var(--text) }
+.pfixes { display: grid; gap: 8px }
+.pdefer { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center }
+.paccept { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; border-top: 1px solid var(--divider); padding-top: 12px }
+.ptitle { width: 100%; font-size: 12.5px; font-weight: 500; color: var(--muted) }
+.pf { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted) }
+.pf.grow { flex: 1; min-width: 180px }
+.pf select, .pf input { font-family: inherit; font-size: 13px; color: var(--text); border: 1px solid #C4C4C4; border-radius: 4px; padding: 6px 8px; background: var(--paper) }
+.pdrawer { background: var(--paper); border: 1px solid var(--divider); border-top: 0; border-radius: 0 0 6px 6px; padding: 10px 14px }
+.pdrawer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 13px }
+.pdrawer li { display: flex; gap: 8px; align-items: flex-start }
+.pdrawer li > span:nth-child(2) { flex: 1 }
+.nicon { color: #5F6672 } .aicon { color: #167F36 }
+.deferred { margin-top: 16px; border-top: 1px solid var(--divider); padding-top: 12px }
+.deferred h3 { margin: 0 0 8px; font-size: 13px }
+.deferred ul { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px }
+.deferred li { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted) }
+.accl { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px }
 </style>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel">
-const { useState, useMemo, useCallback, useEffect } = React;
-
-// ============================================================
-// DATA
-// ============================================================
-const OBJECTIVES = [
-  { id: "O1", name: "AWS D1.1 Structural Welding", group: "Welding", dur: "8h", h: 8, crit: "critical" },
-  { id: "O2", name: "Confined Space Entry", group: "Safety", dur: "4h", h: 4, crit: "critical" },
-  { id: "O3", name: "Overhead Crane Operation", group: "Equipment", dur: "6h", h: 6, crit: "high" },
-  { id: "O4", name: "GTAW (TIG) Welding - Pipe", group: "Welding", dur: "12h", h: 12, crit: "critical" },
-  { id: "O5", name: "Lock-Out/Tag-Out (LOTO)", group: "Safety", dur: "2h", h: 2, crit: "critical" },
-  { id: "O6", name: "CNC Lathe Operation", group: "Machining", dur: "16h", h: 16, crit: "high" },
-  { id: "O7", name: "Forklift Operation", group: "Equipment", dur: "4h", h: 4, crit: "high" },
-  { id: "O8", name: "Torque Wrench Calibration", group: "Assembly QC", dur: "3h", h: 3, crit: "medium" },
-  { id: "O9", name: "Blueprint Reading - Advanced", group: "Core Skills", dur: "6h", h: 6, crit: "medium" },
-  { id: "O10", name: "Hazmat Handling Level II", group: "Safety", dur: "8h", h: 8, crit: "critical" },
-  { id: "O11", name: "SMAW Welding - Structural", group: "Welding", dur: "10h", h: 10, crit: "high" },
-  { id: "O12", name: "First Aid / CPR / AED", group: "Safety", dur: "4h", h: 4, crit: "high" },
-];
-const AREAS = ["Assembly Line A", "Assembly Line B", "Turbine Machining", "Final Assembly", "Test Cell", "Fabrication Shop"];
-const TRAINERS = [
-  { id: "T1", name: "J. Kowalski", objs: ["O1","O4","O11"] },
-  { id: "T2", name: "D. Reeves", objs: ["O2","O5","O10"] },
-  { id: "T3", name: "C. Medina", objs: ["O3","O7"] },
-  { id: "T4", name: "P. Nair", objs: ["O6","O8","O9"] },
-  { id: "T5", name: "R. Kim", objs: ["O2","O5","O12"] },
-];
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script>
+const { useState, useMemo, useEffect, useRef } = React;
+const TODAY = "2026-10-20";
+const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const toDate = (s) => {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d));
+};
+const addDays = (s, n) => {
+  const d = toDate(s);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+const dow = (s) => toDate(s).getUTCDay();
+const fmtDay = (s) => DOW[dow(s)] + " " + MON[toDate(s).getUTCMonth()] + " " + toDate(s).getUTCDate();
+const fmtShort = (s) => MON[toDate(s).getUTCMonth()] + " " + toDate(s).getUTCDate();
+const fmtT = (m) => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+const dayDiff = (a, b) => Math.round((toDate(a) - toDate(b)) / 864e5);
+const between = (from, to) => {
+  const out = [];
+  let d = from;
+  while (d <= to) {
+    if (dow(d) !== 0 && dow(d) !== 6) out.push(d);
+    d = addDays(d, 1);
+  }
+  return out;
+};
+const addWorkdays = (s, n) => {
+  let d = s;
+  let k = 0;
+  while (k < n) {
+    d = addDays(d, 1);
+    if (dow(d) !== 0 && dow(d) !== 6) k += 1;
+  }
+  return d;
+};
+const overlap = (a0, a1, b0, b1) => a0 < b1 && b0 < a1;
+const plural = (n, one, many) => n + " " + (n === 1 ? one : many);
+const DAY_START = 360;
+const DAY_END = 1380;
+const SPAN = DAY_END - DAY_START;
+const pct = (m) => (Math.max(DAY_START, Math.min(DAY_END, m)) - DAY_START) / SPAN * 100;
+const SHIFTS = { "1st": [360, 870], "2nd": [870, 1380] };
+const AREAS = { mb: "Module Bay", ti: "Teardown and Inspection", at: "Assembly and Test", pr: "Parts Repair" };
+const BUILDINGS = { b1: "Training Center, Bldg 1", b2: "Hangar 2, Bldg 2" };
+const INSTRUCTORS = [
+  { id: "i1", name: "Adams, Mary", sub: "Human Factors, Hazmat", shift: "1st" },
+  { id: "i2", name: "Ortega, Luis", sub: "Borescope, Lockwire", shift: "2nd" },
+  { id: "i3", name: "Whitaker, Dana", sub: "Human Factors, Lockwire", shift: "1st" },
+  { id: "i4", name: "Nguyen, Thomas", sub: "Borescope", shift: "1st" },
+  { id: "i5", name: "Kowalski, Erin", sub: "Hazmat, Human Factors", shift: "2nd" }
+].map((x) => ({ ...x, type: "instructor" }));
 const ROOMS = [
-  { id: "R1", name: "Training Center A - Rm 1", cap: 6 },
-  { id: "R2", name: "Welding Lab B", cap: 4 },
-  { id: "R3", name: "Safety Classroom C", cap: 8 },
+  { id: "tc101", name: "Classroom TC-101", seats: 12, bldg: "b1" },
+  { id: "tc102", name: "Classroom TC-102", seats: 8, bldg: "b1" },
+  { id: "h2a", name: "Hangar 2 Training Room", seats: 10, bldg: "b2" }
+].map((x) => ({ ...x, type: "room", sub: x.seats + " seats \xB7 " + BUILDINGS[x.bldg].split(",")[0] }));
+const ASSETS = [
+  { id: "kit", name: "Borescope demo kit", sub: "Stored in Hangar 2", per: "session" },
+  { id: "boards", name: "Lockwire practice boards", sub: "Set of 6, Training Center", per: "trainee" }
+].map((x) => ({ ...x, type: "asset" }));
+const FIRST = ["Rosbel", "Chidi", "Erik", "Mai", "Raj", "Daniela", "Kwame", "Charlotte", "Sophia", "Felipe", "Jae-won", "Ama", "Petra", "Mateo", "Hassan", "Greta", "Jordan", "Lucia", "Owen", "Nia", "Theo", "Paige", "Marco", "Lars", "Simran"];
+const LAST = ["Zuniga", "Okafor", "Lindqvist", "Tran", "Patel", "Reyes", "Mensah", "Thomas", "Martinez", "Duarte", "Kim", "Osei", "Novak", "Garcia", "Ali", "Bauer", "Cole", "Diaz", "Evans", "Foster", "Grant", "Hughes", "Ibarra", "Jensen", "Kaur", "Lopez", "Moreau", "Nakamura", "Ortiz", "Price", "Quinn", "Rossi", "Sato", "Turner", "Usman", "Varga", "Walsh", "Xu", "Young", "Zeller", "Abbott", "Brooks", "Castillo", "Dubois", "Ekwueme", "Fischer", "Haddad", "Ivanova", "Jovanovic", "Keller", "Larsen", "Meyer", "Nair"];
+const TITLES = { mb: "Module Technician", ti: "Inspector", at: "Assembly Technician", pr: "Repair Technician" };
+const empRange = (from, to, shift, areas) => Array.from({ length: to - from + 1 }, (_, k) => {
+  const n = from + k;
+  const area = areas[k % areas.length];
+  return { id: "p" + String(n).padStart(2, "0"), type: "employee", name: LAST[n - 1] + ", " + FIRST[n * 7 % FIRST.length], shift, area, sub: TITLES[area] + " \xB7 " + AREAS[area] };
+});
+const EMPLOYEES = [
+  ...empRange(1, 10, "1st", ["mb", "ti", "at", "pr"]),
+  ...empRange(11, 18, "2nd", ["mb", "ti", "at", "pr"]),
+  ...empRange(19, 24, "1st", ["mb", "ti"]),
+  ...empRange(25, 30, "2nd", ["mb", "ti"]),
+  ...empRange(31, 37, "1st", ["mb"]),
+  ...empRange(38, 42, "2nd", ["mb"]),
+  ...empRange(43, 46, "1st", ["at"]),
+  ...empRange(47, 50, "2nd", ["at"]),
+  ...empRange(51, 53, "1st", ["mb"])
 ];
-const WORKERS = [
-  { id: "W01", name: "Maria Santos", role: "Welder II", area: "Fabrication Shop", shift: "Day" },
-  { id: "W02", name: "James Okafor", role: "Welder I", area: "Fabrication Shop", shift: "Day" },
-  { id: "W03", name: "Chen Wei", role: "Sr. Machinist", area: "Turbine Machining", shift: "Day" },
-  { id: "W04", name: "Sarah Mitchell", role: "Assembler III", area: "Assembly Line A", shift: "Swing" },
-  { id: "W05", name: "Robert Tran", role: "Assembler II", area: "Assembly Line A", shift: "Day" },
-  { id: "W06", name: "Aisha Patel", role: "Test Technician", area: "Test Cell", shift: "Day" },
-  { id: "W07", name: "Marcus Johnson", role: "Welder III", area: "Fabrication Shop", shift: "Swing" },
-  { id: "W08", name: "Elena Volkov", role: "Machinist II", area: "Turbine Machining", shift: "Night" },
-  { id: "W09", name: "David Park", role: "Material Handler", area: "Final Assembly", shift: "Day" },
-  { id: "W10", name: "Lisa Fernandez", role: "Assembler I", area: "Assembly Line B", shift: "Day" },
-  { id: "W11", name: "Tom Bradley", role: "Welder II", area: "Fabrication Shop", shift: "Night" },
-  { id: "W12", name: "Yuki Tanaka", role: "QC Inspector", area: "Final Assembly", shift: "Day" },
-  { id: "W13", name: "Andre Williams", role: "Crane Operator", area: "Assembly Line A", shift: "Day" },
-  { id: "W14", name: "Kathryn Bell", role: "Assembler II", area: "Assembly Line B", shift: "Swing" },
-  { id: "W15", name: "Omar Hassan", role: "Welder I", area: "Fabrication Shop", shift: "Day" },
+const ALL = [...INSTRUCTORS, ...ROOMS, ...ASSETS, ...EMPLOYEES];
+const res = (id) => ALL.find((r) => r.id === id);
+const OBJECTIVES = [
+  { id: "hf", name: "Human Factors Recurrent", durH: 3, occ: 8, n: 3, instructors: ["i1", "i3", "i5"], rooms: ["tc101", "tc102", "h2a"], assets: [], emps: [1, 18], note: "Required every 24 months for certifying staff" },
+  { id: "bsi", name: "Borescope Inspection Theory, LEAP-1A", durH: 4, occ: 6, n: 4, instructors: ["i4", "i2"], rooms: ["h2a", "tc101"], assets: ["kit"], emps: [19, 30], note: "Needs the borescope demo kit in the room" },
+  { id: "lw", name: "Torque and Lockwire Practices", durH: 3, occ: 6, n: 4, instructors: ["i3", "i2"], rooms: ["tc102", "tc101"], assets: ["boards"], emps: [31, 50], note: "One practice board per trainee" }
 ];
-
-const NOW = new Date(2026, 2, 20);
-const addD = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
-const fmtD = d => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-const weekKey = d => { const s = new Date(d); s.setDate(s.getDate() - s.getDay() + 1); return s.toISOString().slice(0, 10); };
-
-function buildBacklog() {
-  const a = [
-    ["W01","O1",-5],["W01","O4",18],["W01","O5",42],["W01","O2",88],
-    ["W02","O1",12],["W02","O5",25],["W02","O11",65],
-    ["W03","O6",8],["W03","O3",35],["W03","O9",120],
-    ["W04","O2",-2],["W04","O5",15],["W04","O8",90],
-    ["W05","O5",22],["W05","O3",55],["W05","O12",110],
-    ["W06","O10",10],["W06","O2",30],["W06","O5",72],
-    ["W07","O1",28],["W07","O4",45],["W07","O11",80],["W07","O2",150],
-    ["W08","O6",38],["W08","O3",95],
-    ["W09","O7",14],["W09","O5",60],["W09","O12",130],
-    ["W10","O5",-8],["W10","O8",50],["W10","O12",100],
-    ["W11","O1",20],["W11","O4",55],["W11","O2",85],
-    ["W12","O8",32],["W12","O9",78],
-    ["W13","O3",6],["W13","O5",40],["W13","O12",140],
-    ["W14","O2",48],["W14","O5",70],["W14","O8",160],
-    ["W15","O1",16],["W15","O5",35],["W15","O11",90],
-  ];
-  return a.map(([wId, oId, dte], idx) => {
-    const w = WORKERS.find(x => x.id === wId), o = OBJECTIVES.find(x => x.id === oId);
-    const cs = o.crit === "critical" ? 4 : o.crit === "high" ? 3 : 2;
-    const us = dte <= 0 ? 4 : dte <= 30 ? 3 : dte <= 90 ? 2 : 1;
-    return {
-      id: `BL-${String(idx + 1).padStart(3, "0")}`, worker: w, obj: o,
-      expiry: addD(NOW, dte), dte, crit: o.crit,
-      urg: dte <= 0 ? "overdue" : dte <= 30 ? "due30" : dte <= 90 ? "due90" : "due12mo",
-      pri: Math.min(100, Math.round((cs * us / 16) * 100 + (dte <= 0 ? 15 : 0))),
-      status: "unscheduled",
-    };
-  }).sort((a, b) => b.pri - a.pri || a.dte - b.dte);
-}
-
-function optimizedSchedule(items) {
-  const sessions = [], used = new Set(), awl = {};
-  const byObj = {};
-  [...items].sort((a, b) => b.pri - a.pri || a.dte - b.dte).forEach(i => { byObj[i.obj.id] = byObj[i.obj.id] || []; byObj[i.obj.id].push(i); });
-
-  Object.entries(byObj).forEach(([oid, oi]) => {
-    const obj = OBJECTIVES.find(o => o.id === oid);
-    const trs = TRAINERS.filter(t => t.objs.includes(oid));
-    if (!trs.length) return;
-    const q = oi.filter(i => !used.has(i.id)).sort((a, b) => a.dte - b.dte);
-    const cap = ["O2","O5","O10","O12"].includes(oid) ? 8 : ["O1","O4","O11"].includes(oid) ? 4 : 5;
-    let bi = 0;
-    while (q.length) {
-      const batch = [], aib = {};
-      const td = Math.max(3, q[0].dte <= 0 ? 3 : q[0].dte - 7);
-      for (let i = 0; i < q.length && batch.length < cap;) {
-        const it = q[i], ar = it.worker.area, wk = weekKey(addD(NOW, td));
-        const cl = (awl[`${ar}-${wk}`] || 0) + (aib[ar] || 0);
-        if (cl >= 2 && it.dte > 0 && batch.length >= 2) { i++; continue; }
-        batch.push(it); aib[ar] = (aib[ar] || 0) + 1; q.splice(i, 1);
+const objById = (id) => OBJECTIVES.find((o) => o.id === id);
+const RECORDS = OBJECTIVES.flatMap((o) => Array.from({ length: o.emps[1] - o.emps[0] + 1 }, (_, k) => {
+  const n = o.emps[0] + k;
+  return { emp: "p" + String(n).padStart(2, "0"), obj: o.id, due: addDays("2026-10-14", n * 7 % 40), renewal: n % 3 === 0 };
+}));
+const EXCEPTIONS = [
+  { res: "i3", from: "2026-10-22", to: "2026-10-23", kind: "Leave", note: "PTO", source: "HR feed, synced Oct 19" },
+  { res: "kit", from: "2026-10-26", to: "2026-10-30", kind: "Loaned", note: "On-Wing Services, ESN 956-118", qty: 1, source: "entered by Mary Adams, Oct 14" },
+  { res: "p03", from: "2026-10-21", to: "2026-10-21", kind: "Leave", note: "PTO", source: "HR feed, synced Oct 19" }
+];
+const B = (id, name, date, start, end, trainer, station, assets, trainees) => ({ id, name, date, start, end, trainer, station, assets, trainees });
+const BOOKINGS = [
+  B("k1", "Borescope Probe Familiarization", "2026-10-21", 360, 870, "i4", "h2a", { kit: 1 }, []),
+  B("k2", "Borescope Probe Familiarization", "2026-10-22", 360, 870, "i4", "h2a", { kit: 1 }, []),
+  B("k3", "Borescope Probe Familiarization", "2026-10-23", 360, 870, "i4", "h2a", { kit: 1 }, []),
+  B("k4", "Engine Run-up Safety Briefing", "2026-10-21", 870, 1110, "i2", "tc101", {}, ["p14", "p26"]),
+  B("k5", "Night Shift FOD Walk", "2026-10-23", 870, 1380, "i2", null, {}, []),
+  B("k6", "Hazmat and DG Awareness", "2026-10-21", 870, 1050, "i5", "h2a", {}, []),
+  B("k7", "Human Factors Initial", "2026-10-21", 360, 540, "i1", "tc102", {}, []),
+  B("k8", "Human Factors Initial", "2026-10-22", 540, 720, "i1", "tc101", {}, []),
+  B("k9", "Shop Visit Kickoff, ESN 891-442", "2026-10-26", 360, 480, "i1", "tc102", {}, ["p51", "p52", "p53"])
+];
+BOOKINGS.forEach((b) => {
+  b.src = "published session";
+});
+const DEFAULT_CFG = { L1: 2, L2: 4, T: 30, F: { mb: 3, ti: 4, at: 3, pr: 4 }, M: 50, C: 1, qty: { kit: 1, boards: 6 }, P1: true };
+const RULES = {
+  A1: { label: "Instructor, room, kit and trainees are free (shift, leave, bookings)", source: "Availability service" },
+  A2: { label: "Instructor holds a Trainer Endorsement on the Objective", source: "Objective Template" },
+  A3: { label: "Room seats cover the session", source: "Objective Template" },
+  K: { label: "Teaching assets available", source: "Objective Template" },
+  L1: { label: "Sessions an instructor teaches per day", source: "Site policy" },
+  L2: { label: "Training hours per trainee per day", source: "Site policy" },
+  T: { label: "Travel time between buildings", source: "Site policy" },
+  F: { label: "Technicians off the floor per area, per shift", source: "Site policy" },
+  M: { label: "Minimum seats filled to run a session", source: "Site policy" },
+  C: { label: "Sessions of this Objective per shift, per day", source: "Site policy" },
+  P1: { label: "Seat overdue and soonest-due records first", source: "Preference" }
+};
+const usesRes = (s, id) => s.trainer === id || s.station === id || (s.trainees || []).includes(id);
+const exceptionOn = (id, date) => EXCEPTIONS.find((x) => x.res === id && date >= x.from && date <= x.to);
+const statusOf = (sessions, id, date, start, end, excludeId) => {
+  const r = res(id);
+  const x = r.type !== "asset" && exceptionOn(id, date);
+  if (x) return { state: "leave", text: x.kind + ": " + x.note + " (" + x.source + ")", short: x.kind, src: x.source };
+  const hit = sessions.find((s) => s.id !== excludeId && s.date === date && usesRes(s, id) && overlap(start, end, s.start, s.end));
+  if (hit) return { state: "booked", text: "Booked: " + hit.name + " " + fmtT(hit.start) + " to " + fmtT(hit.end) + (hit.src ? " (" + hit.src + ")" : ""), short: "Booked" };
+  if (r.shift) {
+    const [a, b] = SHIFTS[r.shift];
+    if (start < a || end > b) return { state: "offshift", text: "Works " + r.shift + " shift", short: "Off shift" };
+  }
+  return { state: "free", text: "Free", short: "Free" };
+};
+const loadOf = (sessions, id, date) => sessions.filter((s) => s.trainer === id && s.date === date).length;
+const assetAvail = (sessions, id, date, start, end, cfg) => {
+  const loaned = EXCEPTIONS.filter((x) => x.res === id && date >= x.from && date <= x.to).reduce((a, x) => a + (x.qty || 0), 0);
+  const used = sessions.filter((s) => s.date === date && s.assets && s.assets[id] && overlap(start, end, s.start, s.end)).reduce((a, s) => a + s.assets[id], 0);
+  return cfg.qty[id] - loaned - used;
+};
+const travelBlock = (sessions, instr, date, start, end, room, T) => {
+  const rb = res(room).bldg;
+  return sessions.find((s) => s.trainer === instr && s.date === date && s.station && res(s.station).bldg !== rb && (s.end <= start && start - s.end < T || s.start >= end && s.start - end < T));
+};
+const offKey = (date, shift, area) => date + "|" + shift + "|" + area;
+const baseOff = () => {
+  const m = {};
+  BOOKINGS.forEach((s) => (s.trainees || []).forEach((p) => {
+    const e = res(p);
+    const k = offKey(s.date, e.shift, e.area);
+    m[k] = m[k] || /* @__PURE__ */ new Set();
+    m[k].add(p);
+  }));
+  return m;
+};
+const allocate = (n, demand) => {
+  const shifts = Object.keys(demand).filter((s) => demand[s] > 0);
+  const total = shifts.reduce((a, s) => a + demand[s], 0);
+  const out = {};
+  shifts.forEach((s) => {
+    out[s] = 0;
+  });
+  if (!total || n <= 0) return out;
+  let used = 0;
+  const rem = shifts.map((s) => {
+    const e = n * demand[s] / total;
+    out[s] = Math.floor(e);
+    used += out[s];
+    return { s, r: e - out[s] };
+  }).sort((a, b) => b.r - a.r);
+  for (let i = 0; used < n; i = (i + 1) % rem.length) {
+    out[rem[i].s] += 1;
+    used += 1;
+  }
+  return out;
+};
+const runSolver = (p, cfg, locked = []) => {
+  const obj = objById(p.obj);
+  const recs = RECORDS.filter((r) => r.obj === p.obj);
+  const days = between(p.from, p.to);
+  const dur = p.durH * 60;
+  const demand = { "1st": {}, "2nd": {} };
+  recs.forEach((r) => {
+    const e = res(r.emp);
+    demand[e.shift][e.area] = (demand[e.shift][e.area] || 0) + 1;
+  });
+  const remOn = (s) => Object.values(demand[s]).reduce((a, b) => a + b, 0);
+  const base = baseOff();
+  const plan = {};
+  const offCount = (d, s, a) => (base[offKey(d, s, a)] || /* @__PURE__ */ new Set()).size + (plan[offKey(d, s, a)] || 0);
+  const perTrainee = obj.assets.find((a) => res(a).per === "trainee");
+  const occCap = perTrainee ? Math.min(p.occ, cfg.qty[perTrainee]) : p.occ;
+  const drafts = [];
+  const asSession = (d) => ({ id: d.id, name: "another draft", date: d.date, start: d.start, end: d.end, trainer: d.instructor, station: d.room, trainees: [], assets: d.assets });
+  const all = () => [...BOOKINGS, ...drafts.map(asSession)];
+  const reserve = (d, target) => {
+    let left2 = Math.min(d.capacity, target || d.capacity);
+    d.plan = {};
+    Object.keys(demand[d.shift]).sort((a, b) => demand[d.shift][b] - demand[d.shift][a]).forEach((a) => {
+      const k = Math.max(0, Math.min(left2, demand[d.shift][a], cfg.F[a] - offCount(d.date, d.shift, a)));
+      if (k > 0) {
+        d.plan[a] = k;
+        plan[offKey(d.date, d.shift, a)] = (plan[offKey(d.date, d.shift, a)] || 0) + k;
+        demand[d.shift][a] -= k;
+        left2 -= k;
       }
-      if (!batch.length) break;
-      const sd = addD(NOW, td), wk = weekKey(sd);
-      batch.forEach(b => { used.add(b.id); awl[`${b.worker.area}-${wk}`] = (awl[`${b.worker.area}-${wk}`] || 0) + (1); });
-      const tr = trs[bi % trs.length];
-      const rm = obj.group === "Welding" ? ROOMS[1] : obj.group === "Safety" ? ROOMS[2] : ROOMS[0];
-      const oc = batch.filter(b => b.dte <= 0).length;
-      const ac = {}; batch.forEach(b => { ac[b.worker.area] = (ac[b.worker.area] || 0) + 1; });
-      const ma = Object.entries(ac).sort((a, b) => b[1] - a[1])[0];
-      const cr = ma[1] >= 3 ? "high" : ma[1] >= 2 ? "medium" : "low";
-      const parts = [];
-      if (oc > 0) parts.push(`${oc} overdue worker${oc > 1 ? "s" : ""} \u2014 earliest available slot.`);
-      if (batch.length >= cap - 1) parts.push(`High utilization: ${batch.length}/${cap} seats filled.`);
-      const cw = batch.filter(b => { const oth = items.filter(i => i.worker.id === b.worker.id && i.id !== b.id && Math.abs(i.dte - b.dte) < 21); return oth.length > 0; });
-      if (cw.length > 0) parts.push(`${cw.map(w => w.worker.name).join(", ")} ha${cw.length > 1 ? "ve" : "s"} other renewals within 3 weeks \u2014 consolidation opportunity.`);
-      if (batch.length > 1) { const areas = [...new Set(batch.map(b => b.worker.area))]; if (areas.length === 1) parts.push(`All ${batch.length} workers from ${areas[0]}.`); else parts.push(`Workers from ${areas.length} areas grouped by deadline.`); }
-      if (cr !== "low") parts.push(`Coverage: ${ma[1]} from ${ma[0]} \u2014 staggering applied.`);
-      sessions.push({ id: `S-${String(sessions.length + 1).padStart(3, "0")}`, obj, trainer: tr, room: rm, date: sd, items: batch, cap, hoursOff: batch.length * obj.h, util: Math.round((batch.length / cap) * 100), cr, hasOD: oc > 0, rationale: parts.join(" ") });
-      bi++;
+    });
+  };
+  locked.forEach((d) => {
+    const c = { ...d };
+    drafts.push(c);
+    reserve(c);
+  });
+  const alloc = allocate(p.n, { "1st": remOn("1st") + locked.filter((d) => d.shift === "1st").reduce((a, d) => a + Object.values(d.plan || {}).reduce((x, y) => x + y, 0), 0), "2nd": remOn("2nd") + locked.filter((d) => d.shift === "2nd").reduce((a, d) => a + Object.values(d.plan || {}).reduce((x, y) => x + y, 0), 0) });
+  locked.forEach((d) => {
+    if (alloc[d.shift] > 0) alloc[d.shift] -= 1;
+  });
+  const order = Object.keys(alloc).sort((a, b) => remOn(b) - remOn(a));
+  const queue = [];
+  const left = { ...alloc };
+  while (order.some((s) => left[s] > 0)) order.forEach((s) => {
+    if (left[s] > 0) {
+      queue.push(s);
+      left[s] -= 1;
     }
   });
-  const wds = new Set();
-  sessions.forEach(s => s.items.forEach(i => wds.add(`${i.worker.id}-${s.date.toISOString().slice(0, 10)}`)));
-  return {
-    sessions: sessions.sort((a, b) => a.date - b.date),
-    stats: {
-      sessionCount: sessions.length,
-      backlogCovered: used.size,
-      backlogTotal: items.length,
-      totalHoursOff: sessions.reduce((s, x) => s + x.hoursOff, 0),
-      avgUtil: sessions.length ? Math.round(sessions.reduce((s, x) => s + x.util, 0) / sessions.length) : 0,
-      workerDays: wds.size,
-      overdueAddressed: items.filter(i => i.dte <= 0 && used.has(i.id)).length,
-      overdueTotal: items.filter(i => i.dte <= 0).length,
-    },
+  const unplaced = [];
+  let checked = 0;
+  const toGo = { ...alloc };
+  queue.forEach((shift) => {
+    const target = Math.ceil(remOn(shift) / Math.max(1, toGo[shift]));
+    toGo[shift] -= 1;
+    const counts = {};
+    const fArea = {};
+    const trace = [];
+    const seen = /* @__PURE__ */ new Set();
+    const fail = (why, day, t, text) => {
+      counts[why] = (counts[why] || 0) + 1;
+      const key = day + why;
+      if (!seen.has(key) && trace.length < 5) {
+        seen.add(key);
+        trace.push({ when: fmtDay(day) + ", " + fmtT(t), why, text });
+      }
+    };
+    let hit = null;
+    outer: for (const day of days) {
+      for (let t = SHIFTS[shift][0]; t + dur <= SHIFTS[shift][1]; t += 30) {
+        checked += 1;
+        const sess = all();
+        const sameShift = drafts.filter((d) => d.date === day && d.shift === shift).length;
+        if (sameShift >= cfg.C) {
+          fail("C", day, t, plural(sameShift, "session", "sessions") + " of this Objective already on " + shift + " shift (limit " + cfg.C + ")");
+          continue;
+        }
+        const ins = p.instructors.map((id) => {
+          const st = statusOf(sess, id, day, t, t + dur);
+          if (st.state !== "free") return { id, why: "A1", text: res(id).name.split(",")[0] + (st.state === "leave" ? " on leave (" + st.src + ")" : " " + st.short.toLowerCase()) };
+          if (loadOf(sess, id, day) >= cfg.L1) return { id, why: "L1", text: res(id).name.split(",")[0] + " already teaches " + cfg.L1 + " that day" };
+          return { id };
+        });
+        const freeI = ins.filter((x) => !x.why);
+        if (!freeI.length) {
+          fail(ins.every((x) => x.why === "L1") ? "L1" : "A1", day, t, "No instructor free: " + ins.map((x) => x.text).join("; "));
+          continue;
+        }
+        const rooms = p.rooms.filter((r) => res(r).seats >= Math.min(occCap, 1)).map((id) => ({ id, st: statusOf(sess, id, day, t, t + dur) }));
+        const freeR = rooms.filter((x) => x.st.state === "free").map((x) => x.id).sort((a, b) => res(a).seats - res(b).seats);
+        if (!freeR.length) {
+          fail("A1", day, t, "No room free: " + rooms.map((x) => res(x.id).name + " " + x.st.short.toLowerCase()).join("; "));
+          continue;
+        }
+        let cap = occCap;
+        let assetFail = null;
+        obj.assets.forEach((a) => {
+          const av = assetAvail(sess, a, day, t, t + dur, cfg);
+          if (res(a).per === "session" && av < 1) assetFail = res(a).name + (exceptionOn(a, day) && av + 0 < 1 && !sess.some((s) => s.date === day && s.assets && s.assets[a] && overlap(t, t + dur, s.start, s.end)) ? " loaned to " + exceptionOn(a, day).note + " (" + exceptionOn(a, day).source + ")" : " in use by another session");
+          if (res(a).per === "trainee") {
+            if (av < 1) assetFail = res(a).name + " all in use";
+            cap = Math.min(cap, av);
+          }
+        });
+        if (assetFail) {
+          fail("K", day, t, assetFail);
+          continue;
+        }
+        let pick = null;
+        let travelNote = null;
+        for (const i of freeI.map((x) => x.id).sort((a, b) => drafts.filter((d) => d.instructor === a).length - drafts.filter((d) => d.instructor === b).length)) {
+          for (const r of freeR) {
+            const tb = travelBlock(sess, i, day, t, t + dur, r, cfg.T);
+            if (tb) {
+              travelNote = travelNote || { i, r, tb };
+              continue;
+            }
+            pick = { i, r };
+            break;
+          }
+          if (pick) break;
+        }
+        if (!pick) {
+          fail("T", day, t, res(travelNote.i).name.split(",")[0] + " needs " + cfg.T + " min to get from " + res(travelNote.tb.station).name + " to " + res(travelNote.r).name);
+          continue;
+        }
+        const seatCap = Math.min(cap, res(pick.r).seats);
+        const blockedAreas = Object.keys(demand[shift]).filter((a) => demand[shift][a] > 0 && offCount(day, shift, a) >= cfg.F[a]);
+        const expect = Math.min(seatCap, target, Object.keys(demand[shift]).reduce((acc, a) => acc + Math.max(0, Math.min(demand[shift][a], cfg.F[a] - offCount(day, shift, a))), 0));
+        const need = Math.max(1, Math.ceil(cfg.M / 100 * seatCap));
+        if (expect < need) {
+          if (expect < Math.min(seatCap, target, remOn(shift)) && blockedAreas.length) {
+            blockedAreas.forEach((a) => {
+              fArea[a] = (fArea[a] || 0) + 1;
+            });
+            fail("F", day, t, blockedAreas.map((a) => AREAS[a] + " already has " + offCount(day, shift, a) + " off the floor (limit " + cfg.F[a] + ")").join("; "));
+          } else fail("M", day, t, "Only " + plural(expect, "trainee", "trainees") + " could attend; minimum is " + need + " of " + seatCap + " seats");
+          continue;
+        }
+        const assets = {};
+        obj.assets.forEach((a) => {
+          assets[a] = res(a).per === "session" ? 1 : seatCap;
+        });
+        const why = "Earliest slot where an endorsed instructor, a room" + (obj.assets.length ? ", the " + res(obj.assets[0]).name.toLowerCase() : "") + " and enough trainees can leave the floor.";
+        const tn = travelNote && travelNote.i === pick.i ? " Kept " + res(pick.i).name.split(",")[0] + " in " + res(pick.r).name + ": " + res(travelNote.r).name + " is " + cfg.T + " min from their previous class." : "";
+        hit = { id: "d" + Math.random().toString(36).slice(2, 8), shift, date: day, start: t, end: t + dur, instructor: pick.i, room: pick.r, assets, capacity: seatCap, trace, why: why + tn, locked: false };
+        break outer;
+      }
+    }
+    if (hit) {
+      drafts.push(hit);
+      reserve(hit, target);
+    } else unplaced.push({ shift, counts, fArea, trace });
+  });
+  drafts.sort((a, b) => a.date + fmtT(a.start) < b.date + fmtT(b.start) ? -1 : 1).forEach((d, i) => {
+    d.label = "S" + (i + 1);
+  });
+  return { drafts, unplaced, checked, alloc };
+};
+const primaryOf = (u) => Object.entries(u.counts).filter(([k]) => k !== "C" || Object.keys(u.counts).length === 1).sort((a, b) => b[1] - a[1]).map(([k, n]) => ({ k, n }));
+const fixesFor = (result, p, cfg, locked) => {
+  if (!result.unplaced.length) return [];
+  const kinds = /* @__PURE__ */ new Set();
+  const areas = {};
+  result.unplaced.forEach((u) => {
+    primaryOf(u).slice(0, 2).forEach((x) => kinds.add(x.k));
+    Object.entries(u.fArea).forEach(([a, n]) => {
+      areas[a] = (areas[a] || 0) + n;
+    });
+  });
+  const obj = objById(p.obj);
+  const cands = [];
+  const later = addWorkdays(p.to, 5);
+  cands.push({ id: "win", text: "Extend the window to " + fmtDay(later), change: "Window end " + fmtShort(p.to) + " to " + fmtShort(later), p: { ...p, to: later }, cfg });
+  if (kinds.has("K")) obj.assets.forEach((a) => cands.push({ id: "asset-" + a, text: "Borrow a second " + res(a).name.toLowerCase() + " from On-Wing Services", change: res(a).name + " " + cfg.qty[a] + " to " + (cfg.qty[a] + 1), p, cfg: { ...cfg, qty: { ...cfg.qty, [a]: cfg.qty[a] + 1 } } }));
+  if (kinds.has("L1")) cands.push({ id: "l1", text: "Allow instructors " + (cfg.L1 + 1) + " sessions a day", change: "Sessions per instructor per day " + cfg.L1 + " to " + (cfg.L1 + 1), p, cfg: { ...cfg, L1: cfg.L1 + 1 } });
+  if (kinds.has("F")) {
+    const a = Object.entries(areas).sort((x, y) => y[1] - x[1])[0];
+    if (a) cands.push({ id: "f-" + a[0], text: "Let " + (cfg.F[a[0]] + 1) + " " + AREAS[a[0]] + " technicians off the floor per shift", change: AREAS[a[0]] + " limit " + cfg.F[a[0]] + " to " + (cfg.F[a[0]] + 1), p, cfg: { ...cfg, F: { ...cfg.F, [a[0]]: cfg.F[a[0]] + 1 } } });
+  }
+  if (kinds.has("M")) cands.push({ id: "m", text: "Run sessions at 25% full", change: "Minimum fill " + cfg.M + "% to 25%", p, cfg: { ...cfg, M: 25 } });
+  if (kinds.has("T")) cands.push({ id: "t", text: "Plan 15 min travel between buildings", change: "Travel time " + cfg.T + " to 15 min", p, cfg: { ...cfg, T: 15 } });
+  if (kinds.has("C")) cands.push({ id: "c", text: "Allow " + (cfg.C + 1) + " sessions of this Objective per shift a day", change: "Sessions per shift " + cfg.C + " to " + (cfg.C + 1), p, cfg: { ...cfg, C: cfg.C + 1 } });
+  return cands.map((c) => {
+    const r = runSolver(c.p, c.cfg, locked);
+    const last = r.drafts.reduce((a, d) => d.date > a ? d.date : a, "");
+    return { ...c, result: r, gain: r.drafts.length - result.drafts.length, last };
+  }).filter((c) => c.gain > 0).sort((a, b) => b.gain - a.gain || (a.last < b.last ? -1 : 1)).slice(0, 3);
+};
+const sessionsFor = (drafts) => drafts.map((d) => ({ id: d.id, date: d.date, start: d.start, end: d.end, shift: d.shift, capacity: d.capacity, label: d.label }));
+const seatIssues = (empId, d, assign, drafts, cfg, dur) => {
+  const e = res(empId);
+  const out = [];
+  const st = statusOf(BOOKINGS, empId, d.date, d.start, d.end);
+  if (st.state === "leave" || st.state === "booked") out.push({ why: "A1", text: st.text });
+  if (e.shift !== d.shift) out.push({ why: "shift", text: "Works " + e.shift + " shift" });
+  const hours = BOOKINGS.filter((s) => s.date === d.date && (s.trainees || []).includes(empId)).reduce((a, s) => a + (s.end - s.start) / 60, 0) + drafts.filter((x) => x.id !== d.id && x.date === d.date && assign[empId] === x.id).reduce((a, x) => a + (x.end - x.start) / 60, 0) + dur / 60;
+  if (hours > cfg.L2) out.push({ why: "L2", text: hours + " h of training that day (limit " + cfg.L2 + ")" });
+  const base = (baseOff()[offKey(d.date, e.shift, e.area)] || /* @__PURE__ */ new Set()).size;
+  const dueOf = (emp) => (RECORDS.find((r) => r.emp === emp) || {}).due || "";
+  const group = Object.entries(assign).filter(([q, did]) => q !== empId && did && res(q).area === e.area && res(q).shift === e.shift && (drafts.find((x) => x.id === did) || {}).date === d.date).map(([q]) => q);
+  const seatedHere = assign[empId] === d.id;
+  const pos = seatedHere ? [...group, empId].sort((a, b) => dueOf(a) < dueOf(b) ? -1 : dueOf(a) > dueOf(b) ? 1 : res(a).name.localeCompare(res(b).name)).indexOf(empId) : group.length;
+  if (base + pos + 1 > cfg.F[e.area]) out.push({ why: "F", text: AREAS[e.area] + " already has " + (base + pos) + " off the floor (limit " + cfg.F[e.area] + ")" });
+  return out;
+};
+const autoFill = (drafts, obj, cfg, durH) => {
+  const recs = RECORDS.filter((r) => r.obj === obj.id).slice().sort((a, b) => cfg.P1 ? a.due < b.due ? -1 : 1 : res(a.emp).name.localeCompare(res(b.emp).name));
+  const assign = {};
+  const sorted = [...drafts].sort((a, b) => a.date + fmtT(a.start) < b.date + fmtT(b.start) ? -1 : 1);
+  const share = {};
+  ["1st", "2nd"].forEach((sh) => {
+    const n = sorted.filter((d) => d.shift === sh).length;
+    share[sh] = n ? Math.ceil(recs.filter((r) => res(r.emp).shift === sh).length / n) : 0;
+  });
+  const seat = (limit) => recs.forEach((r) => {
+    if (assign[r.emp]) return;
+    const e = res(r.emp);
+    const d = sorted.find((x) => x.shift === e.shift && Object.values(assign).filter((v) => v === x.id).length < limit(x) && !seatIssues(r.emp, x, assign, drafts, cfg, durH * 60).length);
+    assign[r.emp] = d ? d.id : null;
+  });
+  seat((x) => Math.min(x.capacity, share[x.shift]));
+  seat((x) => x.capacity);
+  return assign;
+};
+const unassignedWhy = (empId, drafts, assign, cfg, durH) => {
+  const e = res(empId);
+  const on = [...drafts].filter((d) => d.shift === e.shift).sort((a, b) => a.date + fmtT(a.start) < b.date + fmtT(b.start) ? -1 : 1);
+  if (!on.length) return { text: "No session on " + e.shift + " shift", source: "Placement" };
+  const open = on.filter((d) => Object.values(assign).filter((v) => v === d.id).length < d.capacity);
+  if (!open.length) return { text: "No open seat on " + e.shift + " shift", source: "Capacity" };
+  const iss = seatIssues(empId, open[0], assign, drafts, cfg, durH * 60);
+  if (iss.length) return { text: iss[0].text + " on " + fmtShort(open[0].date), source: (RULES[iss[0].why] || {}).source || "Availability service" };
+  return { text: "Removed by you", source: "" };
+};
+const Dot = ({ state }) => /* @__PURE__ */ React.createElement("span", { className: "dot dot-" + state, "aria-hidden": "true" });
+const Tag = ({ tone = "plain", children }) => /* @__PURE__ */ React.createElement("span", { className: "chip chip-" + tone }, children);
+const dueLabel = (due) => {
+  const d = dayDiff(due, TODAY);
+  return d < 0 ? { text: "Overdue " + -d + "d", tone: "bad" } : d <= 10 ? { text: "Due " + fmtShort(due), tone: "warn" } : null;
+};
+const byTime = (a, b) => a.date + fmtT(a.start) < b.date + fmtT(b.start) ? -1 : 1;
+const Result = ({ tone = "plain", children, sub }) => /* @__PURE__ */ React.createElement("div", { className: "result-wrap" }, /* @__PURE__ */ React.createElement("p", { className: "result r-" + tone }, children), sub && /* @__PURE__ */ React.createElement("p", { className: "result-sub" }, sub));
+const NumIn = ({ id, value, onChange, min = 0, max = 99, unit, label }) => /* @__PURE__ */ React.createElement("span", { className: "numin" }, /* @__PURE__ */ React.createElement("input", { id, "aria-label": label, type: "number", min, max, value, onChange: (e) => onChange(Math.max(min, Math.min(max, +e.target.value || 0))) }), unit && /* @__PURE__ */ React.createElement("span", null, unit));
+const changedRules = (cfg) => {
+  const out = [];
+  Object.keys(cfg.qty).forEach((a) => {
+    if (cfg.qty[a] !== DEFAULT_CFG.qty[a]) out.push(res(a).name + ": " + DEFAULT_CFG.qty[a] + " to " + cfg.qty[a]);
+  });
+  ["L1", "L2", "T", "M", "C"].forEach((k) => {
+    if (cfg[k] !== DEFAULT_CFG[k]) out.push(RULES[k].label + ": " + DEFAULT_CFG[k] + " to " + cfg[k]);
+  });
+  Object.keys(AREAS).forEach((a) => {
+    if (cfg.F[a] !== DEFAULT_CFG.F[a]) out.push(AREAS[a] + " off the floor: " + DEFAULT_CFG.F[a] + " to " + cfg.F[a]);
+  });
+  if (cfg.P1 !== DEFAULT_CFG.P1) out.push("Seat by due date: off");
+  return out;
+};
+const Setup = ({ obj, p, setP, cfg, setCfg, onRun }) => {
+  const [showRules, setShowRules] = useState(false);
+  const recs = RECORDS.filter((r) => r.obj === obj.id);
+  const on = (s) => recs.filter((r) => res(r.emp).shift === s).length;
+  const overdue = recs.filter((r) => r.due < TODAY).length;
+  const soon = recs.filter((r) => r.due >= TODAY && dayDiff(r.due, TODAY) <= 10).length;
+  const alloc = allocate(p.n, { "1st": on("1st"), "2nd": on("2nd") });
+  const perTrainee = obj.assets.find((a) => res(a).per === "trainee");
+  const occCap = perTrainee ? Math.min(p.occ, cfg.qty[perTrainee]) : p.occ;
+  const seats = p.n * occCap;
+  const days = between(p.from, p.to);
+  const changed = changedRules(cfg);
+  const setC = (k, v) => setCfg({ ...cfg, [k]: v });
+  const loan = obj.assets.map((a) => EXCEPTIONS.find((x) => x.res === a)).find(Boolean);
+  const areas = [...new Set(recs.map((r) => res(r.emp).area))];
+  return /* @__PURE__ */ React.createElement("div", { className: "narrow" }, /* @__PURE__ */ React.createElement(Result, { sub: on("1st") + " work 1st shift and " + on("2nd") + " work 2nd. " + (overdue ? overdue + " overdue, " : "") + soon + " due in the next 10 days." }, recs.length, " people need ", obj.name, "."), /* @__PURE__ */ React.createElement("section", { className: "block" }, /* @__PURE__ */ React.createElement("div", { className: "sentence" }, /* @__PURE__ */ React.createElement("span", null, "Schedule"), /* @__PURE__ */ React.createElement(NumIn, { id: "s-n", label: "Number of sessions", value: p.n, min: 1, max: 10, onChange: (v) => setP({ ...p, n: v }) }), /* @__PURE__ */ React.createElement("span", null, p.n === 1 ? "session" : "sessions", " of up to"), /* @__PURE__ */ React.createElement(NumIn, { id: "s-occ", label: "Max people per session", value: p.occ, min: 1, max: 20, onChange: (v) => setP({ ...p, occ: v }) }), /* @__PURE__ */ React.createElement("span", null, "people, between"), /* @__PURE__ */ React.createElement("input", { id: "s-from", "aria-label": "Window start", type: "date", value: p.from, min: addDays(TODAY, 1), onChange: (e) => e.target.value && setP({ ...p, from: e.target.value }) }), /* @__PURE__ */ React.createElement("span", null, "and"), /* @__PURE__ */ React.createElement("input", { id: "s-to", "aria-label": "Window end", type: "date", value: p.to, min: p.from, onChange: (e) => e.target.value && setP({ ...p, to: e.target.value }) })), /* @__PURE__ */ React.createElement("p", { className: "fitline " + (seats >= recs.length ? "ok" : "short") }, seats, " seats for ", recs.length, " people over ", days.length, " working days, ", plural(alloc["1st"] || 0, "session", "sessions"), " on 1st shift and ", alloc["2nd"] || 0, " on 2nd.", seats < recs.length && " " + (recs.length - seats) + " will wait for a later run.", occCap < p.occ && " Sessions are capped at " + occCap + " because there are " + occCap + " " + res(perTrainee).name.toLowerCase() + ".")), /* @__PURE__ */ React.createElement("section", { className: "block" }, /* @__PURE__ */ React.createElement("div", { className: "rshead" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Shop rules"), /* @__PURE__ */ React.createElement("p", { className: "quiet" }, "From the Objective Template and Engine Shop policy. ", changed.length ? plural(changed.length, "rule", "rules") + " changed for this run." : "All at their defaults.")), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", "aria-expanded": showRules, onClick: () => setShowRules(!showRules) }, showRules ? "Hide rules" : "Review rules")), /* @__PURE__ */ React.createElement("ul", { className: "keyrules" }, /* @__PURE__ */ React.createElement("li", null, AREAS.mb, " can release ", cfg.F.mb, " people per shift while ESN 891-442 is due back Oct 30."), loan && /* @__PURE__ */ React.createElement("li", null, "The ", res(loan.res).name.toLowerCase(), " is loaned to On-Wing Services ", fmtShort(loan.from), " to ", fmtShort(loan.to), " ", /* @__PURE__ */ React.createElement("span", { className: "prov" }, loan.source)), obj.instructors.filter((i) => EXCEPTIONS.some((x) => x.res === i)).map((i) => /* @__PURE__ */ React.createElement("li", { key: i }, res(i).name.split(", ").reverse().join(" "), " is on leave ", fmtShort(EXCEPTIONS.find((x) => x.res === i).from), " to ", fmtShort(EXCEPTIONS.find((x) => x.res === i).to), " ", /* @__PURE__ */ React.createElement("span", { className: "prov" }, EXCEPTIONS.find((x) => x.res === i).source)))), showRules && /* @__PURE__ */ React.createElement("div", { className: "rulelist" }, obj.assets.map((a) => /* @__PURE__ */ React.createElement("div", { key: a, className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "q-" + a }, res(a).name, " available"), /* @__PURE__ */ React.createElement(NumIn, { id: "q-" + a, value: cfg.qty[a], min: 0, max: 6, onChange: (v) => setCfg({ ...cfg, qty: { ...cfg.qty, [a]: v } }) }))), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-l1" }, "Sessions an instructor teaches per day"), /* @__PURE__ */ React.createElement(NumIn, { id: "c-l1", value: cfg.L1, min: 1, max: 4, onChange: (v) => setC("L1", v) })), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-l2" }, "Training hours per person per day"), /* @__PURE__ */ React.createElement(NumIn, { id: "c-l2", value: cfg.L2, min: 1, max: 8, unit: "h", onChange: (v) => setC("L2", v) })), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-t" }, "Travel time between Bldg 1 and Bldg 2"), /* @__PURE__ */ React.createElement(NumIn, { id: "c-t", value: cfg.T, min: 0, max: 60, unit: "min", onChange: (v) => setC("T", v) })), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-m" }, "Minimum seats filled to run a session"), /* @__PURE__ */ React.createElement(NumIn, { id: "c-m", value: cfg.M, min: 0, max: 100, unit: "%", onChange: (v) => setC("M", v) })), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-c" }, "Sessions of this course per shift, per day"), /* @__PURE__ */ React.createElement(NumIn, { id: "c-c", value: cfg.C, min: 1, max: 4, onChange: (v) => setC("C", v) })), /* @__PURE__ */ React.createElement("div", { className: "rrow wrap" }, /* @__PURE__ */ React.createElement("span", null, "People off the floor per shift"), /* @__PURE__ */ React.createElement("span", { className: "areas" }, areas.map((a) => /* @__PURE__ */ React.createElement("label", { key: a, className: "area", htmlFor: "f-" + a }, AREAS[a], /* @__PURE__ */ React.createElement(NumIn, { id: "f-" + a, value: cfg.F[a], min: 0, max: 10, onChange: (v) => setCfg({ ...cfg, F: { ...cfg.F, [a]: v } }) }))))), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-p1" }, "Seat overdue and soonest-due people first"), /* @__PURE__ */ React.createElement("input", { id: "c-p1", type: "checkbox", checked: cfg.P1, onChange: (e) => setC("P1", e.target.checked) })), /* @__PURE__ */ React.createElement("p", { className: "quiet always" }, "Always applied: instructors hold a Trainer Endorsement for this course, rooms have enough seats, and nobody is booked twice, on leave or outside their shift."))), /* @__PURE__ */ React.createElement("div", { className: "cta" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-primary big", onClick: onRun }, "Find times for ", plural(p.n, "session", "sessions"))));
+};
+const Strip = ({ id, date, drafts, previewIds = [], hover, setHover, onGrab, onNudge, drag }) => {
+  const r = res(id);
+  const x = exceptionOn(id, date);
+  const off = r.shift ? r.shift === "1st" ? [[870, 1380]] : [[360, 870]] : [];
+  const uses = (s) => s.trainer === id || s.station === id || s.assets && s.assets[id];
+  const books = BOOKINGS.filter((s) => s.date === date && uses(s));
+  const mine = (d) => d.instructor === id || d.room === id || d.assets && d.assets[id];
+  const ds = drafts.filter((d) => d.date === date && mine(d));
+  const dragging = drag && mine(drag.d);
+  const fit = dragging && drag.d.instructor === id && drag.fit[date];
+  const ghost = dragging && drag.target && drag.target.day === date;
+  const key = (d, e) => {
+    const map = { ArrowLeft: [0, -30], ArrowRight: [0, 30], ArrowUp: [-1, 0], ArrowDown: [1, 0] };
+    if (map[e.key] && onNudge) {
+      e.preventDefault();
+      onNudge(d, map[e.key][0], map[e.key][1]);
+    }
   };
-}
-
-const C = {
-  pri: "#05448E", priDk: "#03336B", priLt: "#E8F0F8", priMd: "#B8D4F0",
-  acc: "#0B7A3E", accLt: "#E6F4EC", warn: "#B85C00", warnLt: "#FFF4E6",
-  err: "#C4314B", errLt: "#FDE8EC", srf: "#FFFFFF", bg: "#F4F6F9",
-  brd: "#E2E6EB", brdLt: "#F0F2F5", txt: "#1A1A2E", txM: "#5A6070", txL: "#8A90A0",
+  return /* @__PURE__ */ React.createElement("div", { className: "strip strip-lg" }, /* @__PURE__ */ React.createElement("span", { className: "tick", style: { left: pct(870) + "%" } }), off.map(([a, b], i) => /* @__PURE__ */ React.createElement("span", { key: i, className: "seg offshift", style: { left: pct(a) + "%", width: pct(b) - pct(a) + "%" } })), x && /* @__PURE__ */ React.createElement("span", { className: "seg leave", style: { left: 0, width: "100%" }, title: x.kind + ": " + x.note + " (" + x.source + ")" }, /* @__PURE__ */ React.createElement("em", null, x.qty ? x.qty + " " + x.kind.toLowerCase() : x.kind)), books.map((s) => /* @__PURE__ */ React.createElement("span", { key: s.id, className: "seg sess off", style: { left: pct(s.start) + "%", width: pct(s.end) - pct(s.start) + "%" }, title: s.name + ", " + fmtT(s.start) + " to " + fmtT(s.end) + " (" + s.src + ")" })), fit && fit.map((f) => /* @__PURE__ */ React.createElement("span", { key: f.t, className: "seg fitband " + (f.ok ? "ok" : "bad"), style: { left: pct(f.t) + "%", width: pct(f.t + 30) - pct(f.t) + "%" } })), ds.map((d) => /* @__PURE__ */ React.createElement(
+    "span",
+    {
+      key: d.id,
+      role: onGrab ? "button" : void 0,
+      tabIndex: onGrab ? 0 : -1,
+      "aria-label": onGrab ? "Move " + d.label + ", " + fmtDay(d.date) + " " + fmtT(d.start) + ". Arrow keys move it." : void 0,
+      className: "seg sess draft" + (previewIds.includes(d.id) ? " preview" : "") + (hover === d.id ? " hot" : "") + (d.breaks && d.breaks.length ? " broken" : "") + (onGrab ? " grab" : "") + (drag && drag.d.id === d.id ? " lifted" : ""),
+      onMouseEnter: () => setHover(d.id),
+      onMouseLeave: () => setHover(null),
+      onPointerDown: (e) => onGrab && onGrab(d, e),
+      onKeyDown: (e) => key(d, e),
+      style: { left: pct(d.start) + "%", width: pct(d.end) - pct(d.start) + "%" },
+      title: d.label + ", " + fmtT(d.start) + " to " + fmtT(d.end)
+    },
+    /* @__PURE__ */ React.createElement("span", { className: "sl" }, d.label)
+  )), ghost && /* @__PURE__ */ React.createElement("span", { className: "seg ghost " + (drag.breaks.length ? "bad" : "ok"), style: { left: pct(drag.target.start) + "%", width: pct(drag.target.start + drag.d.end - drag.d.start) - pct(drag.target.start) + "%" } }, /* @__PURE__ */ React.createElement("span", { className: "sl" }, drag.d.label)));
 };
-
-const CritBadge = ({ c }) => {
-  const [bg, co, lb] = c === "critical" ? [C.errLt, C.err, "Critical"] : c === "high" ? [C.warnLt, C.warn, "High"] : [C.priLt, C.pri, "Medium"];
-  return <span style={{ padding: "2px 7px", borderRadius: 4, fontSize: 10, fontWeight: 600, backgroundColor: bg, color: co, textTransform: "uppercase" }}>{lb}</span>;
-};
-const UrgBadge = ({ u, d }) => {
-  const [bg, co, lb] = u === "overdue" ? [C.err, "#fff", `${Math.abs(d)}d overdue`] : u === "due30" ? [C.warn, "#fff", `${d}d`] : u === "due90" ? [C.warnLt, C.warn, `${d}d`] : [C.brdLt, C.txM, `${d}d`];
-  return <span style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 7px", borderRadius: 4, fontSize: 10, fontWeight: 600, backgroundColor: bg, color: co, fontVariantNumeric: "tabular-nums" }}>{u === "overdue" && "\u26A0 "}{lb}</span>;
-};
-const StatusBadge = ({ s }) => {
-  const [bg, co, lb, dot] = s === "unscheduled" ? [C.brdLt, C.txM, "Unscheduled", C.txL] : s === "recommended" ? [C.priLt, C.pri, "Recommended", C.pri] : [C.accLt, C.acc, "Scheduled", C.acc];
-  return <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 7px", borderRadius: 4, fontSize: 10, fontWeight: 600, backgroundColor: bg, color: co }}><span style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: dot }} />{lb}</span>;
-};
-const PriBar = ({ v }) => {
-  const co = v >= 75 ? C.err : v >= 50 ? C.warn : C.pri;
-  return <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 80 }}><div style={{ flex: 1, height: 5, backgroundColor: C.brdLt, borderRadius: 3, overflow: "hidden" }}><div style={{ width: `${v}%`, height: "100%", backgroundColor: co, borderRadius: 3 }} /></div><span style={{ fontSize: 10, fontWeight: 700, color: co, fontVariantNumeric: "tabular-nums", minWidth: 20, textAlign: "right" }}>{v}</span></div>;
-};
-const CRDot = ({ r }) => {
-  const co = r === "high" ? C.err : r === "medium" ? C.warn : C.acc;
-  return <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, fontWeight: 600, color: co }}><span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: co }} />{r.charAt(0).toUpperCase() + r.slice(1)}</span>;
-};
-const SmallMetric = ({ label, value, sub, accent }) => <div style={{ flex: 1, padding: "10px 12px", backgroundColor: C.srf, borderRadius: 8, border: `1px solid ${C.brd}` }}><div style={{ fontSize: 9.5, fontWeight: 600, color: C.txL, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div><div style={{ fontSize: 20, fontWeight: 700, color: accent || C.txt, lineHeight: 1.1, fontVariantNumeric: "tabular-nums" }}>{value}</div>{sub && <div style={{ fontSize: 10.5, color: C.txM, marginTop: 2 }}>{sub}</div>}</div>;
-
-function Processing({ onDone }) {
-  const [step, setStep] = useState(0);
-  const [prog, setProg] = useState(0);
-  const steps = [
-    ["Scanning backlog\u2026", "44 training needs across 15 workers"],
-    ["Grouping by objective\u2026", "Identifying cohorts by area and shift"],
-    ["Detecting consolidation opportunities\u2026", "Workers with multiple renewals in same window"],
-    ["Applying staggering constraints\u2026", "Protecting area coverage across sessions"],
-    ["Scoring & ranking\u2026", "Generating recommended sessions"],
-  ];
+const WarnIcon = () => /* @__PURE__ */ React.createElement("svg", { className: "picon", width: "16", height: "16", viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M12 3 2 21h20L12 3z", fill: "currentColor" }), /* @__PURE__ */ React.createElement("path", { d: "M12 10v5", stroke: "#fff", strokeWidth: "2.2", strokeLinecap: "round" }), /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "18", r: "1.3", fill: "#fff" }));
+const IssueIcon = () => /* @__PURE__ */ React.createElement("svg", { className: "picon", width: "16", height: "16", viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "currentColor" }), /* @__PURE__ */ React.createElement("path", { d: "M12 6.5v7", stroke: "#fff", strokeWidth: "2.2", strokeLinecap: "round" }), /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "17", r: "1.3", fill: "#fff" }));
+const OkIcon = () => /* @__PURE__ */ React.createElement("svg", { className: "picon", width: "16", height: "16", viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "currentColor" }), /* @__PURE__ */ React.createElement("path", { d: "m7.5 12.5 3 3 6-6.5", stroke: "#fff", strokeWidth: "2.2", fill: "none", strokeLinecap: "round", strokeLinejoin: "round" }));
+const SevIcon = ({ sev }) => sev === "issue" ? /* @__PURE__ */ React.createElement(IssueIcon, null) : /* @__PURE__ */ React.createElement(WarnIcon, null);
+const REASONS = ["Supervisor approved", "Will attend a later session", "Due date is advisory for this person", "Other (add a note)"];
+const NoteIcon = () => /* @__PURE__ */ React.createElement("svg", { className: "picon", width: "16", height: "16", viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "currentColor" }), /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "7.5", r: "1.3", fill: "#fff" }), /* @__PURE__ */ React.createElement("path", { d: "M12 11v6", stroke: "#fff", strokeWidth: "2.2", strokeLinecap: "round" }));
+const splitProblems = (all, accepted) => ({
+  items: all.filter((x) => x.sev !== "note" && !accepted[x.key]),
+  notes: all.filter((x) => x.sev === "note"),
+  done: all.filter((x) => x.sev !== "note" && accepted[x.key]).map((x) => ({ ...x, ...accepted[x.key] }))
+});
+const ProblemBar = ({ items, notes = [], done = [], onGo, onAccept, onUndo }) => {
+  const [i, setI] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [drawer, setDrawer] = useState(null);
+  const [reason, setReason] = useState(REASONS[0]);
+  const [note, setNote] = useState("");
+  const [seatIn, setSeatIn] = useState("");
+  const k = items.length ? Math.min(i, items.length - 1) : 0;
+  const cur = items[k];
+  const curKey = cur ? cur.key : "";
   useEffect(() => {
-    const iv = setInterval(() => {
-      setProg(p => { const n = p + 1.6; if (n >= 100) { clearInterval(iv); setTimeout(onDone, 250); return 100; } setStep(Math.min(Math.floor(n / 20), 4)); return n; });
-    }, 50);
-    return () => clearInterval(iv);
-  }, []);
-  return (
-    <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(3px)" }}>
-      <div style={{ backgroundColor: C.srf, borderRadius: 14, padding: "28px 36px", width: 420, boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: C.priLt, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="15" height="15" viewBox="0 0 20 20" fill="none" style={{ animation: "spin 1s linear infinite" }}><path d="M10 2v4m0 8v4m-8-8h4m8 0h4m-2.83-5.17l-2.83 2.83m-4.68 4.68l-2.83 2.83m0-10.34l2.83 2.83m4.68 4.68l2.83 2.83" stroke={C.pri} strokeWidth="2" strokeLinecap="round" /></svg>
-          </div>
-          <div><div style={{ fontSize: 14, fontWeight: 700 }}>Optimizing Schedule</div><div style={{ fontSize: 11, color: C.txM }}>Generating recommendations</div></div>
-        </div>
-        <div style={{ height: 4, backgroundColor: C.brdLt, borderRadius: 2, overflow: "hidden", marginBottom: 16 }}>
-          <div style={{ width: `${prog}%`, height: "100%", backgroundColor: C.pri, borderRadius: 2, transition: "width 0.08s linear" }} />
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-          {steps.map(([l, d], i) => (
-            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, opacity: i <= step ? 1 : 0.25, transition: "opacity 0.3s" }}>
-              <div style={{ width: 15, height: 15, borderRadius: "50%", flexShrink: 0, marginTop: 1, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: i < step ? C.acc : i === step ? C.pri : C.brdLt }}>
-                {i < step ? <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg> : i === step ? <div style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#fff" }} /> : null}
-              </div>
-              <div><div style={{ fontSize: 11.5, fontWeight: 600, color: i <= step ? C.txt : C.txL }}>{l}</div><div style={{ fontSize: 10, color: i <= step ? C.txM : C.txL }}>{d}</div></div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
-}
-
-function ResultsSummary({ stats }) {
-  return (
-    <div style={{ backgroundColor: C.srf, borderRadius: 10, border: `1px solid ${C.brd}`, padding: "16px 20px", marginBottom: 12 }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: C.txt, marginBottom: 12 }}>Recommended Schedule Summary</div>
-      <div style={{ display: "flex", gap: 8 }}>
-        <div style={{ flex: 1, textAlign: "center", padding: "10px 0" }}>
-          <div style={{ fontSize: 28, fontWeight: 800, color: C.pri, lineHeight: 1 }}>{stats.sessionCount}</div>
-          <div style={{ fontSize: 10, fontWeight: 600, color: C.txL, textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 4 }}>Sessions</div>
-        </div>
-        <div style={{ width: 1, backgroundColor: C.brd }} />
-        <div style={{ flex: 1, textAlign: "center", padding: "10px 0" }}>
-          <div style={{ fontSize: 28, fontWeight: 800, color: C.txt, lineHeight: 1 }}>{stats.totalHoursOff}h</div>
-          <div style={{ fontSize: 10, fontWeight: 600, color: C.txL, textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 4 }}>Hours Off Floor</div>
-        </div>
-        <div style={{ width: 1, backgroundColor: C.brd }} />
-        <div style={{ flex: 1, textAlign: "center", padding: "10px 0" }}>
-          <div style={{ fontSize: 28, fontWeight: 800, color: C.acc, lineHeight: 1 }}>{stats.avgUtil}%</div>
-          <div style={{ fontSize: 10, fontWeight: 600, color: C.txL, textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 4 }}>Avg Utilization</div>
-        </div>
-        <div style={{ width: 1, backgroundColor: C.brd }} />
-        <div style={{ flex: 1, textAlign: "center", padding: "10px 0" }}>
-          <div style={{ fontSize: 28, fontWeight: 800, color: C.acc, lineHeight: 1 }}>{stats.overdueAddressed}/{stats.overdueTotal}</div>
-          <div style={{ fontSize: 10, fontWeight: 600, color: C.txL, textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 4 }}>Overdue Cleared</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function App() {
-  const [bl, setBl] = useState(() => buildBacklog());
-  const [view, setView] = useState("backlog");
-  const [selItem, setSelItem] = useState(null);
-  const [selRec, setSelRec] = useState(null);
+    setNote("");
+    setReason(REASONS[0]);
+    setSeatIn(cur && cur.override && cur.override.options.length ? cur.override.options[0].id : "");
+  }, [curKey]);
+  useEffect(() => {
+    if (!items.length) setOpen(false);
+  }, [items.length]);
+  const issues = items.filter((x) => x.sev === "issue").length;
+  const warns = items.length - issues;
+  const extras = (notes.length > 0 || done.length > 0) && /* @__PURE__ */ React.createElement("span", { className: "pextra" }, notes.length > 0 && /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", "aria-expanded": drawer === "notes", onClick: () => setDrawer(drawer === "notes" ? null : "notes") }, plural(notes.length, "note", "notes")), done.length > 0 && /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", "aria-expanded": drawer === "done", onClick: () => setDrawer(drawer === "done" ? null : "done") }, done.length, " accepted"));
+  const drawerEl = drawer && /* @__PURE__ */ React.createElement("div", { className: "pdrawer" }, drawer === "notes" && /* @__PURE__ */ React.createElement("ul", null, notes.map((n) => /* @__PURE__ */ React.createElement("li", { key: n.key }, /* @__PURE__ */ React.createElement("span", { className: "nicon" }, /* @__PURE__ */ React.createElement(NoteIcon, null)), /* @__PURE__ */ React.createElement("span", null, n.text)))), drawer === "done" && /* @__PURE__ */ React.createElement("ul", null, done.map((a) => /* @__PURE__ */ React.createElement("li", { key: a.key }, /* @__PURE__ */ React.createElement("span", { className: "aicon" }, /* @__PURE__ */ React.createElement(OkIcon, null)), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, a.text), /* @__PURE__ */ React.createElement("span", { className: "quiet" }, " Accepted: ", a.reason, a.note ? ". " + a.note : "")), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", onClick: () => onUndo(a.key) }, "Undo")))));
+  if (!cur) return /* @__PURE__ */ React.createElement("div", { className: "pwrap" }, /* @__PURE__ */ React.createElement("div", { className: "pbar clear", role: "status" }, /* @__PURE__ */ React.createElement("span", { className: "pc ok" }, /* @__PURE__ */ React.createElement(OkIcon, null)), /* @__PURE__ */ React.createElement("span", { className: "pclear" }, "Nothing left to resolve"), extras), drawerEl);
+  const go = (n) => {
+    const j = (n + items.length) % items.length;
+    setI(j);
+    onGo(items[j]);
+  };
+  const needNote = reason.startsWith("Other") && !note.trim();
+  return /* @__PURE__ */ React.createElement("div", { className: "pwrap" }, /* @__PURE__ */ React.createElement("div", { className: "pbar " + (issues ? "has-issue" : "has-warning"), role: "region", "aria-label": "Problems to resolve" }, /* @__PURE__ */ React.createElement("span", { className: "pcount" }, issues > 0 && /* @__PURE__ */ React.createElement("span", { className: "pc issue" }, /* @__PURE__ */ React.createElement(IssueIcon, null), plural(issues, "issue", "issues")), warns > 0 && /* @__PURE__ */ React.createElement("span", { className: "pc warning" }, /* @__PURE__ */ React.createElement(WarnIcon, null), plural(warns, "warning", "warnings"))), /* @__PURE__ */ React.createElement("button", { type: "button", className: "pitem " + cur.sev, onClick: () => {
+    onGo(cur);
+    setOpen(true);
+  } }, /* @__PURE__ */ React.createElement(SevIcon, { sev: cur.sev }), /* @__PURE__ */ React.createElement("span", null, cur.text)), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-fix " + cur.sev, "aria-expanded": open, onClick: () => {
+    setOpen(!open);
+    onGo(cur);
+  } }, open ? "Hide" : "Resolve"), /* @__PURE__ */ React.createElement("span", { className: "pnav" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "iconbtn", "aria-label": "Previous problem", onClick: () => go(k - 1) }, "\u2039"), /* @__PURE__ */ React.createElement("span", { className: "num" }, k + 1, " of ", items.length), /* @__PURE__ */ React.createElement("button", { type: "button", className: "iconbtn", "aria-label": "Next problem", onClick: () => go(k + 1) }, "\u203A")), extras), open && /* @__PURE__ */ React.createElement("div", { className: "ppanel " + cur.sev }, cur.why && /* @__PURE__ */ React.createElement("p", { className: "pwhy" }, cur.why), cur.fixes.length > 0 ? /* @__PURE__ */ React.createElement("div", { className: "pfixes" }, /* @__PURE__ */ React.createElement("span", { className: "quiet" }, "Each option was checked against every Must hold rule."), cur.fixes.map((f) => /* @__PURE__ */ React.createElement("button", { type: "button", key: f.id, className: "fix", onClick: f.run }, /* @__PURE__ */ React.createElement("span", { className: "ft" }, f.label), f.effect && /* @__PURE__ */ React.createElement("span", { className: "fe" }, f.effect)))) : /* @__PURE__ */ React.createElement("p", { className: "quiet" }, "No change fits every rule.", cur.defer ? " Leave it for the next run, or seat anyway with a reason." : " Accept it with a reason to continue."), cur.defer && /* @__PURE__ */ React.createElement("div", { className: "pdefer" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: cur.defer }, "Leave for the next run"), /* @__PURE__ */ React.createElement("span", { className: "quiet" }, "They stay in Needs scheduling and are offered first next time.")), (cur.acceptable || cur.override) && /* @__PURE__ */ React.createElement("div", { className: "paccept" }, /* @__PURE__ */ React.createElement("span", { className: "ptitle" }, cur.override ? "Or seat anyway" : "Or accept as is"), cur.override && /* @__PURE__ */ React.createElement("label", { className: "pf" }, "Session", /* @__PURE__ */ React.createElement("select", { value: seatIn, onChange: (e) => setSeatIn(e.target.value) }, cur.override.options.map((o) => /* @__PURE__ */ React.createElement("option", { key: o.id, value: o.id }, o.label)))), /* @__PURE__ */ React.createElement("label", { className: "pf" }, "Reason", /* @__PURE__ */ React.createElement("select", { value: reason, onChange: (e) => setReason(e.target.value) }, REASONS.map((r) => /* @__PURE__ */ React.createElement("option", { key: r }, r)))), /* @__PURE__ */ React.createElement("label", { className: "pf grow" }, "Note", reason.startsWith("Other") ? "" : " (optional)", /* @__PURE__ */ React.createElement("input", { value: note, onChange: (e) => setNote(e.target.value), placeholder: reason.startsWith("Other") ? "Required for Other" : "" })), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", disabled: needNote || cur.override && !seatIn, onClick: () => cur.override ? cur.override.run(seatIn, reason, note) : onAccept(cur.key, reason, note) }, cur.override ? "Seat anyway" : cur.acceptLabel || "Accept"))), drawerEl);
+};
+const nearestFit = (d, days, drafts, cfg, obj) => {
+  let best = null;
+  const base = days.indexOf(d.date) * 1440 + d.start;
+  days.forEach((day, di) => {
+    for (let t = SHIFTS[d.shift][0]; t + (d.end - d.start) <= SHIFTS[d.shift][1]; t += 30) {
+      if (day === d.date && t === d.start) continue;
+      if (checkMove(d, day, t, drafts, cfg, obj).length) continue;
+      const dist = Math.abs(di * 1440 + t - base);
+      if (!best || dist < best.dist) best = { day, t, dist };
+    }
+  });
+  return best;
+};
+const breakProblem = (d, days, drafts, cfg, obj, onMove) => {
+  const fixes = [];
+  if (d.orig && !checkMove(d, d.orig.date, d.orig.start, drafts, cfg, obj).length) fixes.push({ id: "back", label: "Move " + d.label + " back to " + fmtDay(d.orig.date) + ", " + fmtT(d.orig.start), effect: "Where the solver placed it", run: () => onMove(d.id, d.orig.date, d.orig.start, []) });
+  const n = nearestFit(d, days, drafts, cfg, obj);
+  if (n && !(d.orig && n.day === d.orig.date && n.t === d.orig.start)) fixes.push({ id: "near", label: "Move " + d.label + " to " + fmtDay(n.day) + ", " + fmtT(n.t), effect: "Nearest time to where you dropped it that fits", run: () => onMove(d.id, n.day, n.t, []) });
+  return { key: "break-" + d.id, sev: "issue", text: d.label + " breaks a rule after you moved it.", why: d.breaks.map((x) => x.text).join("; ") + ".", target: "row-" + d.id, fixes, acceptable: true, acceptLabel: "Keep it here" };
+};
+const useFocus = () => {
+  const [focus, setFocus] = useState(null);
+  useEffect(() => {
+    if (!focus) return;
+    const el = document.getElementById(focus);
+    if (el) el.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+    const t = setTimeout(() => setFocus(null), 2200);
+    return () => clearTimeout(t);
+  }, [focus]);
+  return [focus, setFocus];
+};
+const checkMove = (d, day, start, drafts, cfg, obj) => {
+  const dur = d.end - d.start;
+  const end = start + dur;
+  const out = [];
+  const [a, b] = SHIFTS[d.shift];
+  if (start < a || end > b) out.push({ k: "A1", text: "Outside " + d.shift + " shift, when these trainees work" });
+  const others = [...BOOKINGS, ...drafts.filter((x) => x.id !== d.id).map((x) => ({ id: x.id, name: "draft " + x.label, date: x.date, start: x.start, end: x.end, trainer: x.instructor, station: x.room, trainees: [], assets: x.assets }))];
+  const si = statusOf(others, d.instructor, day, start, end);
+  if (si.state !== "free" && !(si.state === "offshift" && out.length)) out.push({ k: "A1", text: res(d.instructor).name.split(",")[0] + ": " + si.text });
+  const sr = statusOf(others, d.room, day, start, end);
+  if (sr.state !== "free") out.push({ k: "A1", text: res(d.room).name + ": " + sr.text });
+  obj.assets.forEach((x) => {
+    const av = assetAvail(others, x, day, start, end, cfg);
+    if (av < (res(x).per === "session" ? 1 : d.capacity)) {
+      const ex = exceptionOn(x, day);
+      out.push({ k: "K", text: res(x).name + (ex ? " loaned to " + ex.note + " (" + ex.source + ")" : " in use by another session") });
+    }
+  });
+  if (loadOf(others, d.instructor, day) >= cfg.L1) out.push({ k: "L1", text: res(d.instructor).name.split(",")[0] + " already teaches " + cfg.L1 + " sessions that day" });
+  const tb = travelBlock(others, d.instructor, day, start, end, d.room, cfg.T);
+  if (tb) out.push({ k: "T", text: res(d.instructor).name.split(",")[0] + " needs " + cfg.T + " min from " + res(tb.station).name });
+  const same = drafts.filter((x) => x.id !== d.id && x.date === day && x.shift === d.shift).length;
+  if (same >= cfg.C) out.push({ k: "C", text: "Another session of this course is already on " + d.shift + " shift that day" });
+  return out;
+};
+const fitMapFor = (d, days, drafts, cfg, obj) => {
+  const m = {};
+  const dur = d.end - d.start;
+  days.forEach((day) => {
+    m[day] = [];
+    for (let t = SHIFTS[d.shift][0]; t + dur <= SHIFTS[d.shift][1]; t += 30) m[day].push({ t, ok: !checkMove(d, day, t, drafts, cfg, obj).length });
+  });
+  return m;
+};
+const blockerSentence = (u, obj) => {
+  const pr = primaryOf(u);
+  if (!pr.length) return "no open slots in the window";
+  const total = Object.values(u.counts).reduce((a, b) => a + b, 0);
+  const what = pr[0].k === "K" ? "the " + obj.assets.map((a) => res(a).name.toLowerCase()).join(" and ") + " is booked or loaned" : pr[0].k === "A1" ? "no endorsed instructor or room is free" : pr[0].k === "F" ? "too many people are already off the floor" : pr[0].k === "M" ? "too few people are left to fill a session" : pr[0].k === "L1" ? "instructors already teach their daily limit" : pr[0].k === "T" ? "instructors cannot get between buildings in time" : "the limit on sessions per shift is reached";
+  return what + " on " + pr[0].n + " of " + total + " open slots";
+};
+const Review = ({ obj, p, cfg, result, preview, setPreview, fixes, onApply, onLock, onRemove, onMove, onRerun, onBack, onNext, accepted, onAccept, onUndo }) => {
+  const [view, setView] = useState("list");
+  const [open, setOpen] = useState(null);
+  const [hover, setHover] = useState(null);
+  const [drag, setDrag] = useState(null);
+  const [focus, setFocus] = useFocus();
+  const dragRef = useRef(null);
+  const shown = preview ? preview.result : result;
+  const currentKeys = new Set(result.drafts.map((d) => d.date + d.start + d.instructor));
+  const previewIds = preview ? preview.result.drafts.filter((d) => !currentKeys.has(d.date + d.start + d.instructor)).map((d) => d.id) : [];
+  const days = between(preview ? preview.p.from : p.from, preview ? preview.p.to : p.to);
+  const drafts = [...shown.drafts].sort(byTime);
+  const groups = {};
+  result.unplaced.forEach((u) => {
+    groups[u.shift] = groups[u.shift] || [];
+    groups[u.shift].push(u);
+  });
+  const lockedN = result.drafts.filter((d) => d.locked).length;
+  const rows = [...obj.instructors, ...obj.rooms, ...obj.assets];
+  const allFit = !shown.unplaced.length;
+  const recs = RECORDS.filter((r) => r.obj === obj.id);
+  const problems = [];
+  if (!preview) {
+    Object.entries(groups).forEach(([shift, us]) => problems.push({
+      key: "unplaced-" + shift,
+      sev: "issue",
+      text: plural(us.length, "session", "sessions") + " on " + shift + " shift could not be placed.",
+      why: "Blocked because " + blockerSentence(us[0], obj) + ".",
+      target: "blocker",
+      fixes: fixes.map((f) => ({ id: f.id, label: "Preview: " + f.text, effect: "Fits " + plural(f.gain, "more session", "more sessions") + (f.last ? ", last one " + fmtShort(f.last) : ""), run: () => setPreview(f) })),
+      acceptable: true,
+      acceptLabel: "Run fewer sessions"
+    }));
+    drafts.filter((d) => d.breaks && d.breaks.length).forEach((d) => problems.push(breakProblem(d, days, result.drafts, cfg, obj, onMove)));
+    ["1st", "2nd"].forEach((sh) => {
+      const first = drafts.find((d) => d.shift === sh);
+      if (!first) return;
+      const late = recs.filter((r) => res(r.emp).shift === sh && r.due >= TODAY && r.due < first.date);
+      if (!late.length) return;
+      let earlier = null;
+      days.filter((day) => day <= first.date).some((day) => {
+        for (let t = SHIFTS[sh][0]; t + (first.end - first.start) <= SHIFTS[sh][1]; t += 30) {
+          if (day === first.date && t >= first.start) break;
+          if (!checkMove(first, day, t, result.drafts, cfg, obj).length) {
+            earlier = { day, t };
+            return true;
+          }
+        }
+        return false;
+      });
+      const who = plural(late.length, "person", "people") + " on " + sh + " shift " + (late.length === 1 ? "is" : "are") + " due before " + first.label + " on " + fmtShort(first.date);
+      if (earlier) problems.push({ key: "early-" + sh, sev: "warning", text: who + ".", why: "An earlier time fits every rule.", target: "row-" + first.id, fixes: [{ id: "earlier", label: "Move " + first.label + " to " + fmtDay(earlier.day) + ", " + fmtT(earlier.t), effect: "Earlier for everyone on " + sh + " shift", run: () => onMove(first.id, earlier.day, earlier.t, []) }], acceptable: true });
+      else problems.push({ key: "early-" + sh, sev: "note", text: who + ". No earlier time fits the rules, so this is the earliest possible." });
+    });
+  }
+  const goTo = (item) => {
+    if (item.target.startsWith("row-")) setView("list");
+    setFocus(item.target);
+  };
+  const grab = (d, e) => {
+    if (preview || e.button !== 0) return;
+    e.preventDefault();
+    const cell = e.currentTarget.closest(".gcell");
+    const rect = cell.getBoundingClientRect();
+    const at = DAY_START + (e.clientX - rect.left) / rect.width * SPAN;
+    const next = { d, offset: at - d.start, target: { day: d.date, start: d.start }, breaks: d.breaks || [], fit: fitMapFor(d, days, result.drafts, cfg, obj) };
+    dragRef.current = next;
+    setDrag(next);
+  };
+  useEffect(() => {
+    if (!drag) return;
+    const move = (e) => {
+      const cur = dragRef.current;
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const cell = el && el.closest(".gcell[data-day]");
+      if (!cur || !cell) return;
+      const rect = cell.getBoundingClientRect();
+      const dur = cur.d.end - cur.d.start;
+      const raw = DAY_START + (e.clientX - rect.left) / rect.width * SPAN - cur.offset;
+      const start = Math.max(DAY_START, Math.min(DAY_END - dur, Math.round(raw / 30) * 30));
+      const day = cell.dataset.day;
+      if (cur.target.day === day && cur.target.start === start) return;
+      const next = { ...cur, target: { day, start }, breaks: checkMove(cur.d, day, start, result.drafts, cfg, obj) };
+      dragRef.current = next;
+      setDrag(next);
+    };
+    const up = () => {
+      const cur = dragRef.current;
+      dragRef.current = null;
+      setDrag(null);
+      if (cur && (cur.target.day !== cur.d.date || cur.target.start !== cur.d.start)) onMove(cur.d.id, cur.target.day, cur.target.start, cur.breaks);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+  }, [drag ? drag.d.id : null]);
+  const nudge = (d, dd, dm) => {
+    let day = d.date;
+    if (dd) {
+      const i = days.indexOf(day) + dd;
+      if (i < 0 || i >= days.length) return;
+      day = days.at(i);
+    }
+    const dur = d.end - d.start;
+    const start = Math.max(DAY_START, Math.min(DAY_END - dur, d.start + dm));
+    onMove(d.id, day, start, checkMove(d, day, start, result.drafts, cfg, obj));
+  };
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(Result, { tone: allFit ? "good" : "warn", sub: allFit && !preview ? "Check the times below, then fill seats. Nothing is booked until you publish." : null }, preview ? "With this fix, " + shown.drafts.length + " of " + p.n + " sessions fit." : allFit ? "All " + p.n + " sessions fit." : result.drafts.length + " of " + p.n + " sessions fit."), !preview && /* @__PURE__ */ React.createElement(ProblemBar, { ...splitProblems(problems, accepted), onGo: goTo, onAccept, onUndo }), !allFit && !preview && /* @__PURE__ */ React.createElement("section", { id: "blocker", className: "blocker" + (focus === "blocker" ? " focus" : "") }, Object.entries(groups).map(([shift, us]) => /* @__PURE__ */ React.createElement("p", { key: shift }, /* @__PURE__ */ React.createElement("b", null, plural(us.length, "session", "sessions"), " on ", shift, " shift could not be placed"), ": ", blockerSentence(us[0], obj), ".")), fixes.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "fixlist", role: "group", "aria-label": "Ways to place the rest" }, /* @__PURE__ */ React.createElement("span", { className: "quiet" }, "Pick a change to preview it. Nothing changes until you apply it."), fixes.map((f) => /* @__PURE__ */ React.createElement("button", { type: "button", key: f.id, className: "fix", onClick: () => setPreview(f) }, /* @__PURE__ */ React.createElement("span", { className: "ft" }, f.text), /* @__PURE__ */ React.createElement("span", { className: "fe" }, "Fits ", plural(f.gain, "more session", "more sessions"), f.last ? ", last one " + fmtShort(f.last) : "")))), !fixes.length && /* @__PURE__ */ React.createElement("p", { className: "quiet" }, "No single change fits more sessions. Try a longer window or another instructor.")), preview && /* @__PURE__ */ React.createElement("section", { className: "previewbar", role: "status" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("b", null, "Previewing: ", preview.text, "."), " New sessions are marked below."), /* @__PURE__ */ React.createElement("div", { className: "bact" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: () => setPreview(null) }, "Cancel"), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-primary", onClick: onApply }, "Apply this change"))), /* @__PURE__ */ React.createElement("div", { className: "viewbar" }, /* @__PURE__ */ React.createElement("h2", null, plural(drafts.length, "session", "sessions")), /* @__PURE__ */ React.createElement("div", { className: "seg", role: "tablist", "aria-label": "View" }, /* @__PURE__ */ React.createElement("button", { type: "button", role: "tab", "aria-selected": view === "list", className: "segb" + (view === "list" ? " on" : ""), onClick: () => setView("list") }, "List"), /* @__PURE__ */ React.createElement("button", { type: "button", role: "tab", "aria-selected": view === "cal", className: "segb" + (view === "cal" ? " on" : ""), onClick: () => setView("cal") }, "Calendar"))), view === "list" && /* @__PURE__ */ React.createElement("ul", { className: "slist2" }, drafts.map((d) => /* @__PURE__ */ React.createElement("li", { key: d.id, id: "row-" + d.id, className: "srow" + (previewIds.includes(d.id) ? " isnew" : "") + (d.locked ? " locked" : "") + (d.breaks && d.breaks.length ? " broken" : "") + (focus === "row-" + d.id ? " focus" : "") }, /* @__PURE__ */ React.createElement("div", { className: "sline" }, /* @__PURE__ */ React.createElement("span", { className: "slabel" }, d.label), /* @__PURE__ */ React.createElement("span", { className: "swhen" }, /* @__PURE__ */ React.createElement("b", null, fmtDay(d.date)), " ", fmtT(d.start), " to ", fmtT(d.end)), /* @__PURE__ */ React.createElement("span", { className: "swho" }, res(d.instructor).name.split(", ").reverse().join(" "), " in ", res(d.room).name, Object.keys(d.assets).some((a) => res(a).per === "session") ? ", with the " + res(Object.keys(d.assets)[0]).name.toLowerCase() : ""), /* @__PURE__ */ React.createElement("span", { className: "sseats" }, d.capacity, " seats"), previewIds.includes(d.id) && /* @__PURE__ */ React.createElement(Tag, { tone: "ai" }, "New"), d.moved && /* @__PURE__ */ React.createElement(Tag, { tone: d.breaks && d.breaks.length ? "bad" : "zone" }, d.breaks && d.breaks.length ? "Moved, breaks a rule" : "Moved by you"), d.locked && /* @__PURE__ */ React.createElement(Tag, { tone: "zone" }, "Locked"), !preview && /* @__PURE__ */ React.createElement("span", { className: "sacts" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", "aria-expanded": open === d.id, onClick: () => setOpen(open === d.id ? null : d.id) }, "Why this time"), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", onClick: () => onLock(d.id) }, d.locked ? "Unlock" : "Keep"), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text danger", onClick: () => onRemove(d.id) }, "Remove"))), (open === d.id || d.breaks && d.breaks.length > 0) && /* @__PURE__ */ React.createElement("div", { className: "why" + (d.breaks && d.breaks.length ? " bad" : "") }, /* @__PURE__ */ React.createElement("p", null, d.why), d.breaks && d.breaks.length > 0 && /* @__PURE__ */ React.createElement("ul", null, d.breaks.map((x, i) => /* @__PURE__ */ React.createElement("li", { key: i }, x.text, " ", /* @__PURE__ */ React.createElement("em", { className: "src" }, RULES[x.k].source)))), open === d.id && d.trace.length > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("p", { className: "quiet" }, "Earlier times it skipped:"), /* @__PURE__ */ React.createElement("ul", null, d.trace.map((x, i) => /* @__PURE__ */ React.createElement("li", { key: i }, /* @__PURE__ */ React.createElement("span", { className: "num" }, x.when), " ", x.text)))))))), view === "cal" && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("p", { className: "dragline", role: "status", "aria-live": "polite" }, drag ? drag.breaks.length ? /* @__PURE__ */ React.createElement("span", { className: "bad" }, drag.d.label, " to ", fmtDay(drag.target.day), ", ", fmtT(drag.target.start), ": breaks ", drag.breaks.map((x) => x.text).join("; "), ". You can still drop it here.") : /* @__PURE__ */ React.createElement("span", { className: "ok" }, drag.d.label, " to ", fmtDay(drag.target.day), ", ", fmtT(drag.target.start), ": fits every rule.") : preview ? "Apply or cancel the preview to move sessions." : "Drag a proposed session to another time, or select it and use the arrow keys. Green shows where it fits."), /* @__PURE__ */ React.createElement("div", { className: "gscroll" + (drag ? " dragging" : "") }, /* @__PURE__ */ React.createElement("div", { className: "g", style: { "--cols": days.length } }, /* @__PURE__ */ React.createElement("div", { className: "gh corner" }, "Who and where"), days.map((d) => /* @__PURE__ */ React.createElement("div", { key: d, className: "gh" }, /* @__PURE__ */ React.createElement("b", null, fmtDay(d).slice(0, 3)), " ", fmtShort(d), /* @__PURE__ */ React.createElement("div", { className: "axis" }, /* @__PURE__ */ React.createElement("span", null, "06"), /* @__PURE__ */ React.createElement("span", { className: "mid" }, "14:30"), /* @__PURE__ */ React.createElement("span", null, "23")))), rows.map((id) => /* @__PURE__ */ React.createElement(React.Fragment, { key: id }, /* @__PURE__ */ React.createElement("div", { className: "glabel" }, /* @__PURE__ */ React.createElement("span", { className: "gname" }, res(id).name, /* @__PURE__ */ React.createElement("span", { className: "osub" }, res(id).shift ? res(id).shift + " shift" : res(id).sub))), days.map((d) => /* @__PURE__ */ React.createElement("div", { key: d, className: "gcell", "data-day": d }, /* @__PURE__ */ React.createElement(Strip, { id, date: d, drafts: shown.drafts, previewIds, hover, setHover, onGrab: preview ? null : grab, onNudge: preview ? null : nudge, drag })))))), /* @__PURE__ */ React.createElement("div", { className: "legend" }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { className: "lg lg-off" }), "Already booked"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { className: "lg lg-draft" }), "Proposed"), preview && /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { className: "lg lg-prev" }), "New with this change"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { className: "lg lg-fit" }), "Fits while dragging"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { className: "lg lg-offshift" }), "Off shift"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { className: "lg lg-leave" }), "Leave or loaned")))), /* @__PURE__ */ React.createElement("div", { className: "footer" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: onBack }, "Back"), /* @__PURE__ */ React.createElement("span", { className: "spacer" }), !preview && lockedN > 0 && /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: onRerun }, "Re-run around ", lockedN, " kept"), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-primary", disabled: !!preview || !result.drafts.length, onClick: onNext }, "Fill seats")));
+};
+const Fill = ({ obj, p, cfg, setCfg, result, assign, setAssign, onBack, onNext, onMove, accepted, onAccept, onUndo, deferred, setDeferred }) => {
+  const drafts = [...result.drafts].sort(byTime);
+  const recs = RECORDS.filter((r) => r.obj === obj.id);
+  const inS = (id) => recs.filter((r) => assign[r.emp] === id).sort((a, b) => a.due < b.due ? -1 : 1);
+  const un = recs.filter((r) => !assign[r.emp]).sort((a, b) => a.due < b.due ? -1 : 1);
+  const openSeats = (d) => d.capacity - inS(d.id).length;
+  const move = (emp, did) => setAssign({ ...assign, [emp]: did || null });
+  const issuesFor = (r) => seatIssues(r.emp, drafts.find((d) => d.id === assign[r.emp]), assign, drafts, cfg, p.durH * 60);
+  const breaks = recs.filter((r) => assign[r.emp] && issuesFor(r).length).length;
+  const seated = recs.length - un.length;
+  const [focus, setFocus] = useFocus();
+  const dur = p.durH * 60;
+  const days = between(p.from, p.to);
+  const fits = (emp, d) => openSeats(d) > 0 && !seatIssues(emp, d, assign, drafts, cfg, dur).length;
+  const nameOf = (emp) => res(emp).name.split(", ").reverse().join(" ");
+  const problems = [];
+  recs.filter((r) => assign[r.emp]).forEach((r) => {
+    const iss = issuesFor(r);
+    if (!iss.length) return;
+    const d = drafts.find((x) => x.id === assign[r.emp]);
+    const others = drafts.filter((x) => x.id !== d.id && fits(r.emp, x));
+    problems.push({
+      key: "seat-" + r.emp,
+      sev: "issue",
+      text: nameOf(r.emp) + " in " + d.label + " breaks a rule.",
+      why: iss.map((x) => x.text).join("; ") + ".",
+      target: "p-" + r.emp,
+      fixes: [...others.map((x) => ({ id: x.id, label: "Move to " + x.label + ", " + fmtDay(x.date) + " " + fmtT(x.start), effect: "Fits every rule", run: () => move(r.emp, x.id) })), { id: "out", label: "Take " + nameOf(r.emp) + " out of " + d.label, effect: "They go back to Not seated", run: () => move(r.emp, null) }],
+      acceptable: true,
+      acceptLabel: "Keep the override"
+    });
+  });
+  drafts.filter((d) => d.breaks && d.breaks.length).forEach((d) => problems.push({ ...breakProblem(d, days, result.drafts, cfg, obj, onMove), target: "s-" + d.id }));
+  un.filter((r) => !deferred[r.emp]).forEach((r) => {
+    const e = res(r.emp);
+    const w = unassignedWhy(r.emp, drafts, assign, cfg, p.durH);
+    const fx = drafts.filter((x) => fits(r.emp, x)).map((x) => ({ id: x.id, label: "Seat in " + x.label + ", " + fmtDay(x.date) + " " + fmtT(x.start), effect: "Fits every rule", run: () => move(r.emp, x.id) }));
+    if (!fx.length) {
+      const fOnly = drafts.filter((x) => x.shift === e.shift && openSeats(x) > 0).find((x) => {
+        const iss = seatIssues(r.emp, x, assign, drafts, cfg, dur);
+        return iss.length === 1 && iss[0].why === "F";
+      });
+      if (fOnly) fx.push({ id: "raise", label: "Let " + (cfg.F[e.area] + 1) + " " + AREAS[e.area] + " people off the floor per shift, then seat in " + fOnly.label, effect: "Changes a shop rule for this run only. Saved with the sessions.", run: () => {
+        setCfg({ ...cfg, F: { ...cfg.F, [e.area]: cfg.F[e.area] + 1 } });
+        setAssign({ ...assign, [r.emp]: fOnly.id });
+      } });
+    }
+    const opts = drafts.filter((x) => openSeats(x) > 0);
+    problems.push({
+      key: "wait-" + r.emp,
+      sev: "warning",
+      text: nameOf(r.emp) + " is not seated.",
+      why: w.text + ".",
+      target: "w-" + r.emp,
+      fixes: fx,
+      defer: () => setDeferred({ ...deferred, [r.emp]: true }),
+      override: opts.length ? { options: opts.map((x) => ({ x, n: seatIssues(r.emp, x, assign, drafts, cfg, dur).length })).sort((a, b) => a.n - b.n || (a.x.shift === e.shift ? 0 : 1) - (b.x.shift === e.shift ? 0 : 1) || byTime(a.x, b.x)).map(({ x, n }) => ({ id: x.id, label: x.label + ", " + fmtShort(x.date) + (n ? " (breaks " + plural(n, "rule", "rules") + ")" : "") })), run: (sid, reason, note) => {
+        setAssign({ ...assign, [r.emp]: sid });
+        onAccept("seat-" + r.emp, reason, note);
+      } } : null
+    });
+  });
+  recs.filter((r) => assign[r.emp]).forEach((r) => {
+    const d = drafts.find((x) => x.id === assign[r.emp]);
+    if (!(r.due >= TODAY && d.date > r.due)) return;
+    const earlier = drafts.filter((x) => x.date <= r.due && x.id !== d.id && fits(r.emp, x));
+    const text = nameOf(r.emp) + " is seated on " + fmtShort(d.date) + ", after their due date of " + fmtShort(r.due);
+    if (earlier.length) problems.push({ key: "late-" + r.emp, sev: "warning", text: text + ".", why: "An earlier session has a seat that fits.", target: "p-" + r.emp, fixes: earlier.map((x) => ({ id: x.id, label: "Move to " + x.label + ", " + fmtDay(x.date), effect: "Before their due date", run: () => move(r.emp, x.id) })), acceptable: true });
+    else problems.push({ key: "late-" + r.emp, sev: "note", text: text + ". No earlier session has a seat that fits." });
+  });
+  const parts = splitProblems(problems, accepted);
+  const deferredList = un.filter((r) => deferred[r.emp]);
+  const waiting = un.filter((r) => !deferred[r.emp]);
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(Result, { tone: parts.items.length ? "warn" : "good", sub: "Seats go to people on the session's shift" + (cfg.P1 ? ", soonest due first" : "") + ". Anyone booked, on leave or over the shop limits is skipped. You can override any seat." }, seated, " of ", recs.length, " people have a seat.", waiting.length ? " " + waiting.length + " could not be seated." : "", deferredList.length ? " " + deferredList.length + " left for the next run." : "", breaks ? " " + plural(breaks, "seat breaks", "seats break") + " a rule." : ""), /* @__PURE__ */ React.createElement(ProblemBar, { ...parts, onGo: (x) => setFocus(x.target), onAccept, onUndo }), /* @__PURE__ */ React.createElement("div", { className: "fill2" }, /* @__PURE__ */ React.createElement("div", { className: "sessions" }, drafts.map((d) => {
+    const people = inS(d.id);
+    return /* @__PURE__ */ React.createElement("section", { key: d.id, id: "s-" + d.id, className: "sess2" + (focus === "s-" + d.id ? " focus" : "") }, /* @__PURE__ */ React.createElement("header", null, /* @__PURE__ */ React.createElement("span", { className: "slabel" }, d.label), /* @__PURE__ */ React.createElement("span", { className: "swhen" }, /* @__PURE__ */ React.createElement("b", null, fmtDay(d.date)), " ", fmtT(d.start), " to ", fmtT(d.end)), /* @__PURE__ */ React.createElement("span", { className: "quiet" }, res(d.room).name), /* @__PURE__ */ React.createElement("span", { className: "count" + (people.length >= d.capacity ? " full" : "") }, people.length, " of ", d.capacity)), /* @__PURE__ */ React.createElement("ul", { className: "people" }, people.map((r) => {
+      const e = res(r.emp);
+      const due = dueLabel(r.due);
+      const iss = issuesFor(r);
+      return /* @__PURE__ */ React.createElement("li", { key: r.emp, id: "p-" + r.emp, className: (iss.length ? "breaks" : "") + (focus === "p-" + r.emp ? " focus" : "") }, /* @__PURE__ */ React.createElement("span", { className: "pname" }, e.name, /* @__PURE__ */ React.createElement("span", { className: "osub" }, AREAS[e.area])), /* @__PURE__ */ React.createElement("span", { className: "pflags" }, due && /* @__PURE__ */ React.createElement(Tag, { tone: due.tone }, due.text), iss.map((x, i) => /* @__PURE__ */ React.createElement(Tag, { key: i, tone: "bad" }, x.text))), /* @__PURE__ */ React.createElement("select", { "aria-label": "Move " + e.name, value: d.id, onChange: (ev) => move(r.emp, ev.target.value) }, drafts.map((x) => /* @__PURE__ */ React.createElement("option", { key: x.id, value: x.id, disabled: x.id !== d.id && openSeats(x) <= 0 }, x.id === d.id ? "In " + x.label : "Move to " + x.label + ", " + fmtShort(x.date))), /* @__PURE__ */ React.createElement("option", { value: "" }, "Remove")));
+    }), openSeats(d) > 0 && /* @__PURE__ */ React.createElement("li", { className: "openseat2" }, plural(openSeats(d), "open seat", "open seats"))));
+  })), /* @__PURE__ */ React.createElement("aside", { className: "waiting" }, /* @__PURE__ */ React.createElement("h2", null, "Not seated"), !waiting.length && /* @__PURE__ */ React.createElement("p", { className: "quiet" }, deferredList.length ? "Nobody else is waiting." : "Everyone who needs this course has a seat."), /* @__PURE__ */ React.createElement("ul", null, waiting.map((r) => {
+    const e = res(r.emp);
+    const w = unassignedWhy(r.emp, drafts, assign, cfg, p.durH);
+    const opts = drafts.filter((x) => openSeats(x) > 0);
+    return /* @__PURE__ */ React.createElement("li", { key: r.emp, id: "w-" + r.emp, className: focus === "w-" + r.emp ? "focus" : "" }, /* @__PURE__ */ React.createElement("b", null, e.name), /* @__PURE__ */ React.createElement("span", { className: "osub" }, AREAS[e.area], ", ", e.shift, " shift"), /* @__PURE__ */ React.createElement("span", { className: "why2" }, w.text), /* @__PURE__ */ React.createElement("select", { "aria-label": "Seat " + e.name, value: "", disabled: !opts.length, onChange: (ev) => move(r.emp, ev.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "" }, opts.length ? "Seat anyway" : "No open seats"), opts.map((x) => {
+      const n = seatIssues(r.emp, x, assign, drafts, cfg, p.durH * 60);
+      return /* @__PURE__ */ React.createElement("option", { key: x.id, value: x.id }, x.label, ", ", fmtShort(x.date), n.length ? " (breaks a rule)" : "");
+    })));
+  })), deferredList.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "deferred" }, /* @__PURE__ */ React.createElement("h3", null, "Left for the next run"), /* @__PURE__ */ React.createElement("ul", null, deferredList.map((r) => /* @__PURE__ */ React.createElement("li", { key: r.emp }, /* @__PURE__ */ React.createElement("span", null, res(r.emp).name, /* @__PURE__ */ React.createElement("span", { className: "osub" }, AREAS[res(r.emp).area], ", ", res(r.emp).shift, " shift")), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", onClick: () => {
+    const n = { ...deferred };
+    delete n[r.emp];
+    setDeferred(n);
+  } }, "Undo")))), /* @__PURE__ */ React.createElement("p", { className: "quiet" }, "They stay in Needs scheduling and are offered first next time.")))), /* @__PURE__ */ React.createElement("div", { className: "footer" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: onBack }, "Back"), /* @__PURE__ */ React.createElement("span", { className: "spacer" }), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-primary", onClick: onNext }, "Review and publish")));
+};
+const Publish = ({ obj, p, cfg, result, assign, onBack, onPublish, done, onRestart, accepted, deferred }) => {
+  const drafts = [...result.drafts].sort(byTime);
+  const recs = RECORDS.filter((r) => r.obj === obj.id);
+  const seated = recs.filter((r) => assign[r.emp]);
+  const breaks = seated.filter((r) => seatIssues(r.emp, drafts.find((d) => d.id === assign[r.emp]), assign, drafts, cfg, p.durH * 60).length).length;
+  const changes = changedRules(cfg);
+  return /* @__PURE__ */ React.createElement("div", { className: "narrow" }, /* @__PURE__ */ React.createElement(Result, { tone: done ? "good" : "plain" }, done ? "Published " + plural(drafts.length, "session", "sessions") + ". " + seated.length + " people are scheduled." : "Publish " + plural(drafts.length, "session", "sessions") + " for " + seated.length + " people?"), /* @__PURE__ */ React.createElement("ul", { className: "pubrows" }, drafts.map((d) => {
+    const n = seated.filter((r) => assign[r.emp] === d.id).length;
+    return /* @__PURE__ */ React.createElement("li", { key: d.id }, /* @__PURE__ */ React.createElement("span", { className: "slabel" }, d.label), /* @__PURE__ */ React.createElement("span", { className: "swhen" }, /* @__PURE__ */ React.createElement("b", null, fmtDay(d.date)), " ", fmtT(d.start), " to ", fmtT(d.end)), /* @__PURE__ */ React.createElement("span", { className: "swho" }, res(d.instructor).name.split(", ").reverse().join(" "), ", ", res(d.room).name), /* @__PURE__ */ React.createElement("span", { className: "sseats" }, n, " of ", d.capacity));
+  })), /* @__PURE__ */ React.createElement("ul", { className: "effects" }, recs.length - seated.length > 0 && /* @__PURE__ */ React.createElement("li", null, plural(recs.length - seated.length, "person stays", "people stay"), " in Needs scheduling."), breaks > 0 && /* @__PURE__ */ React.createElement("li", null, plural(breaks, "seat publishes", "seats publish"), " with the rule it breaks, so supervisors can see it."), drafts.some((x) => x.breaks && x.breaks.length) && /* @__PURE__ */ React.createElement("li", null, plural(drafts.filter((x) => x.breaks && x.breaks.length).length, "session publishes", "sessions publish"), " at a time you chose that breaks a rule. The break is recorded with the session."), Object.keys(deferred).filter((k) => !assign[k]).length > 0 && /* @__PURE__ */ React.createElement("li", null, plural(Object.keys(deferred).filter((k) => !assign[k]).length, "person was", "people were"), " left for the next run and will be offered first."), Object.keys(accepted).length > 0 && /* @__PURE__ */ React.createElement("li", null, "Accepted with a reason, saved with the sessions:", /* @__PURE__ */ React.createElement("ul", { className: "accl" }, Object.entries(accepted).map(([k, a]) => /* @__PURE__ */ React.createElement("li", { key: k }, /* @__PURE__ */ React.createElement("b", null, a.label), ": ", a.reason, a.note ? ". " + a.note : "")))), /* @__PURE__ */ React.createElement("li", null, changes.length ? "Rules changed for this run, saved with each session: " + changes.join("; ") + "." : "Default shop rules were used. They are saved with each session for audit.")), /* @__PURE__ */ React.createElement("div", { className: "footer" }, !done && /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: onBack }, "Back"), /* @__PURE__ */ React.createElement("span", { className: "spacer" }), !done ? /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-primary", onClick: onPublish }, "Publish ", plural(drafts.length, "session", "sessions")) : /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: onRestart }, "Start another run")));
+};
+const STEPS = ["Set up", "Review drafts", "Fill seats", "Publish"];
+const paramsFor = (o) => ({ obj: o.id, n: o.n, occ: o.occ, durH: o.durH, from: "2026-10-21", to: "2026-10-30", instructors: [...o.instructors], rooms: [...o.rooms] });
+const SCENES = [
+  { obj: "hf", label: "Everything fits", hint: "Human Factors Recurrent: leave, travel and shifts respected" },
+  { obj: "bsi", label: "Blocked by a shared kit", hint: "Borescope Theory: one demo kit, loaned out next week" },
+  { obj: "lw", label: "Production limit", hint: "Lockwire: Module Bay can release 3 people per shift" }
+];
+const App = () => {
+  const [scene, setScene] = useState(0);
+  const [p, setP] = useState(paramsFor(objById("hf")));
+  const [cfg, setCfg] = useState(DEFAULT_CFG);
+  const [step, setStep] = useState(1);
+  const [result, setResult] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [assign, setAssign] = useState({});
+  const [accepted, setAccepted] = useState({});
+  const [deferred, setDeferred] = useState({});
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
-  const [result, setResult] = useState(null);
-  const [approved, setApproved] = useState(new Set());
-
-  const m = useMemo(() => ({
-    total: bl.length,
-    unsched: bl.filter(i => i.status === "unscheduled").length,
-    overdue: bl.filter(i => i.dte <= 0).length,
-    due30: bl.filter(i => i.dte > 0 && i.dte <= 30).length,
-    rec: bl.filter(i => i.status === "recommended").length,
-    sched: bl.filter(i => i.status === "scheduled").length,
-  }), [bl]);
-
-  const finish = useCallback(() => {
-    const r = optimizedSchedule(bl.filter(i => i.status === "unscheduled"));
-    setResult(r);
-    setBl(prev => {
-      const next = prev.map(i => ({ ...i }));
-      r.sessions.forEach(s => s.items.forEach(si => { const it = next.find(i => i.id === si.id); if (it) it.status = "recommended"; }));
-      return next;
-    });
-    setDone(true); setRunning(false); setView("recommendations");
-  }, [bl]);
-
-  return (
-    <div style={{ fontFamily: "'IBM Plex Sans', -apple-system, sans-serif", backgroundColor: C.bg, minHeight: "100vh", color: C.txt }}>
-      {running && <Processing onDone={finish} />}
-      <div style={{ backgroundColor: C.pri, padding: "0 24px", height: 46, display: "flex", alignItems: "center", justifyContent: "space-between", color: "#fff" }}>
-        <span style={{ fontSize: 13, fontWeight: 700 }}>COVALENT | Capability Management</span>
-      </div>
-      <div style={{ padding: "16px 24px", maxWidth: 1400, margin: "0 auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
-          <h1 style={{ fontSize: 18, fontWeight: 700 }}>Training Scheduling Optimization</h1>
-          {!done && <button onClick={() => setRunning(true)} style={{ backgroundColor: C.pri, color: "#fff", border: "none", padding: "8px 16px", borderRadius: 6, cursor: "pointer" }}>Run Optimization</button>}
-        </div>
-        <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-          <SmallMetric label="Backlog" value={m.total} />
-          <SmallMetric label="Unscheduled" value={m.unsched} accent={C.warn} />
-          <SmallMetric label="Overdue" value={m.overdue} accent={C.err} />
-          {done && <SmallMetric label="Scheduled" value={m.sched} accent={C.acc} />}
-        </div>
-        {done && result && <ResultsSummary stats={result.stats} />}
-        <div style={{ backgroundColor: C.srf, borderRadius: 8, border: `1px solid ${C.brd}`, overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-            <thead><tr style={{ backgroundColor: C.bg, textAlign: "left" }}>
-              <th style={{ padding: 10 }}>PRIORITY</th><th style={{ padding: 10 }}>WORKER</th><th style={{ padding: 10 }}>OBJECTIVE</th><th style={{ padding: 10 }}>EXPIRY</th><th style={{ padding: 10 }}>STATUS</th>
-            </tr></thead>
-            <tbody>
-              {bl.map(it => (
-                <tr key={it.id} style={{ borderBottom: `1px solid ${C.brdLt}` }}>
-                  <td style={{ padding: 10 }}><PriBar v={it.pri} /></td>
-                  <td style={{ padding: 10 }}>{it.worker.name}</td>
-                  <td style={{ padding: 10 }}>{it.obj.name}</td>
-                  <td style={{ padding: 10 }}><UrgBadge u={it.urg} d={it.dte} /></td>
-                  <td style={{ padding: 10 }}><StatusBadge s={it.status} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-}
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
+  const obj = objById(p.obj);
+  const locked = result ? result.drafts.filter((d) => d.locked) : [];
+  const fixes = useMemo(() => result ? fixesFor(result, p, cfg, locked) : [], [result, p, cfg]);
+  const go = (i) => {
+    setScene(i);
+    setP(paramsFor(objById(SCENES[i].obj)));
+    setCfg(DEFAULT_CFG);
+    setResult(null);
+    setPreview(null);
+    setAssign({});
+    setAccepted({});
+    setDeferred({});
+    setStep(1);
+    setDone(false);
+  };
+  const labelFor = (key) => {
+    const [kind, id] = [key.split("-")[0], key.slice(key.indexOf("-") + 1)];
+    const d = result && result.drafts.find((x) => x.id === id);
+    return kind === "unplaced" ? "Fewer sessions on " + id + " shift" : kind === "break" ? (d ? d.label : "Session") + " kept at a time that breaks a rule" : kind === "seat" ? res(id).name.split(", ").reverse().join(" ") + " seated against a rule" : kind === "late" ? res(id).name.split(", ").reverse().join(" ") + " seated after their due date" : kind === "early" ? "First " + id + " shift session after some due dates" : key;
+  };
+  const onAccept = (key, reason, note) => setAccepted((a) => ({ ...a, [key]: { reason, note, label: labelFor(key) } }));
+  const onUndo = (key) => setAccepted((a) => {
+    const n = { ...a };
+    delete n[key];
+    return n;
+  });
+  const run = (keep = []) => {
+    setAccepted({});
+    setDeferred({});
+    setRunning(true);
+    setPreview(null);
+    setTimeout(() => {
+      setResult(runSolver(p, cfg, keep));
+      setRunning(false);
+      setStep(2);
+    }, 700);
+  };
+  const apply = () => {
+    setP(preview.p);
+    setCfg(preview.cfg);
+    setResult(preview.result);
+    setPreview(null);
+  };
+  const lock = (id) => setResult({ ...result, drafts: result.drafts.map((d) => d.id === id ? { ...d, locked: !d.locked } : d) });
+  const remove = (id) => setResult({ ...result, drafts: result.drafts.filter((d) => d.id !== id) });
+  const moveDraft = (id, date, start, breaks) => setResult((r) => ({ ...r, drafts: r.drafts.map((d) => d.id !== id ? d : { ...d, orig: d.orig || { date: d.date, start: d.start }, date, start, end: start + (d.end - d.start), breaks, moved: !(d.orig && d.orig.date === date && d.orig.start === start), trace: [], why: breaks.length ? "Moved by you to a time that breaks a Must hold rule. It stays flagged until you move it back or publish it with the break recorded." : "Moved by you. Every Must hold rule still passes." }) }));
+  const toFill = () => {
+    setAssign(autoFill(result.drafts, obj, cfg, p.durH));
+    setStep(3);
+  };
+  return /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("div", { className: "proto" }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, "Prototype"), " Auto-schedule r5"), /* @__PURE__ */ React.createElement("span", { className: "scenes" }, SCENES.map((s, i) => /* @__PURE__ */ React.createElement("button", { type: "button", key: s.obj, className: scene === i ? "on" : "", title: s.hint, onClick: () => go(i) }, s.label))), /* @__PURE__ */ React.createElement("span", { className: "pnote" }, "Fixed today: Tue Oct 20, 2026. Covalent Aerospace, Cincinnati Engine Works MRO shop (fictional)")), /* @__PURE__ */ React.createElement("div", { className: "appbar" }, /* @__PURE__ */ React.createElement("span", { className: "brand" }, "Covalent"), /* @__PURE__ */ React.createElement("span", { className: "env" }, "TEST"), /* @__PURE__ */ React.createElement("nav", null, /* @__PURE__ */ React.createElement("span", null, "Map"), /* @__PURE__ */ React.createElement("span", { className: "on" }, "Manage"), /* @__PURE__ */ React.createElement("span", null, "Analyze")), /* @__PURE__ */ React.createElement("span", { className: "spacer" }), /* @__PURE__ */ React.createElement("span", { className: "avatar" }, "YR")), /* @__PURE__ */ React.createElement("main", { className: "main" }, /* @__PURE__ */ React.createElement("div", { className: "paper" }, /* @__PURE__ */ React.createElement("div", { className: "page-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", { className: "crumb" }, "Scheduling backlog"), /* @__PURE__ */ React.createElement("h1", null, "Auto-schedule ", /* @__PURE__ */ React.createElement("span", { className: "objname" }, obj.name))), /* @__PURE__ */ React.createElement("ol", { className: "stepper" }, STEPS.map((s, i) => /* @__PURE__ */ React.createElement("li", { key: s, className: i + 1 === step ? "on" : i + 1 < step ? "done" : "" }, /* @__PURE__ */ React.createElement("span", { className: "sdot" }, i + 1 < step ? "\u2713" : i + 1), s)))), running && /* @__PURE__ */ React.createElement("div", { className: "running", role: "status" }, /* @__PURE__ */ React.createElement("span", { className: "spin" }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "Checking ", plural(p.instructors.length, "instructor", "instructors"), ", ", plural(p.rooms.length, "room", "rooms"), obj.assets.length ? " and " + res(obj.assets[0]).name.toLowerCase() : "", " across ", between(p.from, p.to).length, " working days"), /* @__PURE__ */ React.createElement("span", { className: "help" }, "Applying ", Object.keys(RULES).length, " rules from the Objective Template and site policy"))), !running && step === 1 && /* @__PURE__ */ React.createElement(Setup, { obj, p, setP, cfg, setCfg, onRun: () => run([]) }), !running && step === 2 && result && /* @__PURE__ */ React.createElement(Review, { obj, p, cfg, result, preview, setPreview, fixes, onApply: apply, onLock: lock, onRemove: remove, onMove: moveDraft, accepted, onAccept, onUndo, onRerun: () => run(locked), onBack: () => {
+    setPreview(null);
+    setStep(1);
+  }, onNext: toFill }), !running && step === 3 && result && /* @__PURE__ */ React.createElement(Fill, { obj, p, cfg, setCfg, onMove: moveDraft, accepted, onAccept, onUndo, deferred, setDeferred, result, assign, setAssign, onBack: () => setStep(2), onNext: () => setStep(4) }), !running && step === 4 && result && /* @__PURE__ */ React.createElement(Publish, { obj, p, cfg, accepted, deferred, result, assign, done, onBack: () => setStep(3), onPublish: () => setDone(true), onRestart: () => go(scene) }))));
+};
+ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(App, null));
 </script>
 </body>
 </html>
