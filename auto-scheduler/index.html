@@ -1,10 +1,6 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Auto-Schedule MRO</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auto-schedule r7, Planning Run</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap">
 <style>
@@ -550,14 +546,77 @@ button { color: inherit }
 .deferred ul { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px }
 .deferred li { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted) }
 .accl { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px }
-</style>
-</head>
-<body>
+
+/* r6: several courses in one run */
+.cdot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; flex: none; vertical-align: middle }
+.ctag { display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: .02em; color: var(--cc); border: 1.5px solid var(--cc); border-radius: 3px; padding: 0 4px; line-height: 15px; background: var(--paper); vertical-align: 1px }
+.block h2 { margin: 0 0 10px }
+.courses { width: 100%; border-collapse: collapse; min-width: 760px }
+.courses th { text-align: left; font-size: 12px; font-weight: 500; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--divider) }
+.courses td { padding: 10px 8px; border-bottom: 1px solid var(--divider); vertical-align: middle; font-size: 13.5px }
+.courses .r { text-align: right }
+.courses .numin input { width: 56px }
+.cname { display: flex; gap: 10px; align-items: flex-start }
+.cname .cdot { margin-top: 4px }
+.courses td.needs { max-width: 220px; font-size: 12.5px; color: var(--muted); line-height: 1.35 }
+.courses td { height: 58px }
+.courses td:last-child { text-align: right; width: 1% }
+.badt { color: var(--bad); font-weight: 600 }
+.okt { color: var(--good); font-weight: 600 }
+.warnt { color: var(--warn); font-weight: 600 }
+.adders { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; margin-top: 12px }
+.adders .or { color: var(--muted); padding-bottom: 8px }
+.adders .inl { display: flex; gap: 8px; align-items: center }
+.adders input[type=date] { font-family: inherit; font-size: 13px; border: 1px solid #C4C4C4; border-radius: 4px; padding: 6px 8px }
+.rulegroups { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; margin-top: 14px }
+.rulegroups .rulelist { margin-top: 0 }
+.rghead { padding: 10px 14px; font-weight: 600; font-size: 13px; background: var(--head); border-bottom: 1px solid var(--divider); border-radius: 6px 6px 0 0 }
+.rrow select { font-family: inherit; font-size: 13px; border: 1px solid #C4C4C4; border-radius: 4px; padding: 5px 6px; max-width: 220px }
+.cresults { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 13.5px }
+.cresults li { display: inline-flex; align-items: center; gap: 8px; color: var(--text) }
+.cgroup { border: 1px solid var(--divider); border-left: 4px solid var(--cc); border-radius: 6px; margin-bottom: 14px; overflow: hidden }
+.cgroup > header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 14px; background: var(--head); border-bottom: 1px solid var(--divider); font-size: 14px }
+.cgroup > header span:last-child { margin-left: auto; font-size: 13px }
+.cgroup .slist2 { border-top: 0 }
+.cgroup .srow:last-child { border-bottom: 0 }
+.srow.empty { padding: 12px; color: var(--muted); font-style: italic }
+.cgroup .slabel, .slabel.course, .sess2 .slabel { border-color: var(--cc); color: var(--cc); min-width: 46px }
+.seg.sess.draft.course { border: 1.5px dashed var(--cc); background: color-mix(in srgb, var(--cc) 14%, white) }
+.seg.sess.draft.course .sl { color: color-mix(in srgb, var(--cc) 80%, black) }
+.seg.sess.draft.course.hot { background: var(--cc); border-style: solid }
+.seg.sess.draft.course.hot .sl { color: #fff }
+.seg.sess.draft.course.preview { border: 2px solid #B45309; background: #FFF4E5 }
+.seg.sess.draft.course.broken { border: 2px solid var(--bad); background: #FFF0F0 }
+.legend .lg { width: 14px; height: 10px }
+.sess2 { border-left: 4px solid var(--cc) }
+.fillbar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-bottom: 14px }
+.fillbar .segb { display: inline-flex; align-items: center; gap: 6px }
+.also { display: inline-flex; align-items: center; gap: 2px; font-size: 11.5px; color: var(--muted); background: var(--head); border-radius: 4px; padding: 1px 6px 1px 3px }
+.fe.trade { color: #B45309 }
+.pubcourses { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px }
+.pubcourses > li { border: 1px solid var(--divider); border-left: 4px solid var(--cc); border-radius: 6px }
+.pcrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 14px; background: var(--head); border-bottom: 1px solid var(--divider) }
+.pstat { margin-left: auto; font-size: 12px; font-weight: 600; border-radius: 12px; padding: 2px 10px }
+.pstat.ready { background: var(--good-bg); color: var(--good) }
+.pstat.open { background: #FFE6C7; color: #6B2F00 }
+.pstat.done { background: var(--primary-wash); color: var(--primary) }
+.pubcourses .pubrows { border-top: 0 }
+.pubcourses .pubrows li:last-child { border-bottom: 0 }
+.pubcourses .pubrows li { padding-left: 14px }
+.narrow { max-width: 900px }
+.adders .pf { max-width: 100%; min-width: 0 }
+.adders select { max-width: 100% }
+.adders .inl { flex-wrap: wrap }
+
+/* r6.2: calendar groups */
+.ggroup { display: flex; align-items: baseline; gap: 10px; background: #EEF2F7; color: var(--text); text-transform: none; letter-spacing: 0; font-size: 13px; padding: 9px 12px; border-top: 1px solid var(--divider); border-bottom: 1px solid var(--divider) }
+.ggroup b { font-weight: 600 }
+.ggroup span { font-size: 12px; color: var(--muted) }
+</style></head><body>
 <div id="root"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script>
-const { useState, useMemo, useEffect, useRef } = React;
 const TODAY = "2026-10-20";
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -595,28 +654,30 @@ const addWorkdays = (s, n) => {
 };
 const overlap = (a0, a1, b0, b1) => a0 < b1 && b0 < a1;
 const plural = (n, one, many) => n + " " + (n === 1 ? one : many);
+const byTime = (a, b) => a.date + fmtT(a.start) < b.date + fmtT(b.start) ? -1 : a.date + fmtT(a.start) > b.date + fmtT(b.start) ? 1 : 0;
 const DAY_START = 360;
 const DAY_END = 1380;
 const SPAN = DAY_END - DAY_START;
 const pct = (m) => (Math.max(DAY_START, Math.min(DAY_END, m)) - DAY_START) / SPAN * 100;
+const personName = (id) => res(id).name.split(", ").reverse().join(" ");
 const SHIFTS = { "1st": [360, 870], "2nd": [870, 1380] };
 const AREAS = { mb: "Module Bay", ti: "Teardown and Inspection", at: "Assembly and Test", pr: "Parts Repair" };
 const BUILDINGS = { b1: "Training Center, Bldg 1", b2: "Hangar 2, Bldg 2" };
 const INSTRUCTORS = [
-  { id: "i1", name: "Adams, Mary", sub: "Human Factors, Hazmat", shift: "1st" },
-  { id: "i2", name: "Ortega, Luis", sub: "Borescope, Lockwire", shift: "2nd" },
-  { id: "i3", name: "Whitaker, Dana", sub: "Human Factors, Lockwire", shift: "1st" },
-  { id: "i4", name: "Nguyen, Thomas", sub: "Borescope", shift: "1st" },
-  { id: "i5", name: "Kowalski, Erin", sub: "Hazmat, Human Factors", shift: "2nd" }
+  { id: "i1", name: "Adams, Mary", shift: "1st" },
+  { id: "i2", name: "Ortega, Luis", shift: "2nd" },
+  { id: "i3", name: "Whitaker, Dana", shift: "1st" },
+  { id: "i4", name: "Nguyen, Thomas", shift: "1st" },
+  { id: "i5", name: "Kowalski, Erin", shift: "2nd" }
 ].map((x) => ({ ...x, type: "instructor" }));
 const ROOMS = [
   { id: "tc101", name: "Classroom TC-101", seats: 12, bldg: "b1" },
   { id: "tc102", name: "Classroom TC-102", seats: 8, bldg: "b1" },
   { id: "h2a", name: "Hangar 2 Training Room", seats: 10, bldg: "b2" }
-].map((x) => ({ ...x, type: "room", sub: x.seats + " seats \xB7 " + BUILDINGS[x.bldg].split(",")[0] }));
+].map((x) => ({ ...x, type: "room", sub: x.seats + " seats, " + BUILDINGS[x.bldg].split(",")[0] }));
 const ASSETS = [
   { id: "kit", name: "Borescope demo kit", sub: "Stored in Hangar 2", per: "session" },
-  { id: "boards", name: "Lockwire practice boards", sub: "Set of 6, Training Center", per: "trainee" }
+  { id: "boards", name: "Lockwire practice boards", sub: "Set of 6", per: "trainee" }
 ].map((x) => ({ ...x, type: "asset" }));
 const FIRST = ["Rosbel", "Chidi", "Erik", "Mai", "Raj", "Daniela", "Kwame", "Charlotte", "Sophia", "Felipe", "Jae-won", "Ama", "Petra", "Mateo", "Hassan", "Greta", "Jordan", "Lucia", "Owen", "Nia", "Theo", "Paige", "Marco", "Lars", "Simran"];
 const LAST = ["Zuniga", "Okafor", "Lindqvist", "Tran", "Patel", "Reyes", "Mensah", "Thomas", "Martinez", "Duarte", "Kim", "Osei", "Novak", "Garcia", "Ali", "Bauer", "Cole", "Diaz", "Evans", "Foster", "Grant", "Hughes", "Ibarra", "Jensen", "Kaur", "Lopez", "Moreau", "Nakamura", "Ortiz", "Price", "Quinn", "Rossi", "Sato", "Turner", "Usman", "Varga", "Walsh", "Xu", "Young", "Zeller", "Abbott", "Brooks", "Castillo", "Dubois", "Ekwueme", "Fischer", "Haddad", "Ivanova", "Jovanovic", "Keller", "Larsen", "Meyer", "Nair"];
@@ -624,7 +685,7 @@ const TITLES = { mb: "Module Technician", ti: "Inspector", at: "Assembly Technic
 const empRange = (from, to, shift, areas) => Array.from({ length: to - from + 1 }, (_, k) => {
   const n = from + k;
   const area = areas[k % areas.length];
-  return { id: "p" + String(n).padStart(2, "0"), type: "employee", name: LAST[n - 1] + ", " + FIRST[n * 7 % FIRST.length], shift, area, sub: TITLES[area] + " \xB7 " + AREAS[area] };
+  return { id: "p" + String(n).padStart(2, "0"), type: "employee", name: LAST[n - 1] + ", " + FIRST[n * 7 % FIRST.length], shift, area, sub: TITLES[area] };
 });
 const EMPLOYEES = [
   ...empRange(1, 10, "1st", ["mb", "ti", "at", "pr"]),
@@ -639,69 +700,69 @@ const EMPLOYEES = [
 ];
 const ALL = [...INSTRUCTORS, ...ROOMS, ...ASSETS, ...EMPLOYEES];
 const res = (id) => ALL.find((r) => r.id === id);
+const range = (a, b) => Array.from({ length: b - a + 1 }, (_, k) => a + k);
 const OBJECTIVES = [
-  { id: "hf", name: "Human Factors Recurrent", durH: 3, occ: 8, n: 3, instructors: ["i1", "i3", "i5"], rooms: ["tc101", "tc102", "h2a"], assets: [], emps: [1, 18], note: "Required every 24 months for certifying staff" },
-  { id: "bsi", name: "Borescope Inspection Theory, LEAP-1A", durH: 4, occ: 6, n: 4, instructors: ["i4", "i2"], rooms: ["h2a", "tc101"], assets: ["kit"], emps: [19, 30], note: "Needs the borescope demo kit in the room" },
-  { id: "lw", name: "Torque and Lockwire Practices", durH: 3, occ: 6, n: 4, instructors: ["i3", "i2"], rooms: ["tc102", "tc101"], assets: ["boards"], emps: [31, 50], note: "One practice board per trainee" }
+  { id: "hf", code: "HF", name: "Human Factors Recurrent", color: "#0E7C86", durH: 3, occ: 8, n: 3, instructors: ["i1", "i3", "i5"], rooms: ["tc101", "tc102", "h2a"], assets: [], emps: [...range(1, 18), 31, 32, 33, 38, 39], note: "Every 24 months for certifying staff" },
+  { id: "bsi", code: "BSI", name: "Borescope Inspection Theory, LEAP-1A", color: "#4F46E5", durH: 4, occ: 6, n: 4, instructors: ["i4", "i2"], rooms: ["h2a", "tc101"], assets: ["kit"], emps: range(19, 30), note: "Needs the borescope demo kit" },
+  { id: "lw", code: "LW", name: "Torque and Lockwire Practices", color: "#BE185D", durH: 3, occ: 6, n: 4, instructors: ["i3", "i2"], rooms: ["tc102", "tc101"], assets: ["boards"], emps: range(31, 50), note: "One practice board per trainee" },
+  { id: "hz", code: "HZ", name: "Hazmat and Dangerous Goods Awareness", color: "#92400E", durH: 2, occ: 10, n: 2, instructors: ["i1", "i5"], rooms: ["tc101", "tc102"], assets: [], emps: [...range(5, 12), 19, 20, 25, 26], note: "Every 24 months for shipping and receiving roles" },
+  { id: "ewis", code: "EWIS", name: "EWIS Awareness Recurrent", color: "#6D28D9", durH: 3, occ: 6, n: 4, instructors: ["i4", "i2"], rooms: ["h2a", "tc101"], assets: [], emps: range(19, 30), note: "Every 24 months for anyone who works on engine wiring" },
+  { id: "sms", code: "SMS", name: "Safety Management System Recurrent", color: "#0369A1", durH: 2, occ: 8, n: 4, instructors: ["i3", "i2"], rooms: ["tc102", "tc101"], assets: [], emps: range(31, 50), note: "Annual for all module and assembly technicians" }
 ];
 const objById = (id) => OBJECTIVES.find((o) => o.id === id);
-const RECORDS = OBJECTIVES.flatMap((o) => Array.from({ length: o.emps[1] - o.emps[0] + 1 }, (_, k) => {
-  const n = o.emps[0] + k;
-  return { emp: "p" + String(n).padStart(2, "0"), obj: o.id, due: addDays("2026-10-14", n * 7 % 40), renewal: n % 3 === 0 };
-}));
+const needsKit = (obj) => objById(obj).assets.length > 0;
+const runHasKits = (run) => run.courses.some((c) => needsKit(c.obj));
+const RECORDS = OBJECTIVES.flatMap((o, oi) => o.emps.map((n) => ({ key: o.id + "|p" + String(n).padStart(2, "0"), emp: "p" + String(n).padStart(2, "0"), obj: o.id, due: addDays("2026-10-14", (n * 7 + oi * 11) % 40) })));
+const coursesOf = (emp) => RECORDS.filter((r) => r.emp === emp).map((r) => r.obj);
 const EXCEPTIONS = [
   { res: "i3", from: "2026-10-22", to: "2026-10-23", kind: "Leave", note: "PTO", source: "HR feed, synced Oct 19" },
   { res: "kit", from: "2026-10-26", to: "2026-10-30", kind: "Loaned", note: "On-Wing Services, ESN 956-118", qty: 1, source: "entered by Mary Adams, Oct 14" },
   { res: "p03", from: "2026-10-21", to: "2026-10-21", kind: "Leave", note: "PTO", source: "HR feed, synced Oct 19" }
 ];
-const B = (id, name, date, start, end, trainer, station, assets, trainees) => ({ id, name, date, start, end, trainer, station, assets, trainees });
+const B = (id, name, date, start, end, trainer, station, assets, trainees) => ({ id, name, date, start, end, trainer, station, assets, trainees, src: "published session" });
 const BOOKINGS = [
   B("k1", "Borescope Probe Familiarization", "2026-10-21", 360, 870, "i4", "h2a", { kit: 1 }, []),
   B("k2", "Borescope Probe Familiarization", "2026-10-22", 360, 870, "i4", "h2a", { kit: 1 }, []),
   B("k3", "Borescope Probe Familiarization", "2026-10-23", 360, 870, "i4", "h2a", { kit: 1 }, []),
   B("k4", "Engine Run-up Safety Briefing", "2026-10-21", 870, 1110, "i2", "tc101", {}, ["p14", "p26"]),
   B("k5", "Night Shift FOD Walk", "2026-10-23", 870, 1380, "i2", null, {}, []),
-  B("k6", "Hazmat and DG Awareness", "2026-10-21", 870, 1050, "i5", "h2a", {}, []),
+  B("k6", "Hazmat and DG Awareness, Q3 make-up", "2026-10-21", 870, 1050, "i5", "h2a", {}, []),
   B("k7", "Human Factors Initial", "2026-10-21", 360, 540, "i1", "tc102", {}, []),
   B("k8", "Human Factors Initial", "2026-10-22", 540, 720, "i1", "tc101", {}, []),
   B("k9", "Shop Visit Kickoff, ESN 891-442", "2026-10-26", 360, 480, "i1", "tc102", {}, ["p51", "p52", "p53"])
 ];
-BOOKINGS.forEach((b) => {
-  b.src = "published session";
-});
 const DEFAULT_CFG = { L1: 2, L2: 4, T: 30, F: { mb: 3, ti: 4, at: 3, pr: 4 }, M: 50, C: 1, qty: { kit: 1, boards: 6 }, P1: true };
 const RULES = {
-  A1: { label: "Instructor, room, kit and trainees are free (shift, leave, bookings)", source: "Availability service" },
-  A2: { label: "Instructor holds a Trainer Endorsement on the Objective", source: "Objective Template" },
-  A3: { label: "Room seats cover the session", source: "Objective Template" },
+  A1: { label: "Instructor, room and trainees are free", source: "Availability service" },
+  X: { label: "Taken by another course in this run", source: "This run" },
   K: { label: "Teaching assets available", source: "Objective Template" },
-  L1: { label: "Sessions an instructor teaches per day", source: "Site policy" },
-  L2: { label: "Training hours per trainee per day", source: "Site policy" },
-  T: { label: "Travel time between buildings", source: "Site policy" },
-  F: { label: "Technicians off the floor per area, per shift", source: "Site policy" },
-  M: { label: "Minimum seats filled to run a session", source: "Site policy" },
-  C: { label: "Sessions of this Objective per shift, per day", source: "Site policy" },
-  P1: { label: "Seat overdue and soonest-due records first", source: "Preference" }
+  L1: { label: "Sessions an instructor teaches per day", source: "Shared rule" },
+  L2: { label: "Training hours per person per day", source: "Shared rule" },
+  T: { label: "Travel time between buildings", source: "Shared rule" },
+  F: { label: "People off the floor per area, per shift", source: "Shared rule" },
+  M: { label: "Minimum seats filled to run a session", source: "Each course" },
+  C: { label: "Sessions of a course per shift, per day", source: "Each course" },
+  shift: { label: "Works another shift", source: "Availability service" }
 };
 const usesRes = (s, id) => s.trainer === id || s.station === id || (s.trainees || []).includes(id);
 const exceptionOn = (id, date) => EXCEPTIONS.find((x) => x.res === id && date >= x.from && date <= x.to);
 const statusOf = (sessions, id, date, start, end, excludeId) => {
   const r = res(id);
   const x = r.type !== "asset" && exceptionOn(id, date);
-  if (x) return { state: "leave", text: x.kind + ": " + x.note + " (" + x.source + ")", short: x.kind, src: x.source };
+  if (x) return { state: "leave", text: x.kind + ": " + x.note + " (" + x.source + ")", short: "on leave" };
   const hit = sessions.find((s) => s.id !== excludeId && s.date === date && usesRes(s, id) && overlap(start, end, s.start, s.end));
-  if (hit) return { state: "booked", text: "Booked: " + hit.name + " " + fmtT(hit.start) + " to " + fmtT(hit.end) + (hit.src ? " (" + hit.src + ")" : ""), short: "Booked" };
+  if (hit) return { state: "booked", text: "Booked: " + hit.name + " " + fmtT(hit.start) + " to " + fmtT(hit.end) + (hit.src ? " (" + hit.src + ")" : ""), short: "booked", run: !!hit.inRun };
   if (r.shift) {
     const [a, b] = SHIFTS[r.shift];
-    if (start < a || end > b) return { state: "offshift", text: "Works " + r.shift + " shift", short: "Off shift" };
+    if (start < a || end > b) return { state: "offshift", text: "Works " + r.shift + " shift", short: "off shift" };
   }
-  return { state: "free", text: "Free", short: "Free" };
+  return { state: "free", text: "Free", short: "free" };
 };
 const loadOf = (sessions, id, date) => sessions.filter((s) => s.trainer === id && s.date === date).length;
+const assetUse = (sessions, id, date, start, end) => sessions.filter((s) => s.date === date && s.assets && s.assets[id] && overlap(start, end, s.start, s.end));
 const assetAvail = (sessions, id, date, start, end, cfg) => {
   const loaned = EXCEPTIONS.filter((x) => x.res === id && date >= x.from && date <= x.to).reduce((a, x) => a + (x.qty || 0), 0);
-  const used = sessions.filter((s) => s.date === date && s.assets && s.assets[id] && overlap(start, end, s.start, s.end)).reduce((a, s) => a + s.assets[id], 0);
-  return cfg.qty[id] - loaned - used;
+  return cfg.qty[id] - loaned - assetUse(sessions, id, date, start, end).reduce((a, s) => a + s.assets[id], 0);
 };
 const travelBlock = (sessions, instr, date, start, end, room, T) => {
   const rb = res(room).bldg;
@@ -718,13 +779,11 @@ const baseOff = () => {
   }));
   return m;
 };
+const BASE_OFF = baseOff();
 const allocate = (n, demand) => {
   const shifts = Object.keys(demand).filter((s) => demand[s] > 0);
   const total = shifts.reduce((a, s) => a + demand[s], 0);
-  const out = {};
-  shifts.forEach((s) => {
-    out[s] = 0;
-  });
+  const out = { "1st": 0, "2nd": 0 };
   if (!total || n <= 0) return out;
   let used = 0;
   const rem = shifts.map((s) => {
@@ -739,113 +798,100 @@ const allocate = (n, demand) => {
   }
   return out;
 };
-const runSolver = (p, cfg, locked = []) => {
-  const obj = objById(p.obj);
-  const recs = RECORDS.filter((r) => r.obj === p.obj);
-  const days = between(p.from, p.to);
-  const dur = p.durH * 60;
-  const demand = { "1st": {}, "2nd": {} };
-  recs.forEach((r) => {
-    const e = res(r.emp);
-    demand[e.shift][e.area] = (demand[e.shift][e.area] || 0) + 1;
-  });
-  const remOn = (s) => Object.values(demand[s]).reduce((a, b) => a + b, 0);
-  const base = baseOff();
+const draftAsSession = (d) => ({ id: d.id, name: d.label + " (" + objById(d.obj).code + ")", inRun: true, src: "this run", date: d.date, start: d.start, end: d.end, trainer: d.instructor, station: d.room, trainees: [], assets: d.assets });
+const occCapFor = (c, cfg) => {
+  const o = objById(c.obj);
+  const pt = o.assets.find((a) => res(a).per === "trainee");
+  return pt ? Math.min(c.occ, cfg.qty[pt]) : c.occ;
+};
+const runPlan = (run, cfg) => {
+  const days = between(run.from, run.to);
   const plan = {};
-  const offCount = (d, s, a) => (base[offKey(d, s, a)] || /* @__PURE__ */ new Set()).size + (plan[offKey(d, s, a)] || 0);
-  const perTrainee = obj.assets.find((a) => res(a).per === "trainee");
-  const occCap = perTrainee ? Math.min(p.occ, cfg.qty[perTrainee]) : p.occ;
+  const offCount = (d, s, a) => (BASE_OFF[offKey(d, s, a)] || /* @__PURE__ */ new Set()).size + (plan[offKey(d, s, a)] || 0);
   const drafts = [];
-  const asSession = (d) => ({ id: d.id, name: "another draft", date: d.date, start: d.start, end: d.end, trainer: d.instructor, station: d.room, trainees: [], assets: d.assets });
-  const all = () => [...BOOKINGS, ...drafts.map(asSession)];
-  const reserve = (d, target) => {
-    let left2 = Math.min(d.capacity, target || d.capacity);
-    d.plan = {};
-    Object.keys(demand[d.shift]).sort((a, b) => demand[d.shift][b] - demand[d.shift][a]).forEach((a) => {
-      const k = Math.max(0, Math.min(left2, demand[d.shift][a], cfg.F[a] - offCount(d.date, d.shift, a)));
-      if (k > 0) {
-        d.plan[a] = k;
-        plan[offKey(d.date, d.shift, a)] = (plan[offKey(d.date, d.shift, a)] || 0) + k;
-        demand[d.shift][a] -= k;
-        left2 -= k;
-      }
-    });
-  };
-  locked.forEach((d) => {
-    const c = { ...d };
-    drafts.push(c);
-    reserve(c);
-  });
-  const alloc = allocate(p.n, { "1st": remOn("1st") + locked.filter((d) => d.shift === "1st").reduce((a, d) => a + Object.values(d.plan || {}).reduce((x, y) => x + y, 0), 0), "2nd": remOn("2nd") + locked.filter((d) => d.shift === "2nd").reduce((a, d) => a + Object.values(d.plan || {}).reduce((x, y) => x + y, 0), 0) });
-  locked.forEach((d) => {
-    if (alloc[d.shift] > 0) alloc[d.shift] -= 1;
-  });
-  const order = Object.keys(alloc).sort((a, b) => remOn(b) - remOn(a));
-  const queue = [];
-  const left = { ...alloc };
-  while (order.some((s) => left[s] > 0)) order.forEach((s) => {
-    if (left[s] > 0) {
-      queue.push(s);
-      left[s] -= 1;
-    }
-  });
-  const unplaced = [];
+  const all = () => [...BOOKINGS, ...drafts.map(draftAsSession)];
   let checked = 0;
-  const toGo = { ...alloc };
-  queue.forEach((shift) => {
-    const target = Math.ceil(remOn(shift) / Math.max(1, toGo[shift]));
-    toGo[shift] -= 1;
+  const cs = run.courses.map((c) => {
+    const obj = objById(c.obj);
+    const recs = RECORDS.filter((r) => r.obj === c.obj);
+    const demand = { "1st": {}, "2nd": {} };
+    const dues = { "1st": [], "2nd": [] };
+    recs.forEach((r) => {
+      const e = res(r.emp);
+      demand[e.shift][e.area] = (demand[e.shift][e.area] || 0) + 1;
+      dues[e.shift].push(r.due);
+    });
+    dues["1st"].sort();
+    dues["2nd"].sort();
+    const alloc = allocate(c.n, { "1st": dues["1st"].length, "2nd": dues["2nd"].length });
+    return { c, obj, demand, dues, used: { "1st": 0, "2nd": 0 }, toGo: { ...alloc }, occCap: occCapFor(c, cfg), unplaced: [], seq: 0 };
+  });
+  const remOn = (s, sh) => Object.values(s.demand[sh]).reduce((a, b) => a + b, 0);
+  for (let guard = 0; guard < 200; guard += 1) {
+    const cands = [];
+    cs.forEach((s2) => ["1st", "2nd"].forEach((sh2) => {
+      if (s2.toGo[sh2] > 0) cands.push({ s: s2, sh: sh2, key: (run.first === s2.c.obj ? "0" : "1") + (s2.dues[sh2][s2.used[sh2]] || "9999") });
+    }));
+    if (!cands.length) break;
+    cands.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : a.s.c.obj < b.s.c.obj ? -1 : 1);
+    const { s, sh } = cands[0];
+    const target = Math.ceil(remOn(s, sh) / Math.max(1, s.toGo[sh]));
+    s.toGo[sh] -= 1;
     const counts = {};
     const fArea = {};
     const trace = [];
     const seen = /* @__PURE__ */ new Set();
     const fail = (why, day, t, text) => {
       counts[why] = (counts[why] || 0) + 1;
-      const key = day + why;
-      if (!seen.has(key) && trace.length < 5) {
-        seen.add(key);
+      const k = day + why;
+      if (!seen.has(k) && trace.length < 5) {
+        seen.add(k);
         trace.push({ when: fmtDay(day) + ", " + fmtT(t), why, text });
       }
     };
+    const dur = s.c.durH * 60;
     let hit = null;
     outer: for (const day of days) {
-      for (let t = SHIFTS[shift][0]; t + dur <= SHIFTS[shift][1]; t += 30) {
+      for (let t = SHIFTS[sh][0]; t + dur <= SHIFTS[sh][1]; t += 30) {
         checked += 1;
         const sess = all();
-        const sameShift = drafts.filter((d) => d.date === day && d.shift === shift).length;
-        if (sameShift >= cfg.C) {
-          fail("C", day, t, plural(sameShift, "session", "sessions") + " of this Objective already on " + shift + " shift (limit " + cfg.C + ")");
+        const same = drafts.filter((d) => d.obj === s.c.obj && d.date === day && d.shift === sh).length;
+        if (same >= cfg.C) {
+          fail("C", day, t, plural(same, "session", "sessions") + " of this course already on " + sh + " shift (limit " + cfg.C + ")");
           continue;
         }
-        const ins = p.instructors.map((id) => {
+        const ins = s.c.instructors.map((id) => {
           const st = statusOf(sess, id, day, t, t + dur);
-          if (st.state !== "free") return { id, why: "A1", text: res(id).name.split(",")[0] + (st.state === "leave" ? " on leave (" + st.src + ")" : " " + st.short.toLowerCase()) };
-          if (loadOf(sess, id, day) >= cfg.L1) return { id, why: "L1", text: res(id).name.split(",")[0] + " already teaches " + cfg.L1 + " that day" };
+          const nm = res(id).name.split(",")[0];
+          if (st.state !== "free") return { id, why: st.run ? "X" : "A1", text: nm + " " + (st.state === "booked" ? st.text.replace("Booked: ", "teaching ") : st.state === "leave" ? "on leave" : st.short) };
+          if (loadOf(sess, id, day) >= cfg.L1) return { id, why: "L1", text: nm + " already teaches " + cfg.L1 + " that day" };
           return { id };
         });
         const freeI = ins.filter((x) => !x.why);
         if (!freeI.length) {
-          fail(ins.every((x) => x.why === "L1") ? "L1" : "A1", day, t, "No instructor free: " + ins.map((x) => x.text).join("; "));
+          fail(ins.some((x) => x.why === "X") ? "X" : ins.every((x) => x.why === "L1") ? "L1" : "A1", day, t, ins.map((x) => x.text).join("; "));
           continue;
         }
-        const rooms = p.rooms.filter((r) => res(r).seats >= Math.min(occCap, 1)).map((id) => ({ id, st: statusOf(sess, id, day, t, t + dur) }));
+        const rooms = s.c.rooms.map((id) => ({ id, st: statusOf(sess, id, day, t, t + dur) }));
         const freeR = rooms.filter((x) => x.st.state === "free").map((x) => x.id).sort((a, b) => res(a).seats - res(b).seats);
         if (!freeR.length) {
-          fail("A1", day, t, "No room free: " + rooms.map((x) => res(x.id).name + " " + x.st.short.toLowerCase()).join("; "));
+          fail(rooms.some((x) => x.st.run) ? "X" : "A1", day, t, "No room free: " + rooms.map((x) => res(x.id).name + " " + (x.st.state === "booked" ? x.st.text.replace("Booked: ", "has ") : x.st.short)).join("; "));
           continue;
         }
-        let cap = occCap;
+        let cap = s.occCap;
         let assetFail = null;
-        obj.assets.forEach((a) => {
+        s.obj.assets.forEach((a) => {
           const av = assetAvail(sess, a, day, t, t + dur, cfg);
-          if (res(a).per === "session" && av < 1) assetFail = res(a).name + (exceptionOn(a, day) && av + 0 < 1 && !sess.some((s) => s.date === day && s.assets && s.assets[a] && overlap(t, t + dur, s.start, s.end)) ? " loaned to " + exceptionOn(a, day).note + " (" + exceptionOn(a, day).source + ")" : " in use by another session");
-          if (res(a).per === "trainee") {
-            if (av < 1) assetFail = res(a).name + " all in use";
-            cap = Math.min(cap, av);
+          const users = assetUse(sess, a, day, t, t + dur);
+          if (av < 1) {
+            const runUser = users.find((u) => u.inRun);
+            const ex = exceptionOn(a, day);
+            assetFail = runUser ? { why: "X", text: res(a).name + " is used by " + runUser.name } : ex && !users.length ? { why: "K", text: res(a).name + " loaned to " + ex.note + " (" + ex.source + ")" } : { why: "K", text: res(a).name + " in use by " + (users[0] ? users[0].name : "another session") };
           }
+          if (res(a).per === "trainee") cap = Math.min(cap, Math.max(0, av));
         });
         if (assetFail) {
-          fail("K", day, t, assetFail);
+          fail(assetFail.why, day, t, assetFail.text);
           continue;
         }
         let pick = null;
@@ -867,123 +913,226 @@ const runSolver = (p, cfg, locked = []) => {
           continue;
         }
         const seatCap = Math.min(cap, res(pick.r).seats);
-        const blockedAreas = Object.keys(demand[shift]).filter((a) => demand[shift][a] > 0 && offCount(day, shift, a) >= cfg.F[a]);
-        const expect = Math.min(seatCap, target, Object.keys(demand[shift]).reduce((acc, a) => acc + Math.max(0, Math.min(demand[shift][a], cfg.F[a] - offCount(day, shift, a))), 0));
+        const blocked = Object.keys(s.demand[sh]).filter((a) => s.demand[sh][a] > 0 && offCount(day, sh, a) >= cfg.F[a]);
+        const expect = Math.min(seatCap, target, Object.keys(s.demand[sh]).reduce((acc, a) => acc + Math.max(0, Math.min(s.demand[sh][a], cfg.F[a] - offCount(day, sh, a))), 0));
         const need = Math.max(1, Math.ceil(cfg.M / 100 * seatCap));
         if (expect < need) {
-          if (expect < Math.min(seatCap, target, remOn(shift)) && blockedAreas.length) {
-            blockedAreas.forEach((a) => {
+          if (expect < Math.min(seatCap, target, remOn(s, sh)) && blocked.length) {
+            blocked.forEach((a) => {
               fArea[a] = (fArea[a] || 0) + 1;
             });
-            fail("F", day, t, blockedAreas.map((a) => AREAS[a] + " already has " + offCount(day, shift, a) + " off the floor (limit " + cfg.F[a] + ")").join("; "));
-          } else fail("M", day, t, "Only " + plural(expect, "trainee", "trainees") + " could attend; minimum is " + need + " of " + seatCap + " seats");
+            fail("F", day, t, blocked.map((a) => AREAS[a] + " already has " + offCount(day, sh, a) + " off the floor (limit " + cfg.F[a] + ")").join("; "));
+          } else fail("M", day, t, "Only " + plural(expect, "person", "people") + " could attend; minimum is " + need + " of " + seatCap + " seats");
           continue;
         }
         const assets = {};
-        obj.assets.forEach((a) => {
+        s.obj.assets.forEach((a) => {
           assets[a] = res(a).per === "session" ? 1 : seatCap;
         });
-        const why = "Earliest slot where an endorsed instructor, a room" + (obj.assets.length ? ", the " + res(obj.assets[0]).name.toLowerCase() : "") + " and enough trainees can leave the floor.";
-        const tn = travelNote && travelNote.i === pick.i ? " Kept " + res(pick.i).name.split(",")[0] + " in " + res(pick.r).name + ": " + res(travelNote.r).name + " is " + cfg.T + " min from their previous class." : "";
-        hit = { id: "d" + Math.random().toString(36).slice(2, 8), shift, date: day, start: t, end: t + dur, instructor: pick.i, room: pick.r, assets, capacity: seatCap, trace, why: why + tn, locked: false };
+        s.seq += 1;
+        hit = {
+          id: s.c.obj + "-" + s.seq,
+          obj: s.c.obj,
+          label: s.obj.code + " " + s.seq,
+          shift: sh,
+          date: day,
+          start: t,
+          end: t + dur,
+          instructor: pick.i,
+          room: pick.r,
+          assets,
+          capacity: seatCap,
+          trace,
+          why: "Earliest time where an endorsed instructor, a room" + (s.obj.assets.length ? ", the " + res(s.obj.assets[0]).name.toLowerCase() : "") + " and enough people can leave the floor." + (travelNote && travelNote.i === pick.i ? " Kept " + res(pick.i).name.split(",")[0] + " in " + res(pick.r).name + " to avoid a " + cfg.T + " min walk." : "")
+        };
         break outer;
       }
     }
     if (hit) {
       drafts.push(hit);
-      reserve(hit, target);
-    } else unplaced.push({ shift, counts, fArea, trace });
-  });
-  drafts.sort((a, b) => a.date + fmtT(a.start) < b.date + fmtT(b.start) ? -1 : 1).forEach((d, i) => {
-    d.label = "S" + (i + 1);
-  });
-  return { drafts, unplaced, checked, alloc };
+      let left = Math.min(hit.capacity, target);
+      hit.plan = {};
+      Object.keys(s.demand[sh]).sort((a, b) => s.demand[sh][b] - s.demand[sh][a]).forEach((a) => {
+        const k = Math.max(0, Math.min(left, s.demand[sh][a], cfg.F[a] - offCount(hit.date, sh, a)));
+        if (k > 0) {
+          hit.plan[a] = k;
+          plan[offKey(hit.date, sh, a)] = (plan[offKey(hit.date, sh, a)] || 0) + k;
+          s.demand[sh][a] -= k;
+          left -= k;
+        }
+      });
+    } else s.unplaced.push({ shift: sh, counts, fArea, trace });
+    s.used[sh] += target;
+  }
+  return {
+    drafts,
+    checked,
+    courses: cs.map((s) => ({ obj: s.c.obj, n: s.c.n, placed: drafts.filter((d) => d.obj === s.c.obj).length, unplaced: s.unplaced }))
+  };
 };
 const primaryOf = (u) => Object.entries(u.counts).filter(([k]) => k !== "C" || Object.keys(u.counts).length === 1).sort((a, b) => b[1] - a[1]).map(([k, n]) => ({ k, n }));
-const fixesFor = (result, p, cfg, locked) => {
-  if (!result.unplaced.length) return [];
+const blockerSentence = (u, obj) => {
+  const pr = primaryOf(u);
+  if (!pr.length) return "no open slots in the window";
+  const total = Object.values(u.counts).reduce((a, b) => a + b, 0);
+  const shared = obj.assets.length ? "the instructor, room or kit" : "the instructor or room";
+  const what = pr[0].k === "X" ? "another course in this run already has " + shared : pr[0].k === "K" ? "the " + obj.assets.map((a) => res(a).name.toLowerCase()).join(" and ") + " is booked or loaned" : pr[0].k === "A1" ? "no endorsed instructor or room is free" : pr[0].k === "F" ? "too many people are already off the floor" : pr[0].k === "M" ? "too few people are left to fill a session" : pr[0].k === "L1" ? "instructors already teach their daily limit" : pr[0].k === "T" ? "instructors cannot get between buildings in time" : "the limit on sessions per shift is reached";
+  const comp = pr[0].k !== "X" && u.counts.X ? "; another course in this run had them on " + u.counts.X + " more" : "";
+  return what + " on " + pr[0].n + " of " + total + " open slots" + comp;
+};
+const placedCount = (r) => r.drafts.length;
+const fixesFor = (result, run, cfg) => {
+  const blockedCourses = result.courses.filter((c) => c.unplaced.length);
+  if (!blockedCourses.length) return [];
   const kinds = /* @__PURE__ */ new Set();
   const areas = {};
-  result.unplaced.forEach((u) => {
+  blockedCourses.forEach((c) => c.unplaced.forEach((u) => {
     primaryOf(u).slice(0, 2).forEach((x) => kinds.add(x.k));
     Object.entries(u.fArea).forEach(([a, n]) => {
       areas[a] = (areas[a] || 0) + n;
     });
-  });
-  const obj = objById(p.obj);
+  }));
   const cands = [];
-  const later = addWorkdays(p.to, 5);
-  cands.push({ id: "win", text: "Extend the window to " + fmtDay(later), change: "Window end " + fmtShort(p.to) + " to " + fmtShort(later), p: { ...p, to: later }, cfg });
-  if (kinds.has("K")) obj.assets.forEach((a) => cands.push({ id: "asset-" + a, text: "Borrow a second " + res(a).name.toLowerCase() + " from On-Wing Services", change: res(a).name + " " + cfg.qty[a] + " to " + (cfg.qty[a] + 1), p, cfg: { ...cfg, qty: { ...cfg.qty, [a]: cfg.qty[a] + 1 } } }));
-  if (kinds.has("L1")) cands.push({ id: "l1", text: "Allow instructors " + (cfg.L1 + 1) + " sessions a day", change: "Sessions per instructor per day " + cfg.L1 + " to " + (cfg.L1 + 1), p, cfg: { ...cfg, L1: cfg.L1 + 1 } });
+  const later = addWorkdays(run.to, 5);
+  const sharedPick = runHasKits(run) ? "shared instructors, rooms and kits" : "shared instructors and rooms";
+  cands.push({ id: "win", text: "Extend the window to " + fmtDay(later), change: "Window end " + fmtShort(run.to) + " to " + fmtShort(later), run: { ...run, to: later }, cfg });
+  if (kinds.has("X")) blockedCourses.forEach((c) => {
+    if (run.first !== c.obj) cands.push({ id: "first-" + c.obj, text: "Place " + objById(c.obj).name + " first", change: objById(c.obj).code + " gets first pick of " + sharedPick, run: { ...run, first: c.obj }, cfg });
+  });
+  if (kinds.has("K") || kinds.has("X")) [...new Set(blockedCourses.flatMap((c) => objById(c.obj).assets))].filter((a) => res(a).per === "session").forEach((a) => cands.push({ id: "asset-" + a, text: "Borrow a second " + res(a).name.toLowerCase() + " from On-Wing Services", change: res(a).name + " " + cfg.qty[a] + " to " + (cfg.qty[a] + 1), run, cfg: { ...cfg, qty: { ...cfg.qty, [a]: cfg.qty[a] + 1 } } }));
+  if (kinds.has("L1") || kinds.has("X")) cands.push({ id: "l1", text: "Allow instructors " + (cfg.L1 + 1) + " sessions a day", change: "Sessions per instructor per day " + cfg.L1 + " to " + (cfg.L1 + 1), run, cfg: { ...cfg, L1: cfg.L1 + 1 } });
   if (kinds.has("F")) {
     const a = Object.entries(areas).sort((x, y) => y[1] - x[1])[0];
-    if (a) cands.push({ id: "f-" + a[0], text: "Let " + (cfg.F[a[0]] + 1) + " " + AREAS[a[0]] + " technicians off the floor per shift", change: AREAS[a[0]] + " limit " + cfg.F[a[0]] + " to " + (cfg.F[a[0]] + 1), p, cfg: { ...cfg, F: { ...cfg.F, [a[0]]: cfg.F[a[0]] + 1 } } });
+    if (a) cands.push({ id: "f-" + a[0], text: "Let " + (cfg.F[a[0]] + 1) + " " + AREAS[a[0]] + " people off the floor per shift", change: AREAS[a[0]] + " limit " + cfg.F[a[0]] + " to " + (cfg.F[a[0]] + 1), run, cfg: { ...cfg, F: { ...cfg.F, [a[0]]: cfg.F[a[0]] + 1 } } });
   }
-  if (kinds.has("M")) cands.push({ id: "m", text: "Run sessions at 25% full", change: "Minimum fill " + cfg.M + "% to 25%", p, cfg: { ...cfg, M: 25 } });
-  if (kinds.has("T")) cands.push({ id: "t", text: "Plan 15 min travel between buildings", change: "Travel time " + cfg.T + " to 15 min", p, cfg: { ...cfg, T: 15 } });
-  if (kinds.has("C")) cands.push({ id: "c", text: "Allow " + (cfg.C + 1) + " sessions of this Objective per shift a day", change: "Sessions per shift " + cfg.C + " to " + (cfg.C + 1), p, cfg: { ...cfg, C: cfg.C + 1 } });
+  if (kinds.has("M")) cands.push({ id: "m", text: "Run sessions at 25% full", change: "Minimum fill " + cfg.M + "% to 25%", run, cfg: { ...cfg, M: 25 } });
+  if (kinds.has("T")) cands.push({ id: "t", text: "Plan 15 min travel between buildings", change: "Travel time " + cfg.T + " to 15 min", run, cfg: { ...cfg, T: 15 } });
+  if (kinds.has("C")) cands.push({ id: "c", text: "Allow " + (cfg.C + 1) + " sessions of a course per shift a day", change: "Sessions per shift " + cfg.C + " to " + (cfg.C + 1), run, cfg: { ...cfg, C: cfg.C + 1 } });
   return cands.map((c) => {
-    const r = runSolver(c.p, c.cfg, locked);
+    const r = runPlan(c.run, c.cfg);
+    const per = r.courses.map((x) => ({ obj: x.obj, delta: x.placed - (result.courses.find((y) => y.obj === x.obj) || { placed: 0 }).placed })).filter((x) => x.delta !== 0);
     const last = r.drafts.reduce((a, d) => d.date > a ? d.date : a, "");
-    return { ...c, result: r, gain: r.drafts.length - result.drafts.length, last };
-  }).filter((c) => c.gain > 0).sort((a, b) => b.gain - a.gain || (a.last < b.last ? -1 : 1)).slice(0, 3);
+    return { ...c, result: r, gain: placedCount(r) - placedCount(result), per, last };
+  }).filter((c) => c.per.some((x) => x.delta > 0) && c.gain >= 0).sort((a, b) => b.gain - a.gain || (a.last < b.last ? -1 : 1)).slice(0, 4);
 };
-const sessionsFor = (drafts) => drafts.map((d) => ({ id: d.id, date: d.date, start: d.start, end: d.end, shift: d.shift, capacity: d.capacity, label: d.label }));
-const seatIssues = (empId, d, assign, drafts, cfg, dur) => {
-  const e = res(empId);
+const effectText = (f) => f.per.map((x) => objById(x.obj).code + " " + (x.delta > 0 ? "+" : "") + x.delta).join(", ") + (f.gain ? "" : " (a trade-off)");
+const dueOf = (key) => (RECORDS.find((r) => r.key === key) || {}).due || "";
+const seatIssues = (key, d, assign, drafts, cfg) => {
+  const rec = RECORDS.find((r) => r.key === key);
+  const emp = rec.emp;
+  const e = res(emp);
   const out = [];
-  const st = statusOf(BOOKINGS, empId, d.date, d.start, d.end);
+  const st = statusOf(BOOKINGS, emp, d.date, d.start, d.end);
   if (st.state === "leave" || st.state === "booked") out.push({ why: "A1", text: st.text });
+  const mine = Object.entries(assign).filter(([k2, did]) => k2 !== key && did && k2.endsWith("|" + emp)).map(([, did]) => drafts.find((x) => x.id === did)).filter(Boolean);
+  const clash = mine.find((x) => x.date === d.date && overlap(d.start, d.end, x.start, x.end));
+  if (clash) out.push({ why: "A1", text: "Already in " + clash.label + " at that time" });
   if (e.shift !== d.shift) out.push({ why: "shift", text: "Works " + e.shift + " shift" });
-  const hours = BOOKINGS.filter((s) => s.date === d.date && (s.trainees || []).includes(empId)).reduce((a, s) => a + (s.end - s.start) / 60, 0) + drafts.filter((x) => x.id !== d.id && x.date === d.date && assign[empId] === x.id).reduce((a, x) => a + (x.end - x.start) / 60, 0) + dur / 60;
+  const hours = BOOKINGS.filter((s) => s.date === d.date && (s.trainees || []).includes(emp)).reduce((a, s) => a + (s.end - s.start) / 60, 0) + mine.filter((x) => x.date === d.date).reduce((a, x) => a + (x.end - x.start) / 60, 0) + (d.end - d.start) / 60;
   if (hours > cfg.L2) out.push({ why: "L2", text: hours + " h of training that day (limit " + cfg.L2 + ")" });
-  const base = (baseOff()[offKey(d.date, e.shift, e.area)] || /* @__PURE__ */ new Set()).size;
-  const dueOf = (emp) => (RECORDS.find((r) => r.emp === emp) || {}).due || "";
-  const group = Object.entries(assign).filter(([q, did]) => q !== empId && did && res(q).area === e.area && res(q).shift === e.shift && (drafts.find((x) => x.id === did) || {}).date === d.date).map(([q]) => q);
-  const seatedHere = assign[empId] === d.id;
-  const pos = seatedHere ? [...group, empId].sort((a, b) => dueOf(a) < dueOf(b) ? -1 : dueOf(a) > dueOf(b) ? 1 : res(a).name.localeCompare(res(b).name)).indexOf(empId) : group.length;
-  if (base + pos + 1 > cfg.F[e.area]) out.push({ why: "F", text: AREAS[e.area] + " already has " + (base + pos) + " off the floor (limit " + cfg.F[e.area] + ")" });
+  const base = (BASE_OFF[offKey(d.date, e.shift, e.area)] || /* @__PURE__ */ new Set()).size;
+  const others = new Set(Object.entries(assign).filter(([k2, did]) => {
+    if (!did || k2 === key) return false;
+    const p = k2.split("|")[1];
+    if (p === emp) return false;
+    const x = drafts.find((z) => z.id === did);
+    return x && x.date === d.date && res(p).area === e.area && res(p).shift === e.shift;
+  }).map(([k2]) => k2.split("|")[1]));
+  if (!mine.some((x) => x.date === d.date)) {
+    const seatedHere = assign[key] === d.id;
+    const ranked = [...others, emp].sort((a, b) => {
+      const da = RECORDS.filter((r) => r.emp === a).map((r) => r.due).sort()[0];
+      const db = RECORDS.filter((r) => r.emp === b).map((r) => r.due).sort()[0];
+      return da < db ? -1 : da > db ? 1 : res(a).name.localeCompare(res(b).name);
+    });
+    const pos = seatedHere ? ranked.indexOf(emp) : others.size;
+    if (base + pos + 1 > cfg.F[e.area]) out.push({ why: "F", text: AREAS[e.area] + " already has " + (base + pos) + " off the floor that day (limit " + cfg.F[e.area] + ")" });
+  }
   return out;
 };
-const autoFill = (drafts, obj, cfg, durH) => {
-  const recs = RECORDS.filter((r) => r.obj === obj.id).slice().sort((a, b) => cfg.P1 ? a.due < b.due ? -1 : 1 : res(a.emp).name.localeCompare(res(b.emp).name));
+const autoFill = (drafts, run, cfg) => {
+  const objs = run.courses.map((c) => c.obj);
+  const recs = RECORDS.filter((r) => objs.includes(r.obj)).slice().sort((a, b) => cfg.P1 ? a.due < b.due ? -1 : a.due > b.due ? 1 : a.key < b.key ? -1 : 1 : res(a.emp).name.localeCompare(res(b.emp).name));
   const assign = {};
-  const sorted = [...drafts].sort((a, b) => a.date + fmtT(a.start) < b.date + fmtT(b.start) ? -1 : 1);
+  const sorted = [...drafts].sort(byTime);
   const share = {};
-  ["1st", "2nd"].forEach((sh) => {
-    const n = sorted.filter((d) => d.shift === sh).length;
-    share[sh] = n ? Math.ceil(recs.filter((r) => res(r.emp).shift === sh).length / n) : 0;
+  sorted.forEach((d) => {
+    const n = sorted.filter((x) => x.obj === d.obj && x.shift === d.shift).length;
+    share[d.id] = Math.ceil(RECORDS.filter((r) => r.obj === d.obj && res(r.emp).shift === d.shift).length / n);
   });
   const seat = (limit) => recs.forEach((r) => {
-    if (assign[r.emp]) return;
+    if (assign[r.key]) return;
     const e = res(r.emp);
-    const d = sorted.find((x) => x.shift === e.shift && Object.values(assign).filter((v) => v === x.id).length < limit(x) && !seatIssues(r.emp, x, assign, drafts, cfg, durH * 60).length);
-    assign[r.emp] = d ? d.id : null;
+    const d = sorted.find((x) => x.obj === r.obj && x.shift === e.shift && Object.values(assign).filter((v) => v === x.id).length < limit(x) && !seatIssues(r.key, x, assign, drafts, cfg).length);
+    assign[r.key] = d ? d.id : null;
   });
-  seat((x) => Math.min(x.capacity, share[x.shift]));
+  seat((x) => Math.min(x.capacity, share[x.id]));
   seat((x) => x.capacity);
   return assign;
 };
-const unassignedWhy = (empId, drafts, assign, cfg, durH) => {
-  const e = res(empId);
-  const on = [...drafts].filter((d) => d.shift === e.shift).sort((a, b) => a.date + fmtT(a.start) < b.date + fmtT(b.start) ? -1 : 1);
-  if (!on.length) return { text: "No session on " + e.shift + " shift", source: "Placement" };
+const unseatedWhy = (key, drafts, assign, cfg) => {
+  const rec = RECORDS.find((r) => r.key === key);
+  const e = res(rec.emp);
+  const on = drafts.filter((d) => d.obj === rec.obj && d.shift === e.shift).sort(byTime);
+  if (!on.length) return "No " + objById(rec.obj).code + " session on " + e.shift + " shift";
   const open = on.filter((d) => Object.values(assign).filter((v) => v === d.id).length < d.capacity);
-  if (!open.length) return { text: "No open seat on " + e.shift + " shift", source: "Capacity" };
-  const iss = seatIssues(empId, open[0], assign, drafts, cfg, durH * 60);
-  if (iss.length) return { text: iss[0].text + " on " + fmtShort(open[0].date), source: (RULES[iss[0].why] || {}).source || "Availability service" };
-  return { text: "Removed by you", source: "" };
+  if (!open.length) return "No open " + objById(rec.obj).code + " seat on " + e.shift + " shift";
+  const iss = seatIssues(key, open[0], assign, drafts, cfg);
+  return iss.length ? iss[0].text + " (" + open[0].label + ", " + fmtShort(open[0].date) + ")" : "A seat that fits is open in " + open[0].label;
 };
-const Dot = ({ state }) => /* @__PURE__ */ React.createElement("span", { className: "dot dot-" + state, "aria-hidden": "true" });
+const checkMove = (d, day, start, drafts, cfg) => {
+  const obj = objById(d.obj);
+  const dur = d.end - d.start;
+  const end = start + dur;
+  const out = [];
+  const [a, b] = SHIFTS[d.shift];
+  if (start < a || end > b) out.push({ k: "A1", text: "Outside " + d.shift + " shift, when these people work" });
+  const others = [...BOOKINGS, ...drafts.filter((x) => x.id !== d.id).map(draftAsSession)];
+  const si = statusOf(others, d.instructor, day, start, end);
+  if (si.state !== "free" && !(si.state === "offshift" && out.length)) out.push({ k: si.run ? "X" : "A1", text: res(d.instructor).name.split(",")[0] + ": " + si.text });
+  const sr = statusOf(others, d.room, day, start, end);
+  if (sr.state !== "free") out.push({ k: sr.run ? "X" : "A1", text: res(d.room).name + ": " + sr.text });
+  obj.assets.forEach((x) => {
+    if (assetAvail(others, x, day, start, end, cfg) < (res(x).per === "session" ? 1 : d.capacity)) {
+      const ex = exceptionOn(x, day);
+      out.push({ k: "K", text: res(x).name + (ex ? " loaned to " + ex.note + " (" + ex.source + ")" : " in use") });
+    }
+  });
+  if (loadOf(others, d.instructor, day) >= cfg.L1) out.push({ k: "L1", text: res(d.instructor).name.split(",")[0] + " already teaches " + cfg.L1 + " sessions that day" });
+  const tb = travelBlock(others, d.instructor, day, start, end, d.room, cfg.T);
+  if (tb) out.push({ k: "T", text: res(d.instructor).name.split(",")[0] + " needs " + cfg.T + " min from " + res(tb.station).name });
+  if (drafts.filter((x) => x.id !== d.id && x.obj === d.obj && x.date === day && x.shift === d.shift).length >= cfg.C) out.push({ k: "C", text: "Another " + obj.code + " session is already on " + d.shift + " shift that day" });
+  return out;
+};
+const nearestFit = (d, days, drafts, cfg) => {
+  let best = null;
+  const base = days.indexOf(d.date) * 1440 + d.start;
+  days.forEach((day, di) => {
+    for (let t = SHIFTS[d.shift][0]; t + (d.end - d.start) <= SHIFTS[d.shift][1]; t += 30) {
+      if (day === d.date && t === d.start) continue;
+      if (checkMove(d, day, t, drafts, cfg).length) continue;
+      const dist = Math.abs(di * 1440 + t - base);
+      if (!best || dist < best.dist) best = { day, t, dist };
+    }
+  });
+  return best;
+};
+if (typeof module !== "undefined") module.exports = { runPlan, fixesFor, autoFill, seatIssues, unseatedWhy, RECORDS, OBJECTIVES, objById, res, plural, effectText, blockerSentence, primaryOf, runHasKits, DEFAULT_CFG };
+const { useState, useMemo, useEffect, useRef } = React;
 const Tag = ({ tone = "plain", children }) => /* @__PURE__ */ React.createElement("span", { className: "chip chip-" + tone }, children);
+const CourseDot = ({ obj }) => /* @__PURE__ */ React.createElement("span", { className: "cdot", style: { background: objById(obj).color }, "aria-hidden": "true" });
+const CourseTag = ({ obj }) => /* @__PURE__ */ React.createElement("span", { className: "ctag", style: { "--cc": objById(obj).color } }, objById(obj).code);
 const dueLabel = (due) => {
   const d = dayDiff(due, TODAY);
   return d < 0 ? { text: "Overdue " + -d + "d", tone: "bad" } : d <= 10 ? { text: "Due " + fmtShort(due), tone: "warn" } : null;
 };
-const byTime = (a, b) => a.date + fmtT(a.start) < b.date + fmtT(b.start) ? -1 : 1;
-const Result = ({ tone = "plain", children, sub }) => /* @__PURE__ */ React.createElement("div", { className: "result-wrap" }, /* @__PURE__ */ React.createElement("p", { className: "result r-" + tone }, children), sub && /* @__PURE__ */ React.createElement("p", { className: "result-sub" }, sub));
+const Result = ({ tone = "plain", children, sub }) => /* @__PURE__ */ React.createElement("div", { className: "result-wrap" }, /* @__PURE__ */ React.createElement("p", { className: "result r-" + tone }, children), sub && /* @__PURE__ */ React.createElement("div", { className: "result-sub" }, sub));
 const NumIn = ({ id, value, onChange, min = 0, max = 99, unit, label }) => /* @__PURE__ */ React.createElement("span", { className: "numin" }, /* @__PURE__ */ React.createElement("input", { id, "aria-label": label, type: "number", min, max, value, onChange: (e) => onChange(Math.max(min, Math.min(max, +e.target.value || 0))) }), unit && /* @__PURE__ */ React.createElement("span", null, unit));
+const WarnIcon = () => /* @__PURE__ */ React.createElement("svg", { className: "picon", width: "16", height: "16", viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M12 3 2 21h20L12 3z", fill: "currentColor" }), /* @__PURE__ */ React.createElement("path", { d: "M12 10v5", stroke: "#fff", strokeWidth: "2.2", strokeLinecap: "round" }), /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "18", r: "1.3", fill: "#fff" }));
+const IssueIcon = () => /* @__PURE__ */ React.createElement("svg", { className: "picon", width: "16", height: "16", viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "currentColor" }), /* @__PURE__ */ React.createElement("path", { d: "M12 6.5v7", stroke: "#fff", strokeWidth: "2.2", strokeLinecap: "round" }), /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "17", r: "1.3", fill: "#fff" }));
+const OkIcon = () => /* @__PURE__ */ React.createElement("svg", { className: "picon", width: "16", height: "16", viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "currentColor" }), /* @__PURE__ */ React.createElement("path", { d: "m7.5 12.5 3 3 6-6.5", stroke: "#fff", strokeWidth: "2.2", fill: "none", strokeLinecap: "round", strokeLinejoin: "round" }));
+const NoteIcon = () => /* @__PURE__ */ React.createElement("svg", { className: "picon", width: "16", height: "16", viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "currentColor" }), /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "7.5", r: "1.3", fill: "#fff" }), /* @__PURE__ */ React.createElement("path", { d: "M12 11v6", stroke: "#fff", strokeWidth: "2.2", strokeLinecap: "round" }));
+const SevIcon = ({ sev }) => sev === "issue" ? /* @__PURE__ */ React.createElement(IssueIcon, null) : /* @__PURE__ */ React.createElement(WarnIcon, null);
 const changedRules = (cfg) => {
   const out = [];
   Object.keys(cfg.qty).forEach((a) => {
@@ -995,26 +1144,216 @@ const changedRules = (cfg) => {
   Object.keys(AREAS).forEach((a) => {
     if (cfg.F[a] !== DEFAULT_CFG.F[a]) out.push(AREAS[a] + " off the floor: " + DEFAULT_CFG.F[a] + " to " + cfg.F[a]);
   });
-  if (cfg.P1 !== DEFAULT_CFG.P1) out.push("Seat by due date: off");
   return out;
 };
-const Setup = ({ obj, p, setP, cfg, setCfg, onRun }) => {
-  const [showRules, setShowRules] = useState(false);
-  const recs = RECORDS.filter((r) => r.obj === obj.id);
-  const on = (s) => recs.filter((r) => res(r.emp).shift === s).length;
-  const overdue = recs.filter((r) => r.due < TODAY).length;
-  const soon = recs.filter((r) => r.due >= TODAY && dayDiff(r.due, TODAY) <= 10).length;
-  const alloc = allocate(p.n, { "1st": on("1st"), "2nd": on("2nd") });
-  const perTrainee = obj.assets.find((a) => res(a).per === "trainee");
-  const occCap = perTrainee ? Math.min(p.occ, cfg.qty[perTrainee]) : p.occ;
-  const seats = p.n * occCap;
-  const days = between(p.from, p.to);
-  const changed = changedRules(cfg);
-  const setC = (k, v) => setCfg({ ...cfg, [k]: v });
-  const loan = obj.assets.map((a) => EXCEPTIONS.find((x) => x.res === a)).find(Boolean);
-  const areas = [...new Set(recs.map((r) => res(r.emp).area))];
-  return /* @__PURE__ */ React.createElement("div", { className: "narrow" }, /* @__PURE__ */ React.createElement(Result, { sub: on("1st") + " work 1st shift and " + on("2nd") + " work 2nd. " + (overdue ? overdue + " overdue, " : "") + soon + " due in the next 10 days." }, recs.length, " people need ", obj.name, "."), /* @__PURE__ */ React.createElement("section", { className: "block" }, /* @__PURE__ */ React.createElement("div", { className: "sentence" }, /* @__PURE__ */ React.createElement("span", null, "Schedule"), /* @__PURE__ */ React.createElement(NumIn, { id: "s-n", label: "Number of sessions", value: p.n, min: 1, max: 10, onChange: (v) => setP({ ...p, n: v }) }), /* @__PURE__ */ React.createElement("span", null, p.n === 1 ? "session" : "sessions", " of up to"), /* @__PURE__ */ React.createElement(NumIn, { id: "s-occ", label: "Max people per session", value: p.occ, min: 1, max: 20, onChange: (v) => setP({ ...p, occ: v }) }), /* @__PURE__ */ React.createElement("span", null, "people, between"), /* @__PURE__ */ React.createElement("input", { id: "s-from", "aria-label": "Window start", type: "date", value: p.from, min: addDays(TODAY, 1), onChange: (e) => e.target.value && setP({ ...p, from: e.target.value }) }), /* @__PURE__ */ React.createElement("span", null, "and"), /* @__PURE__ */ React.createElement("input", { id: "s-to", "aria-label": "Window end", type: "date", value: p.to, min: p.from, onChange: (e) => e.target.value && setP({ ...p, to: e.target.value }) })), /* @__PURE__ */ React.createElement("p", { className: "fitline " + (seats >= recs.length ? "ok" : "short") }, seats, " seats for ", recs.length, " people over ", days.length, " working days, ", plural(alloc["1st"] || 0, "session", "sessions"), " on 1st shift and ", alloc["2nd"] || 0, " on 2nd.", seats < recs.length && " " + (recs.length - seats) + " will wait for a later run.", occCap < p.occ && " Sessions are capped at " + occCap + " because there are " + occCap + " " + res(perTrainee).name.toLowerCase() + ".")), /* @__PURE__ */ React.createElement("section", { className: "block" }, /* @__PURE__ */ React.createElement("div", { className: "rshead" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Shop rules"), /* @__PURE__ */ React.createElement("p", { className: "quiet" }, "From the Objective Template and Engine Shop policy. ", changed.length ? plural(changed.length, "rule", "rules") + " changed for this run." : "All at their defaults.")), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", "aria-expanded": showRules, onClick: () => setShowRules(!showRules) }, showRules ? "Hide rules" : "Review rules")), /* @__PURE__ */ React.createElement("ul", { className: "keyrules" }, /* @__PURE__ */ React.createElement("li", null, AREAS.mb, " can release ", cfg.F.mb, " people per shift while ESN 891-442 is due back Oct 30."), loan && /* @__PURE__ */ React.createElement("li", null, "The ", res(loan.res).name.toLowerCase(), " is loaned to On-Wing Services ", fmtShort(loan.from), " to ", fmtShort(loan.to), " ", /* @__PURE__ */ React.createElement("span", { className: "prov" }, loan.source)), obj.instructors.filter((i) => EXCEPTIONS.some((x) => x.res === i)).map((i) => /* @__PURE__ */ React.createElement("li", { key: i }, res(i).name.split(", ").reverse().join(" "), " is on leave ", fmtShort(EXCEPTIONS.find((x) => x.res === i).from), " to ", fmtShort(EXCEPTIONS.find((x) => x.res === i).to), " ", /* @__PURE__ */ React.createElement("span", { className: "prov" }, EXCEPTIONS.find((x) => x.res === i).source)))), showRules && /* @__PURE__ */ React.createElement("div", { className: "rulelist" }, obj.assets.map((a) => /* @__PURE__ */ React.createElement("div", { key: a, className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "q-" + a }, res(a).name, " available"), /* @__PURE__ */ React.createElement(NumIn, { id: "q-" + a, value: cfg.qty[a], min: 0, max: 6, onChange: (v) => setCfg({ ...cfg, qty: { ...cfg.qty, [a]: v } }) }))), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-l1" }, "Sessions an instructor teaches per day"), /* @__PURE__ */ React.createElement(NumIn, { id: "c-l1", value: cfg.L1, min: 1, max: 4, onChange: (v) => setC("L1", v) })), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-l2" }, "Training hours per person per day"), /* @__PURE__ */ React.createElement(NumIn, { id: "c-l2", value: cfg.L2, min: 1, max: 8, unit: "h", onChange: (v) => setC("L2", v) })), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-t" }, "Travel time between Bldg 1 and Bldg 2"), /* @__PURE__ */ React.createElement(NumIn, { id: "c-t", value: cfg.T, min: 0, max: 60, unit: "min", onChange: (v) => setC("T", v) })), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-m" }, "Minimum seats filled to run a session"), /* @__PURE__ */ React.createElement(NumIn, { id: "c-m", value: cfg.M, min: 0, max: 100, unit: "%", onChange: (v) => setC("M", v) })), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-c" }, "Sessions of this course per shift, per day"), /* @__PURE__ */ React.createElement(NumIn, { id: "c-c", value: cfg.C, min: 1, max: 4, onChange: (v) => setC("C", v) })), /* @__PURE__ */ React.createElement("div", { className: "rrow wrap" }, /* @__PURE__ */ React.createElement("span", null, "People off the floor per shift"), /* @__PURE__ */ React.createElement("span", { className: "areas" }, areas.map((a) => /* @__PURE__ */ React.createElement("label", { key: a, className: "area", htmlFor: "f-" + a }, AREAS[a], /* @__PURE__ */ React.createElement(NumIn, { id: "f-" + a, value: cfg.F[a], min: 0, max: 10, onChange: (v) => setCfg({ ...cfg, F: { ...cfg.F, [a]: v } }) }))))), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-p1" }, "Seat overdue and soonest-due people first"), /* @__PURE__ */ React.createElement("input", { id: "c-p1", type: "checkbox", checked: cfg.P1, onChange: (e) => setC("P1", e.target.checked) })), /* @__PURE__ */ React.createElement("p", { className: "quiet always" }, "Always applied: instructors hold a Trainer Endorsement for this course, rooms have enough seats, and nobody is booked twice, on leave or outside their shift."))), /* @__PURE__ */ React.createElement("div", { className: "cta" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-primary big", onClick: onRun }, "Find times for ", plural(p.n, "session", "sessions"))));
+const courseFor = (obj) => ({ obj, n: objById(obj).n, occ: objById(obj).occ, durH: objById(obj).durH, instructors: [...objById(obj).instructors], rooms: [...objById(obj).rooms] });
+const REASONS = ["Supervisor approved", "Will attend a later session", "Due date is advisory for this person", "Other (add a note)"];
+const splitProblems = (all, accepted) => ({
+  items: all.filter((x) => x.sev !== "note" && !accepted[x.key]),
+  notes: all.filter((x) => x.sev === "note"),
+  done: all.filter((x) => x.sev !== "note" && accepted[x.key]).map((x) => ({ ...x, ...accepted[x.key] }))
+});
+const ProblemBar = ({ items, notes = [], done = [], onGo, onAccept, onUndo }) => {
+  const [i, setI] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [drawer, setDrawer] = useState(null);
+  const [reason, setReason] = useState(REASONS[0]);
+  const [note, setNote] = useState("");
+  const k = items.length ? Math.min(i, items.length - 1) : 0;
+  const cur = items[k];
+  useEffect(() => {
+    setNote("");
+    setReason(REASONS[0]);
+  }, [cur ? cur.key : ""]);
+  useEffect(() => {
+    if (!items.length) setOpen(false);
+  }, [items.length]);
+  const issues = items.filter((x) => x.sev === "issue").length;
+  const warns = items.length - issues;
+  const extras = (notes.length > 0 || done.length > 0) && /* @__PURE__ */ React.createElement("span", { className: "pextra" }, notes.length > 0 && /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", "aria-expanded": drawer === "notes", onClick: () => setDrawer(drawer === "notes" ? null : "notes") }, plural(notes.length, "note", "notes")), done.length > 0 && /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", "aria-expanded": drawer === "done", onClick: () => setDrawer(drawer === "done" ? null : "done") }, done.length, " accepted"));
+  const drawerEl = drawer && /* @__PURE__ */ React.createElement("div", { className: "pdrawer" }, drawer === "notes" && /* @__PURE__ */ React.createElement("ul", null, notes.map((n) => /* @__PURE__ */ React.createElement("li", { key: n.key }, /* @__PURE__ */ React.createElement("span", { className: "nicon" }, /* @__PURE__ */ React.createElement(NoteIcon, null)), /* @__PURE__ */ React.createElement("span", null, n.obj && /* @__PURE__ */ React.createElement(CourseTag, { obj: n.obj }), " ", n.text)))), drawer === "done" && /* @__PURE__ */ React.createElement("ul", null, done.map((a) => /* @__PURE__ */ React.createElement("li", { key: a.key }, /* @__PURE__ */ React.createElement("span", { className: "aicon" }, /* @__PURE__ */ React.createElement(OkIcon, null)), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, a.text), /* @__PURE__ */ React.createElement("span", { className: "quiet" }, " Accepted: ", a.reason, a.note ? ". " + a.note : "")), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", onClick: () => onUndo(a.key) }, "Undo")))));
+  if (!cur) return /* @__PURE__ */ React.createElement("div", { className: "pwrap" }, /* @__PURE__ */ React.createElement("div", { className: "pbar clear", role: "status" }, /* @__PURE__ */ React.createElement("span", { className: "pc ok" }, /* @__PURE__ */ React.createElement(OkIcon, null)), /* @__PURE__ */ React.createElement("span", { className: "pclear" }, "Nothing left to resolve"), extras), drawerEl);
+  const go = (n) => {
+    const j = (n + items.length) % items.length;
+    setI(j);
+    onGo(items[j]);
+  };
+  const needNote = reason.startsWith("Other") && !note.trim();
+  return /* @__PURE__ */ React.createElement("div", { className: "pwrap" }, /* @__PURE__ */ React.createElement("div", { className: "pbar " + (issues ? "has-issue" : "has-warning"), role: "region", "aria-label": "Problems to resolve" }, /* @__PURE__ */ React.createElement("span", { className: "pcount" }, issues > 0 && /* @__PURE__ */ React.createElement("span", { className: "pc issue" }, /* @__PURE__ */ React.createElement(IssueIcon, null), plural(issues, "issue", "issues")), warns > 0 && /* @__PURE__ */ React.createElement("span", { className: "pc warning" }, /* @__PURE__ */ React.createElement(WarnIcon, null), plural(warns, "warning", "warnings"))), /* @__PURE__ */ React.createElement("button", { type: "button", className: "pitem " + cur.sev, onClick: () => {
+    onGo(cur);
+    setOpen(true);
+  } }, /* @__PURE__ */ React.createElement(SevIcon, { sev: cur.sev }), /* @__PURE__ */ React.createElement("span", null, cur.obj && /* @__PURE__ */ React.createElement(CourseTag, { obj: cur.obj }), " ", cur.text)), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-fix " + cur.sev, "aria-expanded": open, onClick: () => {
+    setOpen(!open);
+    onGo(cur);
+  } }, open ? "Hide" : "Resolve"), /* @__PURE__ */ React.createElement("span", { className: "pnav" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "iconbtn", "aria-label": "Previous problem", onClick: () => go(k - 1) }, "\u2039"), /* @__PURE__ */ React.createElement("span", { className: "num" }, k + 1, " of ", items.length), /* @__PURE__ */ React.createElement("button", { type: "button", className: "iconbtn", "aria-label": "Next problem", onClick: () => go(k + 1) }, "\u203A")), extras), open && /* @__PURE__ */ React.createElement("div", { className: "ppanel " + cur.sev }, cur.why && /* @__PURE__ */ React.createElement("p", { className: "pwhy" }, cur.why), cur.fixes.length > 0 ? /* @__PURE__ */ React.createElement("div", { className: "pfixes" }, /* @__PURE__ */ React.createElement("span", { className: "quiet" }, "Each option was checked against every rule before it is offered."), cur.fixes.map((f) => /* @__PURE__ */ React.createElement("button", { type: "button", key: f.id, className: "fix", onClick: f.run }, /* @__PURE__ */ React.createElement("span", { className: "ft" }, f.label), f.effect && /* @__PURE__ */ React.createElement("span", { className: "fe" + (f.trade ? " trade" : "") }, f.effect)))) : /* @__PURE__ */ React.createElement("p", { className: "quiet" }, "No change fits every rule.", cur.defer ? " Leave them for the next run, or seat someone anyway from the Not seated list." : " Accept it with a reason to continue."), cur.defer && /* @__PURE__ */ React.createElement("div", { className: "pdefer" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: cur.defer }, cur.deferLabel || "Leave for the next run"), /* @__PURE__ */ React.createElement("span", { className: "quiet" }, "They stay in Needs scheduling and are offered first next time.")), cur.acceptable && /* @__PURE__ */ React.createElement("div", { className: "paccept" }, /* @__PURE__ */ React.createElement("span", { className: "ptitle" }, "Or accept as is"), /* @__PURE__ */ React.createElement("label", { className: "pf" }, "Reason", /* @__PURE__ */ React.createElement("select", { value: reason, onChange: (e) => setReason(e.target.value) }, REASONS.map((r) => /* @__PURE__ */ React.createElement("option", { key: r }, r)))), /* @__PURE__ */ React.createElement("label", { className: "pf grow" }, "Note", reason.startsWith("Other") ? "" : " (optional)", /* @__PURE__ */ React.createElement("input", { value: note, onChange: (e) => setNote(e.target.value), placeholder: reason.startsWith("Other") ? "Required for Other" : "" })), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", disabled: needNote, onClick: () => onAccept(cur.key, cur.acceptText || cur.text, reason, note) }, cur.acceptLabel || "Accept"))), drawerEl);
 };
+const useFocus = () => {
+  const [focus, setFocus] = useState(null);
+  useEffect(() => {
+    if (!focus) return;
+    const el = document.getElementById(focus);
+    if (el) el.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+    const t = setTimeout(() => setFocus(null), 2200);
+    return () => clearTimeout(t);
+  }, [focus]);
+  return [focus, setFocus];
+};
+const breakProblem = (d, days, drafts, cfg, h) => {
+  const fixes = [];
+  if (d.orig && !checkMove(d, d.orig.date, d.orig.start, drafts, cfg).length) fixes.push({ id: "back", label: "Move " + d.label + " back to " + fmtDay(d.orig.date) + ", " + fmtT(d.orig.start), effect: "Where the solver placed it", run: () => h.onMove(d.id, d.orig.date, d.orig.start, []) });
+  const n = nearestFit(d, days, drafts, cfg);
+  if (n && !(d.orig && n.day === d.orig.date && n.t === d.orig.start)) fixes.push({ id: "near", label: "Move " + d.label + " to " + fmtDay(n.day) + ", " + fmtT(n.t), effect: "Nearest time that fits", run: () => h.onMove(d.id, n.day, n.t, []) });
+  return { key: "break-" + d.id, obj: d.obj, sev: "issue", text: d.label + " breaks a rule after you moved it.", why: d.breaks.map((x) => x.text).join("; ") + ".", target: "row-" + d.id, fixes, acceptable: true, acceptLabel: "Keep it here", acceptText: d.label + " kept at a time that breaks a rule" };
+};
+const reviewProblems = (run, cfg, result, fixes, h) => {
+  const out = [];
+  const days = between(run.from, run.to);
+  const drafts = [...result.drafts].sort(byTime);
+  result.courses.forEach((c) => {
+    const obj = objById(c.obj);
+    const by = {};
+    c.unplaced.forEach((u) => {
+      by[u.shift] = by[u.shift] || [];
+      by[u.shift].push(u);
+    });
+    Object.entries(by).forEach(([sh, us]) => out.push({
+      key: "unplaced-" + c.obj + "-" + sh,
+      obj: c.obj,
+      sev: "issue",
+      text: plural(us.length, "session", "sessions") + " on " + sh + " shift could not be placed.",
+      why: "Blocked because " + blockerSentence(us[0], obj) + ".",
+      target: "course-" + c.obj,
+      fixes: fixes.filter((f) => f.per.some((x) => x.obj === c.obj && x.delta > 0)).map((f) => ({ id: f.id, label: "Preview: " + f.text, effect: effectText(f), trade: !f.gain, run: () => h.setPreview(f) })),
+      acceptable: true,
+      acceptLabel: "Run fewer sessions",
+      acceptText: "Fewer " + obj.code + " sessions on " + sh + " shift"
+    }));
+    ["1st", "2nd"].forEach((sh) => {
+      const first = drafts.find((d) => d.obj === c.obj && d.shift === sh);
+      if (!first) return;
+      const late = RECORDS.filter((r) => r.obj === c.obj && res(r.emp).shift === sh && r.due >= TODAY && r.due < first.date);
+      if (!late.length) return;
+      let earlier = null;
+      days.filter((day) => day <= first.date).some((day) => {
+        for (let t = SHIFTS[sh][0]; t + (first.end - first.start) <= SHIFTS[sh][1]; t += 30) {
+          if (day === first.date && t >= first.start) break;
+          if (!checkMove(first, day, t, result.drafts, cfg).length) {
+            earlier = { day, t };
+            return true;
+          }
+        }
+        return false;
+      });
+      const who = plural(late.length, "person", "people") + " on " + sh + " shift " + (late.length === 1 ? "is" : "are") + " due before " + first.label + " on " + fmtShort(first.date);
+      if (earlier) out.push({ key: "early-" + c.obj + "-" + sh, obj: c.obj, sev: "warning", text: who + ".", why: "An earlier time fits every rule.", target: "row-" + first.id, fixes: [{ id: "earlier", label: "Move " + first.label + " to " + fmtDay(earlier.day) + ", " + fmtT(earlier.t), effect: "Earlier for everyone on " + sh + " shift", run: () => h.onMove(first.id, earlier.day, earlier.t, []) }], acceptable: true, acceptText: obj.code + " " + sh + " shift starts after some due dates" });
+      else out.push({ key: "early-" + c.obj + "-" + sh, obj: c.obj, sev: "note", text: who + ". No earlier time fits the rules." });
+    });
+  });
+  drafts.filter((d) => d.breaks && d.breaks.length).forEach((d) => out.push(breakProblem(d, days, result.drafts, cfg, h)));
+  return out;
+};
+const waitCause = (key, drafts, assign, cfg) => {
+  const rec = RECORDS.find((r) => r.key === key);
+  const e = res(rec.emp);
+  const on = drafts.filter((d) => d.obj === rec.obj && d.shift === e.shift);
+  if (!on.length) return { kind: "nosession", label: "no " + objById(rec.obj).code + " session on " + e.shift + " shift" };
+  const open = on.filter((d) => Object.values(assign).filter((v) => v === d.id).length < d.capacity);
+  if (!open.length) return { kind: "full", label: "every " + objById(rec.obj).code + " session on " + e.shift + " shift is full" };
+  const iss = seatIssues(key, open.sort(byTime)[0], assign, drafts, cfg);
+  if (!iss.length) return { kind: "open", label: "a seat that fits them is open" };
+  if (iss[0].why === "F") return { kind: "F-" + e.area, label: AREAS[e.area] + " is at its off-the-floor limit", area: e.area };
+  if (iss[0].why === "L2") return { kind: "L2", label: "it would push them over " + cfg.L2 + " h of training that day" };
+  return { kind: "A1", label: "they are booked or on leave when the sessions run" };
+};
+const fillProblems = (run, cfg, result, assign, deferred, h) => {
+  const out = [];
+  const drafts = [...result.drafts].sort(byTime);
+  const days = between(run.from, run.to);
+  const objs = run.courses.map((c) => c.obj);
+  const recs = RECORDS.filter((r) => objs.includes(r.obj));
+  const openSeats = (d, a) => d.capacity - Object.values(a).filter((v) => v === d.id).length;
+  recs.filter((r) => assign[r.key]).forEach((r) => {
+    const d = drafts.find((x) => x.id === assign[r.key]);
+    const iss = seatIssues(r.key, d, assign, drafts, cfg);
+    if (!iss.length) return;
+    const others = drafts.filter((x) => x.obj === r.obj && x.id !== d.id && openSeats(x, assign) > 0 && !seatIssues(r.key, x, { ...assign, [r.key]: null }, drafts, cfg).length);
+    out.push({
+      key: "seat-" + r.key,
+      obj: r.obj,
+      sev: "issue",
+      text: personName(r.emp) + " in " + d.label + " breaks a rule.",
+      why: iss.map((x) => x.text).join("; ") + ".",
+      target: "p-" + r.key,
+      fixes: [...others.map((x) => ({ id: x.id, label: "Move to " + x.label + ", " + fmtDay(x.date) + " " + fmtT(x.start), effect: "Fits every rule", run: () => h.move(r.key, x.id) })), { id: "out", label: "Take " + personName(r.emp) + " out of " + d.label, effect: "They go back to Not seated", run: () => h.move(r.key, null) }],
+      acceptable: true,
+      acceptLabel: "Keep the override",
+      acceptText: personName(r.emp) + " seated in " + d.label + " against a rule"
+    });
+  });
+  drafts.filter((d) => d.breaks && d.breaks.length).forEach((d) => out.push({ ...breakProblem(d, days, result.drafts, cfg, h), target: "s-" + d.id }));
+  const groups = {};
+  recs.filter((r) => !assign[r.key] && !deferred[r.key]).forEach((r) => {
+    const c = waitCause(r.key, drafts, assign, cfg);
+    const g = r.obj + "|" + c.kind;
+    groups[g] = groups[g] || { obj: r.obj, cause: c, keys: [] };
+    groups[g].keys.push(r.key);
+  });
+  Object.entries(groups).forEach(([g, grp]) => {
+    const names = grp.keys.map((k) => personName(k.split("|")[1]));
+    const fixes = [];
+    const tryRule = (cfg2, a0) => {
+      const a = { ...a0 };
+      let n = 0;
+      grp.keys.forEach((k) => {
+        const x = drafts.find((d) => d.obj === grp.obj && openSeats(d, a) > 0 && !seatIssues(k, d, a, drafts, cfg2).length);
+        if (x) {
+          a[k] = x.id;
+          n += 1;
+        }
+      });
+      return { a, n };
+    };
+    const now = tryRule(cfg, assign);
+    if (now.n) fixes.push({ id: "seat", label: "Seat " + (now.n === grp.keys.length ? "them" : now.n + " of them") + " where a seat fits", effect: "Fits every rule", run: () => h.setAssign(now.a) });
+    if (grp.cause.area) {
+      const cfg2 = { ...cfg, F: { ...cfg.F, [grp.cause.area]: cfg.F[grp.cause.area] + 1 } };
+      const t = tryRule(cfg2, assign);
+      if (t.n) fixes.push({ id: "raise", label: "Let " + cfg2.F[grp.cause.area] + " " + AREAS[grp.cause.area] + " people off the floor per shift", effect: "Seats " + t.n + " of " + grp.keys.length + ". Shared rule, changes every course in this run", trade: true, run: () => {
+        h.setCfg(cfg2);
+        h.setAssign(t.a);
+      } });
+    }
+    if (grp.cause.kind === "nosession") fixes.push({ id: "review", label: "Go back to Review drafts to place a " + objById(grp.obj).code + " session", effect: "Sessions that could not be placed have fixes there", run: h.goReview });
+    out.push({
+      key: "wait-" + g,
+      obj: grp.obj,
+      sev: "warning",
+      text: plural(grp.keys.length, "person is", "people are") + " not seated because " + grp.cause.label + ".",
+      why: names.slice(0, 8).join(", ") + (names.length > 8 ? " and " + (names.length - 8) + " more" : "") + ".",
+      target: "w-" + grp.keys[0],
+      fixes,
+      defer: () => h.defer(grp.keys),
+      deferLabel: grp.keys.length === 1 ? "Leave for the next run" : "Leave all " + grp.keys.length + " for the next run"
+    });
+  });
+  recs.filter((r) => assign[r.key]).forEach((r) => {
+    const d = drafts.find((x) => x.id === assign[r.key]);
+    if (!(r.due >= TODAY && d.date > r.due)) return;
+    const earlier = drafts.filter((x) => x.obj === r.obj && x.date <= r.due && x.id !== d.id && openSeats(x, assign) > 0 && !seatIssues(r.key, x, { ...assign, [r.key]: null }, drafts, cfg).length);
+    const text = personName(r.emp) + " is seated in " + d.label + " on " + fmtShort(d.date) + ", after their due date of " + fmtShort(r.due);
+    if (earlier.length) out.push({ key: "late-" + r.key, obj: r.obj, sev: "warning", text: text + ".", why: "An earlier session has a seat that fits.", target: "p-" + r.key, fixes: earlier.map((x) => ({ id: x.id, label: "Move to " + x.label + ", " + fmtDay(x.date), effect: "Before their due date", run: () => h.move(r.key, x.id) })), acceptable: true });
+    else out.push({ key: "late-" + r.key, obj: r.obj, sev: "note", text: text + ". No earlier seat fits." });
+  });
+  return out;
+};
+const NOOP = { setPreview: () => {
+}, onMove: () => {
+}, move: () => {
+}, setAssign: () => {
+}, setCfg: () => {
+}, defer: () => {
+}, goReview: () => {
+} };
 const Strip = ({ id, date, drafts, previewIds = [], hover, setHover, onGrab, onNudge, drag }) => {
   const r = res(id);
   const x = exceptionOn(id, date);
@@ -1040,138 +1379,49 @@ const Strip = ({ id, date, drafts, previewIds = [], hover, setHover, onGrab, onN
       role: onGrab ? "button" : void 0,
       tabIndex: onGrab ? 0 : -1,
       "aria-label": onGrab ? "Move " + d.label + ", " + fmtDay(d.date) + " " + fmtT(d.start) + ". Arrow keys move it." : void 0,
-      className: "seg sess draft" + (previewIds.includes(d.id) ? " preview" : "") + (hover === d.id ? " hot" : "") + (d.breaks && d.breaks.length ? " broken" : "") + (onGrab ? " grab" : "") + (drag && drag.d.id === d.id ? " lifted" : ""),
+      className: "seg sess draft course" + (previewIds.includes(d.id) ? " preview" : "") + (hover === d.id ? " hot" : "") + (d.breaks && d.breaks.length ? " broken" : "") + (onGrab ? " grab" : "") + (drag && drag.d.id === d.id ? " lifted" : ""),
       onMouseEnter: () => setHover(d.id),
       onMouseLeave: () => setHover(null),
       onPointerDown: (e) => onGrab && onGrab(d, e),
       onKeyDown: (e) => key(d, e),
-      style: { left: pct(d.start) + "%", width: pct(d.end) - pct(d.start) + "%" },
-      title: d.label + ", " + fmtT(d.start) + " to " + fmtT(d.end)
+      style: { "--cc": objById(d.obj).color, left: pct(d.start) + "%", width: pct(d.end) - pct(d.start) + "%" },
+      title: d.label + ", " + objById(d.obj).name + ", " + fmtT(d.start) + " to " + fmtT(d.end)
     },
     /* @__PURE__ */ React.createElement("span", { className: "sl" }, d.label)
   )), ghost && /* @__PURE__ */ React.createElement("span", { className: "seg ghost " + (drag.breaks.length ? "bad" : "ok"), style: { left: pct(drag.target.start) + "%", width: pct(drag.target.start + drag.d.end - drag.d.start) - pct(drag.target.start) + "%" } }, /* @__PURE__ */ React.createElement("span", { className: "sl" }, drag.d.label)));
 };
-const WarnIcon = () => /* @__PURE__ */ React.createElement("svg", { className: "picon", width: "16", height: "16", viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M12 3 2 21h20L12 3z", fill: "currentColor" }), /* @__PURE__ */ React.createElement("path", { d: "M12 10v5", stroke: "#fff", strokeWidth: "2.2", strokeLinecap: "round" }), /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "18", r: "1.3", fill: "#fff" }));
-const IssueIcon = () => /* @__PURE__ */ React.createElement("svg", { className: "picon", width: "16", height: "16", viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "currentColor" }), /* @__PURE__ */ React.createElement("path", { d: "M12 6.5v7", stroke: "#fff", strokeWidth: "2.2", strokeLinecap: "round" }), /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "17", r: "1.3", fill: "#fff" }));
-const OkIcon = () => /* @__PURE__ */ React.createElement("svg", { className: "picon", width: "16", height: "16", viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "currentColor" }), /* @__PURE__ */ React.createElement("path", { d: "m7.5 12.5 3 3 6-6.5", stroke: "#fff", strokeWidth: "2.2", fill: "none", strokeLinecap: "round", strokeLinejoin: "round" }));
-const SevIcon = ({ sev }) => sev === "issue" ? /* @__PURE__ */ React.createElement(IssueIcon, null) : /* @__PURE__ */ React.createElement(WarnIcon, null);
-const REASONS = ["Supervisor approved", "Will attend a later session", "Due date is advisory for this person", "Other (add a note)"];
-const NoteIcon = () => /* @__PURE__ */ React.createElement("svg", { className: "picon", width: "16", height: "16", viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "currentColor" }), /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "7.5", r: "1.3", fill: "#fff" }), /* @__PURE__ */ React.createElement("path", { d: "M12 11v6", stroke: "#fff", strokeWidth: "2.2", strokeLinecap: "round" }));
-const splitProblems = (all, accepted) => ({
-  items: all.filter((x) => x.sev !== "note" && !accepted[x.key]),
-  notes: all.filter((x) => x.sev === "note"),
-  done: all.filter((x) => x.sev !== "note" && accepted[x.key]).map((x) => ({ ...x, ...accepted[x.key] }))
-});
-const ProblemBar = ({ items, notes = [], done = [], onGo, onAccept, onUndo }) => {
-  const [i, setI] = useState(0);
-  const [open, setOpen] = useState(false);
-  const [drawer, setDrawer] = useState(null);
-  const [reason, setReason] = useState(REASONS[0]);
-  const [note, setNote] = useState("");
-  const [seatIn, setSeatIn] = useState("");
-  const k = items.length ? Math.min(i, items.length - 1) : 0;
-  const cur = items[k];
-  const curKey = cur ? cur.key : "";
-  useEffect(() => {
-    setNote("");
-    setReason(REASONS[0]);
-    setSeatIn(cur && cur.override && cur.override.options.length ? cur.override.options[0].id : "");
-  }, [curKey]);
-  useEffect(() => {
-    if (!items.length) setOpen(false);
-  }, [items.length]);
-  const issues = items.filter((x) => x.sev === "issue").length;
-  const warns = items.length - issues;
-  const extras = (notes.length > 0 || done.length > 0) && /* @__PURE__ */ React.createElement("span", { className: "pextra" }, notes.length > 0 && /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", "aria-expanded": drawer === "notes", onClick: () => setDrawer(drawer === "notes" ? null : "notes") }, plural(notes.length, "note", "notes")), done.length > 0 && /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", "aria-expanded": drawer === "done", onClick: () => setDrawer(drawer === "done" ? null : "done") }, done.length, " accepted"));
-  const drawerEl = drawer && /* @__PURE__ */ React.createElement("div", { className: "pdrawer" }, drawer === "notes" && /* @__PURE__ */ React.createElement("ul", null, notes.map((n) => /* @__PURE__ */ React.createElement("li", { key: n.key }, /* @__PURE__ */ React.createElement("span", { className: "nicon" }, /* @__PURE__ */ React.createElement(NoteIcon, null)), /* @__PURE__ */ React.createElement("span", null, n.text)))), drawer === "done" && /* @__PURE__ */ React.createElement("ul", null, done.map((a) => /* @__PURE__ */ React.createElement("li", { key: a.key }, /* @__PURE__ */ React.createElement("span", { className: "aicon" }, /* @__PURE__ */ React.createElement(OkIcon, null)), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, a.text), /* @__PURE__ */ React.createElement("span", { className: "quiet" }, " Accepted: ", a.reason, a.note ? ". " + a.note : "")), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", onClick: () => onUndo(a.key) }, "Undo")))));
-  if (!cur) return /* @__PURE__ */ React.createElement("div", { className: "pwrap" }, /* @__PURE__ */ React.createElement("div", { className: "pbar clear", role: "status" }, /* @__PURE__ */ React.createElement("span", { className: "pc ok" }, /* @__PURE__ */ React.createElement(OkIcon, null)), /* @__PURE__ */ React.createElement("span", { className: "pclear" }, "Nothing left to resolve"), extras), drawerEl);
-  const go = (n) => {
-    const j = (n + items.length) % items.length;
-    setI(j);
-    onGo(items[j]);
-  };
-  const needNote = reason.startsWith("Other") && !note.trim();
-  return /* @__PURE__ */ React.createElement("div", { className: "pwrap" }, /* @__PURE__ */ React.createElement("div", { className: "pbar " + (issues ? "has-issue" : "has-warning"), role: "region", "aria-label": "Problems to resolve" }, /* @__PURE__ */ React.createElement("span", { className: "pcount" }, issues > 0 && /* @__PURE__ */ React.createElement("span", { className: "pc issue" }, /* @__PURE__ */ React.createElement(IssueIcon, null), plural(issues, "issue", "issues")), warns > 0 && /* @__PURE__ */ React.createElement("span", { className: "pc warning" }, /* @__PURE__ */ React.createElement(WarnIcon, null), plural(warns, "warning", "warnings"))), /* @__PURE__ */ React.createElement("button", { type: "button", className: "pitem " + cur.sev, onClick: () => {
-    onGo(cur);
-    setOpen(true);
-  } }, /* @__PURE__ */ React.createElement(SevIcon, { sev: cur.sev }), /* @__PURE__ */ React.createElement("span", null, cur.text)), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-fix " + cur.sev, "aria-expanded": open, onClick: () => {
-    setOpen(!open);
-    onGo(cur);
-  } }, open ? "Hide" : "Resolve"), /* @__PURE__ */ React.createElement("span", { className: "pnav" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "iconbtn", "aria-label": "Previous problem", onClick: () => go(k - 1) }, "\u2039"), /* @__PURE__ */ React.createElement("span", { className: "num" }, k + 1, " of ", items.length), /* @__PURE__ */ React.createElement("button", { type: "button", className: "iconbtn", "aria-label": "Next problem", onClick: () => go(k + 1) }, "\u203A")), extras), open && /* @__PURE__ */ React.createElement("div", { className: "ppanel " + cur.sev }, cur.why && /* @__PURE__ */ React.createElement("p", { className: "pwhy" }, cur.why), cur.fixes.length > 0 ? /* @__PURE__ */ React.createElement("div", { className: "pfixes" }, /* @__PURE__ */ React.createElement("span", { className: "quiet" }, "Each option was checked against every Must hold rule."), cur.fixes.map((f) => /* @__PURE__ */ React.createElement("button", { type: "button", key: f.id, className: "fix", onClick: f.run }, /* @__PURE__ */ React.createElement("span", { className: "ft" }, f.label), f.effect && /* @__PURE__ */ React.createElement("span", { className: "fe" }, f.effect)))) : /* @__PURE__ */ React.createElement("p", { className: "quiet" }, "No change fits every rule.", cur.defer ? " Leave it for the next run, or seat anyway with a reason." : " Accept it with a reason to continue."), cur.defer && /* @__PURE__ */ React.createElement("div", { className: "pdefer" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: cur.defer }, "Leave for the next run"), /* @__PURE__ */ React.createElement("span", { className: "quiet" }, "They stay in Needs scheduling and are offered first next time.")), (cur.acceptable || cur.override) && /* @__PURE__ */ React.createElement("div", { className: "paccept" }, /* @__PURE__ */ React.createElement("span", { className: "ptitle" }, cur.override ? "Or seat anyway" : "Or accept as is"), cur.override && /* @__PURE__ */ React.createElement("label", { className: "pf" }, "Session", /* @__PURE__ */ React.createElement("select", { value: seatIn, onChange: (e) => setSeatIn(e.target.value) }, cur.override.options.map((o) => /* @__PURE__ */ React.createElement("option", { key: o.id, value: o.id }, o.label)))), /* @__PURE__ */ React.createElement("label", { className: "pf" }, "Reason", /* @__PURE__ */ React.createElement("select", { value: reason, onChange: (e) => setReason(e.target.value) }, REASONS.map((r) => /* @__PURE__ */ React.createElement("option", { key: r }, r)))), /* @__PURE__ */ React.createElement("label", { className: "pf grow" }, "Note", reason.startsWith("Other") ? "" : " (optional)", /* @__PURE__ */ React.createElement("input", { value: note, onChange: (e) => setNote(e.target.value), placeholder: reason.startsWith("Other") ? "Required for Other" : "" })), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", disabled: needNote || cur.override && !seatIn, onClick: () => cur.override ? cur.override.run(seatIn, reason, note) : onAccept(cur.key, reason, note) }, cur.override ? "Seat anyway" : cur.acceptLabel || "Accept"))), drawerEl);
+const Setup = ({ run, setRun, cfg, setCfg, onRun, allowKits }) => {
+  const [showRules, setShowRules] = useState(false);
+  const [dueBy, setDueBy] = useState("2026-11-30");
+  const objs = run.courses.map((c) => c.obj);
+  const recs = RECORDS.filter((r) => objs.includes(r.obj));
+  const people = [...new Set(recs.map((r) => r.emp))];
+  const multi = people.filter((p) => recs.filter((r) => r.emp === p).length > 1);
+  const overdue = recs.filter((r) => r.due < TODAY).length;
+  const days = between(run.from, run.to);
+  const seats = run.courses.reduce((a, c) => a + c.n * occCapFor(c, cfg), 0);
+  const sessions = run.courses.reduce((a, c) => a + c.n, 0);
+  const setC = (i, patch) => setRun({ ...run, courses: run.courses.map((c, j) => j === i ? { ...c, ...patch } : c) });
+  const notIn = OBJECTIVES.filter((o) => !objs.includes(o.id) && (allowKits || !o.assets.length));
+  const dueAdds = notIn.filter((o) => RECORDS.some((r) => r.obj === o.id && r.due <= dueBy));
+  const assets = [...new Set(run.courses.flatMap((c) => objById(c.obj).assets))];
+  const areas = [...new Set(recs.map((r) => res(r.emp).area))];
+  const changed = changedRules(cfg);
+  const setR = (k, v) => setCfg({ ...cfg, [k]: v });
+  const loan = assets.map((a) => EXCEPTIONS.find((x) => x.res === a)).find(Boolean);
+  const leaves = [...new Set(run.courses.flatMap((c) => c.instructors))].filter((i) => EXCEPTIONS.some((x) => x.res === i));
+  const competeFor = assets.length ? "instructor, room, kit or people" : "instructor, room or people";
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(Result, { sub: /* @__PURE__ */ React.createElement("p", null, plural(people.length, "person needs", "people need"), " training across ", plural(run.courses.length, "course", "courses"), multi.length ? ", and " + multi.length + " of them need more than one" : "", ". ", overdue, " ", overdue === 1 ? "seat is" : "seats are", " already overdue.") }, "Plan ", plural(run.courses.length, "course", "courses"), " together."), /* @__PURE__ */ React.createElement("section", { className: "block" }, /* @__PURE__ */ React.createElement("div", { className: "sentence" }, /* @__PURE__ */ React.createElement("span", null, "Find times between"), /* @__PURE__ */ React.createElement("input", { id: "r-from", "aria-label": "Window start", type: "date", value: run.from, min: addDays(TODAY, 1), onChange: (e) => e.target.value && setRun({ ...run, from: e.target.value }) }), /* @__PURE__ */ React.createElement("span", null, "and"), /* @__PURE__ */ React.createElement("input", { id: "r-to", "aria-label": "Window end", type: "date", value: run.to, min: run.from, onChange: (e) => e.target.value && setRun({ ...run, to: e.target.value }) }), /* @__PURE__ */ React.createElement("span", { className: "quiet" }, plural(days.length, "working day", "working days")))), /* @__PURE__ */ React.createElement("section", { className: "block" }, /* @__PURE__ */ React.createElement("h2", null, "Courses in this run"), /* @__PURE__ */ React.createElement("div", { className: "tablewrap" }, /* @__PURE__ */ React.createElement("table", { className: "courses" }, /* @__PURE__ */ React.createElement("thead", null, /* @__PURE__ */ React.createElement("tr", null, /* @__PURE__ */ React.createElement("th", null, "Course"), /* @__PURE__ */ React.createElement("th", { className: "r" }, "People"), /* @__PURE__ */ React.createElement("th", { className: "r" }, "Overdue"), /* @__PURE__ */ React.createElement("th", null, "Sessions"), /* @__PURE__ */ React.createElement("th", null, "Up to"), /* @__PURE__ */ React.createElement("th", { className: "r" }, "Hours"), /* @__PURE__ */ React.createElement("th", null, "Needs"), /* @__PURE__ */ React.createElement("th", null))), /* @__PURE__ */ React.createElement("tbody", null, run.courses.map((c, i) => {
+    const o = objById(c.obj);
+    const rs = RECORDS.filter((r) => r.obj === c.obj);
+    const cap = occCapFor(c, cfg);
+    return /* @__PURE__ */ React.createElement("tr", { key: c.obj }, /* @__PURE__ */ React.createElement("td", null, /* @__PURE__ */ React.createElement("span", { className: "cname" }, /* @__PURE__ */ React.createElement(CourseDot, { obj: c.obj }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, o.name), /* @__PURE__ */ React.createElement("span", { className: "osub" }, o.code, " \xB7 ", o.note)))), /* @__PURE__ */ React.createElement("td", { className: "r num" }, rs.length, /* @__PURE__ */ React.createElement("span", { className: "osub" }, rs.filter((r) => res(r.emp).shift === "1st").length, " 1st, ", rs.filter((r) => res(r.emp).shift === "2nd").length, " 2nd")), /* @__PURE__ */ React.createElement("td", { className: "r num" + (rs.some((r) => r.due < TODAY) ? " badt" : "") }, rs.filter((r) => r.due < TODAY).length), /* @__PURE__ */ React.createElement("td", null, /* @__PURE__ */ React.createElement(NumIn, { id: "n-" + c.obj, label: "Sessions of " + o.name, value: c.n, min: 1, max: 8, onChange: (v) => setC(i, { n: v }) })), /* @__PURE__ */ React.createElement("td", null, /* @__PURE__ */ React.createElement(NumIn, { id: "o-" + c.obj, label: "People per session for " + o.name, value: c.occ, min: 1, max: 20, onChange: (v) => setC(i, { occ: v }) }), cap < c.occ && /* @__PURE__ */ React.createElement("span", { className: "osub warnt" }, "capped at ", cap)), /* @__PURE__ */ React.createElement("td", { className: "r num" }, c.durH), /* @__PURE__ */ React.createElement("td", { className: "needs" }, plural(c.instructors.length, "instructor", "instructors"), ", ", plural(c.rooms.length, "room", "rooms"), o.assets.length ? ", " + o.assets.map((a) => res(a).name.toLowerCase()).join(", ") : ""), /* @__PURE__ */ React.createElement("td", null, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text danger", "aria-label": "Remove " + o.name, disabled: run.courses.length === 1, onClick: () => setRun({ ...run, courses: run.courses.filter((_, j) => j !== i) }) }, "Remove")));
+  })))), /* @__PURE__ */ React.createElement("div", { className: "adders" }, /* @__PURE__ */ React.createElement("label", { className: "pf" }, "Add a course", /* @__PURE__ */ React.createElement("select", { value: "", disabled: !notIn.length, onChange: (e) => e.target.value && setRun({ ...run, courses: [...run.courses, courseFor(e.target.value)] }) }, /* @__PURE__ */ React.createElement("option", { value: "" }, notIn.length ? "Choose a course" : "All courses added"), notIn.map((o) => /* @__PURE__ */ React.createElement("option", { key: o.id, value: o.id }, o.name, " (", RECORDS.filter((r) => r.obj === o.id).length, " people)")))), /* @__PURE__ */ React.createElement("span", { className: "or" }, "or"), /* @__PURE__ */ React.createElement("span", { className: "pf" }, "Add every course with people due by", /* @__PURE__ */ React.createElement("span", { className: "inl" }, /* @__PURE__ */ React.createElement("input", { id: "due-by", type: "date", "aria-label": "Due by", value: dueBy, onChange: (e) => e.target.value && setDueBy(e.target.value) }), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", disabled: !dueAdds.length, onClick: () => setRun({ ...run, courses: [...run.courses, ...dueAdds.map((o) => courseFor(o.id))] }) }, dueAdds.length ? "Add " + plural(dueAdds.length, "course", "courses") : "Nothing new to add")))), /* @__PURE__ */ React.createElement("p", { className: "fitline " + (seats >= recs.length ? "ok" : "short") }, sessions, " sessions, ", seats, " seats for ", recs.length, " course seats needed", seats < recs.length ? ". " + (recs.length - seats) + " will wait for a later run." : ".")), /* @__PURE__ */ React.createElement("section", { className: "block" }, /* @__PURE__ */ React.createElement("div", { className: "rshead" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", null, "Rules"), /* @__PURE__ */ React.createElement("p", { className: "quiet" }, "When courses compete for the same ", competeFor, ", the course with the most overdue people is placed first. ", changed.length ? plural(changed.length, "rule", "rules") + " changed for this run." : "All rules at their defaults.")), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", "aria-expanded": showRules, onClick: () => setShowRules(!showRules) }, showRules ? "Hide rules" : "Review rules")), /* @__PURE__ */ React.createElement("ul", { className: "keyrules" }, /* @__PURE__ */ React.createElement("li", null, AREAS.mb, " can release ", cfg.F.mb, " people per shift across all courses while ESN 891-442 is due back Oct 30."), loan && /* @__PURE__ */ React.createElement("li", null, "The ", res(loan.res).name.toLowerCase(), " is loaned to On-Wing Services ", fmtShort(loan.from), " to ", fmtShort(loan.to), " ", /* @__PURE__ */ React.createElement("span", { className: "prov" }, loan.source)), leaves.map((i) => {
+    const x = EXCEPTIONS.find((z) => z.res === i);
+    return /* @__PURE__ */ React.createElement("li", { key: i }, personName(i), " is on leave ", fmtShort(x.from), " to ", fmtShort(x.to), " ", /* @__PURE__ */ React.createElement("span", { className: "prov" }, x.source));
+  })), showRules && /* @__PURE__ */ React.createElement("div", { className: "rulegroups" }, /* @__PURE__ */ React.createElement("div", { className: "rulelist" }, /* @__PURE__ */ React.createElement("div", { className: "rghead" }, "Shared across all courses"), assets.map((a) => /* @__PURE__ */ React.createElement("div", { key: a, className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "q-" + a }, res(a).name, " available"), /* @__PURE__ */ React.createElement(NumIn, { id: "q-" + a, value: cfg.qty[a], min: 0, max: 6, onChange: (v) => setCfg({ ...cfg, qty: { ...cfg.qty, [a]: v } }) }))), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-l1" }, "Sessions an instructor teaches per day"), /* @__PURE__ */ React.createElement(NumIn, { id: "c-l1", value: cfg.L1, min: 1, max: 4, onChange: (v) => setR("L1", v) })), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-l2" }, "Training hours per person per day, all courses"), /* @__PURE__ */ React.createElement(NumIn, { id: "c-l2", value: cfg.L2, min: 1, max: 8, unit: "h", onChange: (v) => setR("L2", v) })), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-t" }, "Travel time between Bldg 1 and Bldg 2"), /* @__PURE__ */ React.createElement(NumIn, { id: "c-t", value: cfg.T, min: 0, max: 60, unit: "min", onChange: (v) => setR("T", v) })), /* @__PURE__ */ React.createElement("div", { className: "rrow wrap" }, /* @__PURE__ */ React.createElement("span", null, "People off the floor per shift, all courses"), /* @__PURE__ */ React.createElement("span", { className: "areas" }, areas.map((a) => /* @__PURE__ */ React.createElement("label", { key: a, className: "area", htmlFor: "f-" + a }, AREAS[a], /* @__PURE__ */ React.createElement(NumIn, { id: "f-" + a, value: cfg.F[a], min: 0, max: 10, onChange: (v) => setCfg({ ...cfg, F: { ...cfg.F, [a]: v } }) })))))), /* @__PURE__ */ React.createElement("div", { className: "rulelist" }, /* @__PURE__ */ React.createElement("div", { className: "rghead" }, "Each course"), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-m" }, "Minimum seats filled to run a session"), /* @__PURE__ */ React.createElement(NumIn, { id: "c-m", value: cfg.M, min: 0, max: 100, unit: "%", onChange: (v) => setR("M", v) })), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-c" }, "Sessions of a course per shift, per day"), /* @__PURE__ */ React.createElement(NumIn, { id: "c-c", value: cfg.C, min: 1, max: 4, onChange: (v) => setR("C", v) })), /* @__PURE__ */ React.createElement("div", { className: "rrow" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "c-first" }, "Place this course first when courses compete"), /* @__PURE__ */ React.createElement("select", { id: "c-first", value: run.first || "", onChange: (e) => setRun({ ...run, first: e.target.value || null }) }, /* @__PURE__ */ React.createElement("option", { value: "" }, "Most overdue first"), run.courses.map((c) => /* @__PURE__ */ React.createElement("option", { key: c.obj, value: c.obj }, objById(c.obj).name)))), /* @__PURE__ */ React.createElement("p", { className: "quiet always" }, "Always applied: instructors hold a Trainer Endorsement for the course, rooms have enough seats, and nobody is booked twice, on leave or outside their shift.")))), /* @__PURE__ */ React.createElement("div", { className: "cta" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-primary big", onClick: onRun }, "Find times for ", plural(sessions, "session", "sessions"))));
 };
-const nearestFit = (d, days, drafts, cfg, obj) => {
-  let best = null;
-  const base = days.indexOf(d.date) * 1440 + d.start;
-  days.forEach((day, di) => {
-    for (let t = SHIFTS[d.shift][0]; t + (d.end - d.start) <= SHIFTS[d.shift][1]; t += 30) {
-      if (day === d.date && t === d.start) continue;
-      if (checkMove(d, day, t, drafts, cfg, obj).length) continue;
-      const dist = Math.abs(di * 1440 + t - base);
-      if (!best || dist < best.dist) best = { day, t, dist };
-    }
-  });
-  return best;
-};
-const breakProblem = (d, days, drafts, cfg, obj, onMove) => {
-  const fixes = [];
-  if (d.orig && !checkMove(d, d.orig.date, d.orig.start, drafts, cfg, obj).length) fixes.push({ id: "back", label: "Move " + d.label + " back to " + fmtDay(d.orig.date) + ", " + fmtT(d.orig.start), effect: "Where the solver placed it", run: () => onMove(d.id, d.orig.date, d.orig.start, []) });
-  const n = nearestFit(d, days, drafts, cfg, obj);
-  if (n && !(d.orig && n.day === d.orig.date && n.t === d.orig.start)) fixes.push({ id: "near", label: "Move " + d.label + " to " + fmtDay(n.day) + ", " + fmtT(n.t), effect: "Nearest time to where you dropped it that fits", run: () => onMove(d.id, n.day, n.t, []) });
-  return { key: "break-" + d.id, sev: "issue", text: d.label + " breaks a rule after you moved it.", why: d.breaks.map((x) => x.text).join("; ") + ".", target: "row-" + d.id, fixes, acceptable: true, acceptLabel: "Keep it here" };
-};
-const useFocus = () => {
-  const [focus, setFocus] = useState(null);
-  useEffect(() => {
-    if (!focus) return;
-    const el = document.getElementById(focus);
-    if (el) el.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
-    const t = setTimeout(() => setFocus(null), 2200);
-    return () => clearTimeout(t);
-  }, [focus]);
-  return [focus, setFocus];
-};
-const checkMove = (d, day, start, drafts, cfg, obj) => {
-  const dur = d.end - d.start;
-  const end = start + dur;
-  const out = [];
-  const [a, b] = SHIFTS[d.shift];
-  if (start < a || end > b) out.push({ k: "A1", text: "Outside " + d.shift + " shift, when these trainees work" });
-  const others = [...BOOKINGS, ...drafts.filter((x) => x.id !== d.id).map((x) => ({ id: x.id, name: "draft " + x.label, date: x.date, start: x.start, end: x.end, trainer: x.instructor, station: x.room, trainees: [], assets: x.assets }))];
-  const si = statusOf(others, d.instructor, day, start, end);
-  if (si.state !== "free" && !(si.state === "offshift" && out.length)) out.push({ k: "A1", text: res(d.instructor).name.split(",")[0] + ": " + si.text });
-  const sr = statusOf(others, d.room, day, start, end);
-  if (sr.state !== "free") out.push({ k: "A1", text: res(d.room).name + ": " + sr.text });
-  obj.assets.forEach((x) => {
-    const av = assetAvail(others, x, day, start, end, cfg);
-    if (av < (res(x).per === "session" ? 1 : d.capacity)) {
-      const ex = exceptionOn(x, day);
-      out.push({ k: "K", text: res(x).name + (ex ? " loaned to " + ex.note + " (" + ex.source + ")" : " in use by another session") });
-    }
-  });
-  if (loadOf(others, d.instructor, day) >= cfg.L1) out.push({ k: "L1", text: res(d.instructor).name.split(",")[0] + " already teaches " + cfg.L1 + " sessions that day" });
-  const tb = travelBlock(others, d.instructor, day, start, end, d.room, cfg.T);
-  if (tb) out.push({ k: "T", text: res(d.instructor).name.split(",")[0] + " needs " + cfg.T + " min from " + res(tb.station).name });
-  const same = drafts.filter((x) => x.id !== d.id && x.date === day && x.shift === d.shift).length;
-  if (same >= cfg.C) out.push({ k: "C", text: "Another session of this course is already on " + d.shift + " shift that day" });
-  return out;
-};
-const fitMapFor = (d, days, drafts, cfg, obj) => {
-  const m = {};
-  const dur = d.end - d.start;
-  days.forEach((day) => {
-    m[day] = [];
-    for (let t = SHIFTS[d.shift][0]; t + dur <= SHIFTS[d.shift][1]; t += 30) m[day].push({ t, ok: !checkMove(d, day, t, drafts, cfg, obj).length });
-  });
-  return m;
-};
-const blockerSentence = (u, obj) => {
-  const pr = primaryOf(u);
-  if (!pr.length) return "no open slots in the window";
-  const total = Object.values(u.counts).reduce((a, b) => a + b, 0);
-  const what = pr[0].k === "K" ? "the " + obj.assets.map((a) => res(a).name.toLowerCase()).join(" and ") + " is booked or loaned" : pr[0].k === "A1" ? "no endorsed instructor or room is free" : pr[0].k === "F" ? "too many people are already off the floor" : pr[0].k === "M" ? "too few people are left to fill a session" : pr[0].k === "L1" ? "instructors already teach their daily limit" : pr[0].k === "T" ? "instructors cannot get between buildings in time" : "the limit on sessions per shift is reached";
-  return what + " on " + pr[0].n + " of " + total + " open slots";
-};
-const Review = ({ obj, p, cfg, result, preview, setPreview, fixes, onApply, onLock, onRemove, onMove, onRerun, onBack, onNext, accepted, onAccept, onUndo }) => {
+const Review = ({ run, cfg, result, preview, setPreview, fixes, onApply, onRemove, onMove, onBack, onNext, accepted, onAccept, onUndo }) => {
   const [view, setView] = useState("list");
   const [open, setOpen] = useState(null);
   const [hover, setHover] = useState(null);
@@ -1179,55 +1429,16 @@ const Review = ({ obj, p, cfg, result, preview, setPreview, fixes, onApply, onLo
   const [focus, setFocus] = useFocus();
   const dragRef = useRef(null);
   const shown = preview ? preview.result : result;
-  const currentKeys = new Set(result.drafts.map((d) => d.date + d.start + d.instructor));
-  const previewIds = preview ? preview.result.drafts.filter((d) => !currentKeys.has(d.date + d.start + d.instructor)).map((d) => d.id) : [];
-  const days = between(preview ? preview.p.from : p.from, preview ? preview.p.to : p.to);
+  const currentKeys = new Set(result.drafts.map((d) => d.obj + d.date + d.start + d.instructor));
+  const previewIds = preview ? preview.result.drafts.filter((d) => !currentKeys.has(d.obj + d.date + d.start + d.instructor)).map((d) => d.id) : [];
+  const days = between(preview ? preview.run.from : run.from, preview ? preview.run.to : run.to);
   const drafts = [...shown.drafts].sort(byTime);
-  const groups = {};
-  result.unplaced.forEach((u) => {
-    groups[u.shift] = groups[u.shift] || [];
-    groups[u.shift].push(u);
-  });
-  const lockedN = result.drafts.filter((d) => d.locked).length;
-  const rows = [...obj.instructors, ...obj.rooms, ...obj.assets];
-  const allFit = !shown.unplaced.length;
-  const recs = RECORDS.filter((r) => r.obj === obj.id);
-  const problems = [];
-  if (!preview) {
-    Object.entries(groups).forEach(([shift, us]) => problems.push({
-      key: "unplaced-" + shift,
-      sev: "issue",
-      text: plural(us.length, "session", "sessions") + " on " + shift + " shift could not be placed.",
-      why: "Blocked because " + blockerSentence(us[0], obj) + ".",
-      target: "blocker",
-      fixes: fixes.map((f) => ({ id: f.id, label: "Preview: " + f.text, effect: "Fits " + plural(f.gain, "more session", "more sessions") + (f.last ? ", last one " + fmtShort(f.last) : ""), run: () => setPreview(f) })),
-      acceptable: true,
-      acceptLabel: "Run fewer sessions"
-    }));
-    drafts.filter((d) => d.breaks && d.breaks.length).forEach((d) => problems.push(breakProblem(d, days, result.drafts, cfg, obj, onMove)));
-    ["1st", "2nd"].forEach((sh) => {
-      const first = drafts.find((d) => d.shift === sh);
-      if (!first) return;
-      const late = recs.filter((r) => res(r.emp).shift === sh && r.due >= TODAY && r.due < first.date);
-      if (!late.length) return;
-      let earlier = null;
-      days.filter((day) => day <= first.date).some((day) => {
-        for (let t = SHIFTS[sh][0]; t + (first.end - first.start) <= SHIFTS[sh][1]; t += 30) {
-          if (day === first.date && t >= first.start) break;
-          if (!checkMove(first, day, t, result.drafts, cfg, obj).length) {
-            earlier = { day, t };
-            return true;
-          }
-        }
-        return false;
-      });
-      const who = plural(late.length, "person", "people") + " on " + sh + " shift " + (late.length === 1 ? "is" : "are") + " due before " + first.label + " on " + fmtShort(first.date);
-      if (earlier) problems.push({ key: "early-" + sh, sev: "warning", text: who + ".", why: "An earlier time fits every rule.", target: "row-" + first.id, fixes: [{ id: "earlier", label: "Move " + first.label + " to " + fmtDay(earlier.day) + ", " + fmtT(earlier.t), effect: "Earlier for everyone on " + sh + " shift", run: () => onMove(first.id, earlier.day, earlier.t, []) }], acceptable: true });
-      else problems.push({ key: "early-" + sh, sev: "note", text: who + ". No earlier time fits the rules, so this is the earliest possible." });
-    });
-  }
+  const total = run.courses.reduce((a, c) => a + c.n, 0);
+  const allFit = shown.courses.every((c) => !c.unplaced.length);
+  const kits = runHasKits(run);
+  const problems = preview ? [] : reviewProblems(run, cfg, result, fixes, { setPreview, onMove });
   const goTo = (item) => {
-    if (item.target.startsWith("row-")) setView("list");
+    if (item.target.startsWith("row-") || item.target.startsWith("course-")) setView("list");
     setFocus(item.target);
   };
   const grab = (d, e) => {
@@ -1236,7 +1447,12 @@ const Review = ({ obj, p, cfg, result, preview, setPreview, fixes, onApply, onLo
     const cell = e.currentTarget.closest(".gcell");
     const rect = cell.getBoundingClientRect();
     const at = DAY_START + (e.clientX - rect.left) / rect.width * SPAN;
-    const next = { d, offset: at - d.start, target: { day: d.date, start: d.start }, breaks: d.breaks || [], fit: fitMapFor(d, days, result.drafts, cfg, obj) };
+    const fit = {};
+    days.forEach((day) => {
+      fit[day] = [];
+      for (let t = SHIFTS[d.shift][0]; t + (d.end - d.start) <= SHIFTS[d.shift][1]; t += 30) fit[day].push({ t, ok: !checkMove(d, day, t, result.drafts, cfg).length });
+    });
+    const next = { d, offset: at - d.start, target: { day: d.date, start: d.start }, breaks: d.breaks || [], fit };
     dragRef.current = next;
     setDrag(next);
   };
@@ -1253,7 +1469,7 @@ const Review = ({ obj, p, cfg, result, preview, setPreview, fixes, onApply, onLo
       const start = Math.max(DAY_START, Math.min(DAY_END - dur, Math.round(raw / 30) * 30));
       const day = cell.dataset.day;
       if (cur.target.day === day && cur.target.start === start) return;
-      const next = { ...cur, target: { day, start }, breaks: checkMove(cur.d, day, start, result.drafts, cfg, obj) };
+      const next = { ...cur, target: { day, start }, breaks: checkMove(cur.d, day, start, result.drafts, cfg) };
       dragRef.current = next;
       setDrag(next);
     };
@@ -1277,128 +1493,101 @@ const Review = ({ obj, p, cfg, result, preview, setPreview, fixes, onApply, onLo
       if (i < 0 || i >= days.length) return;
       day = days.at(i);
     }
-    const dur = d.end - d.start;
-    const start = Math.max(DAY_START, Math.min(DAY_END - dur, d.start + dm));
-    onMove(d.id, day, start, checkMove(d, day, start, result.drafts, cfg, obj));
+    const start = Math.max(DAY_START, Math.min(DAY_END - (d.end - d.start), d.start + dm));
+    onMove(d.id, day, start, checkMove(d, day, start, result.drafts, cfg));
   };
-  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(Result, { tone: allFit ? "good" : "warn", sub: allFit && !preview ? "Check the times below, then fill seats. Nothing is booked until you publish." : null }, preview ? "With this fix, " + shown.drafts.length + " of " + p.n + " sessions fit." : allFit ? "All " + p.n + " sessions fit." : result.drafts.length + " of " + p.n + " sessions fit."), !preview && /* @__PURE__ */ React.createElement(ProblemBar, { ...splitProblems(problems, accepted), onGo: goTo, onAccept, onUndo }), !allFit && !preview && /* @__PURE__ */ React.createElement("section", { id: "blocker", className: "blocker" + (focus === "blocker" ? " focus" : "") }, Object.entries(groups).map(([shift, us]) => /* @__PURE__ */ React.createElement("p", { key: shift }, /* @__PURE__ */ React.createElement("b", null, plural(us.length, "session", "sessions"), " on ", shift, " shift could not be placed"), ": ", blockerSentence(us[0], obj), ".")), fixes.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "fixlist", role: "group", "aria-label": "Ways to place the rest" }, /* @__PURE__ */ React.createElement("span", { className: "quiet" }, "Pick a change to preview it. Nothing changes until you apply it."), fixes.map((f) => /* @__PURE__ */ React.createElement("button", { type: "button", key: f.id, className: "fix", onClick: () => setPreview(f) }, /* @__PURE__ */ React.createElement("span", { className: "ft" }, f.text), /* @__PURE__ */ React.createElement("span", { className: "fe" }, "Fits ", plural(f.gain, "more session", "more sessions"), f.last ? ", last one " + fmtShort(f.last) : "")))), !fixes.length && /* @__PURE__ */ React.createElement("p", { className: "quiet" }, "No single change fits more sessions. Try a longer window or another instructor.")), preview && /* @__PURE__ */ React.createElement("section", { className: "previewbar", role: "status" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("b", null, "Previewing: ", preview.text, "."), " New sessions are marked below."), /* @__PURE__ */ React.createElement("div", { className: "bact" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: () => setPreview(null) }, "Cancel"), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-primary", onClick: onApply }, "Apply this change"))), /* @__PURE__ */ React.createElement("div", { className: "viewbar" }, /* @__PURE__ */ React.createElement("h2", null, plural(drafts.length, "session", "sessions")), /* @__PURE__ */ React.createElement("div", { className: "seg", role: "tablist", "aria-label": "View" }, /* @__PURE__ */ React.createElement("button", { type: "button", role: "tab", "aria-selected": view === "list", className: "segb" + (view === "list" ? " on" : ""), onClick: () => setView("list") }, "List"), /* @__PURE__ */ React.createElement("button", { type: "button", role: "tab", "aria-selected": view === "cal", className: "segb" + (view === "cal" ? " on" : ""), onClick: () => setView("cal") }, "Calendar"))), view === "list" && /* @__PURE__ */ React.createElement("ul", { className: "slist2" }, drafts.map((d) => /* @__PURE__ */ React.createElement("li", { key: d.id, id: "row-" + d.id, className: "srow" + (previewIds.includes(d.id) ? " isnew" : "") + (d.locked ? " locked" : "") + (d.breaks && d.breaks.length ? " broken" : "") + (focus === "row-" + d.id ? " focus" : "") }, /* @__PURE__ */ React.createElement("div", { className: "sline" }, /* @__PURE__ */ React.createElement("span", { className: "slabel" }, d.label), /* @__PURE__ */ React.createElement("span", { className: "swhen" }, /* @__PURE__ */ React.createElement("b", null, fmtDay(d.date)), " ", fmtT(d.start), " to ", fmtT(d.end)), /* @__PURE__ */ React.createElement("span", { className: "swho" }, res(d.instructor).name.split(", ").reverse().join(" "), " in ", res(d.room).name, Object.keys(d.assets).some((a) => res(a).per === "session") ? ", with the " + res(Object.keys(d.assets)[0]).name.toLowerCase() : ""), /* @__PURE__ */ React.createElement("span", { className: "sseats" }, d.capacity, " seats"), previewIds.includes(d.id) && /* @__PURE__ */ React.createElement(Tag, { tone: "ai" }, "New"), d.moved && /* @__PURE__ */ React.createElement(Tag, { tone: d.breaks && d.breaks.length ? "bad" : "zone" }, d.breaks && d.breaks.length ? "Moved, breaks a rule" : "Moved by you"), d.locked && /* @__PURE__ */ React.createElement(Tag, { tone: "zone" }, "Locked"), !preview && /* @__PURE__ */ React.createElement("span", { className: "sacts" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", "aria-expanded": open === d.id, onClick: () => setOpen(open === d.id ? null : d.id) }, "Why this time"), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", onClick: () => onLock(d.id) }, d.locked ? "Unlock" : "Keep"), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text danger", onClick: () => onRemove(d.id) }, "Remove"))), (open === d.id || d.breaks && d.breaks.length > 0) && /* @__PURE__ */ React.createElement("div", { className: "why" + (d.breaks && d.breaks.length ? " bad" : "") }, /* @__PURE__ */ React.createElement("p", null, d.why), d.breaks && d.breaks.length > 0 && /* @__PURE__ */ React.createElement("ul", null, d.breaks.map((x, i) => /* @__PURE__ */ React.createElement("li", { key: i }, x.text, " ", /* @__PURE__ */ React.createElement("em", { className: "src" }, RULES[x.k].source)))), open === d.id && d.trace.length > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("p", { className: "quiet" }, "Earlier times it skipped:"), /* @__PURE__ */ React.createElement("ul", null, d.trace.map((x, i) => /* @__PURE__ */ React.createElement("li", { key: i }, /* @__PURE__ */ React.createElement("span", { className: "num" }, x.when), " ", x.text)))))))), view === "cal" && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("p", { className: "dragline", role: "status", "aria-live": "polite" }, drag ? drag.breaks.length ? /* @__PURE__ */ React.createElement("span", { className: "bad" }, drag.d.label, " to ", fmtDay(drag.target.day), ", ", fmtT(drag.target.start), ": breaks ", drag.breaks.map((x) => x.text).join("; "), ". You can still drop it here.") : /* @__PURE__ */ React.createElement("span", { className: "ok" }, drag.d.label, " to ", fmtDay(drag.target.day), ", ", fmtT(drag.target.start), ": fits every rule.") : preview ? "Apply or cancel the preview to move sessions." : "Drag a proposed session to another time, or select it and use the arrow keys. Green shows where it fits."), /* @__PURE__ */ React.createElement("div", { className: "gscroll" + (drag ? " dragging" : "") }, /* @__PURE__ */ React.createElement("div", { className: "g", style: { "--cols": days.length } }, /* @__PURE__ */ React.createElement("div", { className: "gh corner" }, "Who and where"), days.map((d) => /* @__PURE__ */ React.createElement("div", { key: d, className: "gh" }, /* @__PURE__ */ React.createElement("b", null, fmtDay(d).slice(0, 3)), " ", fmtShort(d), /* @__PURE__ */ React.createElement("div", { className: "axis" }, /* @__PURE__ */ React.createElement("span", null, "06"), /* @__PURE__ */ React.createElement("span", { className: "mid" }, "14:30"), /* @__PURE__ */ React.createElement("span", null, "23")))), rows.map((id) => /* @__PURE__ */ React.createElement(React.Fragment, { key: id }, /* @__PURE__ */ React.createElement("div", { className: "glabel" }, /* @__PURE__ */ React.createElement("span", { className: "gname" }, res(id).name, /* @__PURE__ */ React.createElement("span", { className: "osub" }, res(id).shift ? res(id).shift + " shift" : res(id).sub))), days.map((d) => /* @__PURE__ */ React.createElement("div", { key: d, className: "gcell", "data-day": d }, /* @__PURE__ */ React.createElement(Strip, { id, date: d, drafts: shown.drafts, previewIds, hover, setHover, onGrab: preview ? null : grab, onNudge: preview ? null : nudge, drag })))))), /* @__PURE__ */ React.createElement("div", { className: "legend" }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { className: "lg lg-off" }), "Already booked"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { className: "lg lg-draft" }), "Proposed"), preview && /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { className: "lg lg-prev" }), "New with this change"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { className: "lg lg-fit" }), "Fits while dragging"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { className: "lg lg-offshift" }), "Off shift"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { className: "lg lg-leave" }), "Leave or loaned")))), /* @__PURE__ */ React.createElement("div", { className: "footer" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: onBack }, "Back"), /* @__PURE__ */ React.createElement("span", { className: "spacer" }), !preview && lockedN > 0 && /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: onRerun }, "Re-run around ", lockedN, " kept"), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-primary", disabled: !!preview || !result.drafts.length, onClick: onNext }, "Fill seats")));
+  const groups = [
+    ["Trainers", [...new Set(run.courses.flatMap((c) => c.instructors))], "Endorsed for at least one course in this run"],
+    ["Classrooms", [...new Set(run.courses.flatMap((c) => c.rooms))], "Rooms the courses can use"],
+    ...kits ? [["Resources", [...new Set(run.courses.flatMap((c) => objById(c.obj).assets))], "Kits and equipment the courses need"]] : []
+  ].filter((g) => g[1].length);
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(Result, { tone: allFit ? "good" : "warn", sub: /* @__PURE__ */ React.createElement("ul", { className: "cresults" }, shown.courses.map((c) => /* @__PURE__ */ React.createElement("li", { key: c.obj }, /* @__PURE__ */ React.createElement(CourseDot, { obj: c.obj }), /* @__PURE__ */ React.createElement("span", null, objById(c.obj).name), /* @__PURE__ */ React.createElement("b", { className: c.unplaced.length ? "warnt" : "okt" }, c.placed, " of ", c.n)))) }, preview ? "With this change, " + shown.drafts.length + " of " + total + " sessions fit." : shown.drafts.length + " of " + total + " sessions fit across " + plural(run.courses.length, "course", "courses") + "."), !preview && /* @__PURE__ */ React.createElement(ProblemBar, { ...splitProblems(problems, accepted), onGo: goTo, onAccept, onUndo }), preview && /* @__PURE__ */ React.createElement("section", { className: "previewbar", role: "status" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("b", null, "Previewing: ", preview.text, "."), " ", effectText(preview), ". New sessions are marked below."), /* @__PURE__ */ React.createElement("div", { className: "bact" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: () => setPreview(null) }, "Cancel"), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-primary", onClick: onApply }, "Apply this change"))), /* @__PURE__ */ React.createElement("div", { className: "viewbar" }, /* @__PURE__ */ React.createElement("h2", null, plural(drafts.length, "session", "sessions")), /* @__PURE__ */ React.createElement("div", { className: "seg", role: "tablist", "aria-label": "View" }, /* @__PURE__ */ React.createElement("button", { type: "button", role: "tab", "aria-selected": view === "list", className: "segb" + (view === "list" ? " on" : ""), onClick: () => setView("list") }, "By course"), /* @__PURE__ */ React.createElement("button", { type: "button", role: "tab", "aria-selected": view === "cal", className: "segb" + (view === "cal" ? " on" : ""), onClick: () => setView("cal") }, "Calendar"))), view === "list" && run.courses.map((c) => {
+    const ds = drafts.filter((d) => d.obj === c.obj);
+    const cr = shown.courses.find((x) => x.obj === c.obj);
+    return /* @__PURE__ */ React.createElement("section", { key: c.obj, id: "course-" + c.obj, className: "cgroup" + (focus === "course-" + c.obj ? " focus" : ""), style: { "--cc": objById(c.obj).color } }, /* @__PURE__ */ React.createElement("header", null, /* @__PURE__ */ React.createElement(CourseDot, { obj: c.obj }), /* @__PURE__ */ React.createElement("b", null, objById(c.obj).name), /* @__PURE__ */ React.createElement("span", { className: cr.unplaced.length ? "warnt" : "okt" }, cr.placed, " of ", cr.n, " placed")), /* @__PURE__ */ React.createElement("ul", { className: "slist2" }, ds.map((d) => /* @__PURE__ */ React.createElement("li", { key: d.id, id: "row-" + d.id, className: "srow" + (previewIds.includes(d.id) ? " isnew" : "") + (d.breaks && d.breaks.length ? " broken" : "") + (focus === "row-" + d.id ? " focus" : "") }, /* @__PURE__ */ React.createElement("div", { className: "sline" }, /* @__PURE__ */ React.createElement("span", { className: "slabel" }, d.label), /* @__PURE__ */ React.createElement("span", { className: "swhen" }, /* @__PURE__ */ React.createElement("b", null, fmtDay(d.date)), " ", fmtT(d.start), " to ", fmtT(d.end)), /* @__PURE__ */ React.createElement("span", { className: "swho" }, personName(d.instructor), " in ", res(d.room).name, Object.keys(d.assets).some((a) => res(a).per === "session") ? ", with the " + res(Object.keys(d.assets)[0]).name.toLowerCase() : ""), /* @__PURE__ */ React.createElement("span", { className: "sseats" }, d.capacity, " seats"), previewIds.includes(d.id) && /* @__PURE__ */ React.createElement(Tag, { tone: "ai" }, "New"), d.moved && /* @__PURE__ */ React.createElement(Tag, { tone: d.breaks && d.breaks.length ? "bad" : "zone" }, d.breaks && d.breaks.length ? "Moved, breaks a rule" : "Moved by you"), !preview && /* @__PURE__ */ React.createElement("span", { className: "sacts" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", "aria-expanded": open === d.id, onClick: () => setOpen(open === d.id ? null : d.id) }, "Why this time"), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text danger", onClick: () => onRemove(d.id) }, "Remove"))), (open === d.id || d.breaks && d.breaks.length > 0) && /* @__PURE__ */ React.createElement("div", { className: "why" + (d.breaks && d.breaks.length ? " bad" : "") }, /* @__PURE__ */ React.createElement("p", null, d.why), d.breaks && d.breaks.length > 0 && /* @__PURE__ */ React.createElement("ul", null, d.breaks.map((x, i) => /* @__PURE__ */ React.createElement("li", { key: i }, x.text))), open === d.id && d.trace.length > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("p", { className: "quiet" }, "Earlier times it skipped:"), /* @__PURE__ */ React.createElement("ul", null, d.trace.map((x, i) => /* @__PURE__ */ React.createElement("li", { key: i }, /* @__PURE__ */ React.createElement("span", { className: "num" }, x.when), " ", x.text, x.why === "X" && /* @__PURE__ */ React.createElement(Tag, { tone: "ai" }, "Another course")))))))), !ds.length && /* @__PURE__ */ React.createElement("li", { className: "srow empty" }, "No sessions placed yet.")));
+  }), view === "cal" && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("p", { className: "dragline", role: "status", "aria-live": "polite" }, drag ? drag.breaks.length ? /* @__PURE__ */ React.createElement("span", { className: "bad" }, drag.d.label, " to ", fmtDay(drag.target.day), ", ", fmtT(drag.target.start), ": breaks ", drag.breaks.map((x) => x.text).join("; "), ". You can still drop it here.") : /* @__PURE__ */ React.createElement("span", { className: "ok" }, drag.d.label, " to ", fmtDay(drag.target.day), ", ", fmtT(drag.target.start), ": fits every rule.") : preview ? "Apply or cancel the preview to move sessions." : "Drag a session to another time, or select it and use the arrow keys. Green shows where it fits."), /* @__PURE__ */ React.createElement("div", { className: "gscroll" + (drag ? " dragging" : "") }, /* @__PURE__ */ React.createElement("div", { className: "g", style: { "--cols": days.length } }, /* @__PURE__ */ React.createElement("div", { className: "gh corner" }, "Who and where"), days.map((d) => /* @__PURE__ */ React.createElement("div", { key: d, className: "gh" }, /* @__PURE__ */ React.createElement("b", null, fmtDay(d).slice(0, 3)), " ", fmtShort(d), /* @__PURE__ */ React.createElement("div", { className: "axis" }, /* @__PURE__ */ React.createElement("span", null, "06"), /* @__PURE__ */ React.createElement("span", { className: "mid" }, "14:30"), /* @__PURE__ */ React.createElement("span", null, "23")))), groups.map(([title, ids, note]) => /* @__PURE__ */ React.createElement(React.Fragment, { key: title }, /* @__PURE__ */ React.createElement("div", { className: "ggroup", style: { gridColumn: "1 / -1" }, role: "rowheader" }, /* @__PURE__ */ React.createElement("b", null, title), /* @__PURE__ */ React.createElement("span", null, ids.length, " \xB7 ", note)), ids.map((id) => /* @__PURE__ */ React.createElement(React.Fragment, { key: id }, /* @__PURE__ */ React.createElement("div", { className: "glabel" }, /* @__PURE__ */ React.createElement("span", { className: "gname" }, res(id).name, /* @__PURE__ */ React.createElement("span", { className: "osub" }, res(id).shift ? res(id).shift + " shift" : res(id).sub))), days.map((d) => /* @__PURE__ */ React.createElement("div", { key: d, className: "gcell", "data-day": d }, /* @__PURE__ */ React.createElement(Strip, { id, date: d, drafts: shown.drafts, previewIds, hover, setHover, onGrab: preview ? null : grab, onNudge: preview ? null : nudge, drag })))))))), /* @__PURE__ */ React.createElement("div", { className: "legend" }, run.courses.map((c) => /* @__PURE__ */ React.createElement("span", { key: c.obj }, /* @__PURE__ */ React.createElement("i", { className: "lg", style: { background: objById(c.obj).color } }), objById(c.obj).code)), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { className: "lg lg-off" }), "Already booked"), preview && /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { className: "lg lg-prev" }), "New with this change"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { className: "lg lg-offshift" }), "Off shift"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { className: "lg lg-leave" }), kits ? "Leave or loaned" : "Leave")))), /* @__PURE__ */ React.createElement("div", { className: "footer" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: onBack }, "Back"), /* @__PURE__ */ React.createElement("span", { className: "spacer" }), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-primary", disabled: !!preview || !result.drafts.length, onClick: onNext }, "Fill seats")));
 };
-const Fill = ({ obj, p, cfg, setCfg, result, assign, setAssign, onBack, onNext, onMove, accepted, onAccept, onUndo, deferred, setDeferred }) => {
-  const drafts = [...result.drafts].sort(byTime);
-  const recs = RECORDS.filter((r) => r.obj === obj.id);
-  const inS = (id) => recs.filter((r) => assign[r.emp] === id).sort((a, b) => a.due < b.due ? -1 : 1);
-  const un = recs.filter((r) => !assign[r.emp]).sort((a, b) => a.due < b.due ? -1 : 1);
-  const openSeats = (d) => d.capacity - inS(d.id).length;
-  const move = (emp, did) => setAssign({ ...assign, [emp]: did || null });
-  const issuesFor = (r) => seatIssues(r.emp, drafts.find((d) => d.id === assign[r.emp]), assign, drafts, cfg, p.durH * 60);
-  const breaks = recs.filter((r) => assign[r.emp] && issuesFor(r).length).length;
-  const seated = recs.length - un.length;
+const Fill = ({ run, cfg, setCfg, result, assign, setAssign, deferred, setDeferred, onMove, onBack, onNext, goReview, accepted, onAccept, onUndo }) => {
+  const [course, setCourse] = useState("all");
+  const [multiOnly, setMultiOnly] = useState(false);
   const [focus, setFocus] = useFocus();
-  const dur = p.durH * 60;
-  const days = between(p.from, p.to);
-  const fits = (emp, d) => openSeats(d) > 0 && !seatIssues(emp, d, assign, drafts, cfg, dur).length;
-  const nameOf = (emp) => res(emp).name.split(", ").reverse().join(" ");
-  const problems = [];
-  recs.filter((r) => assign[r.emp]).forEach((r) => {
-    const iss = issuesFor(r);
-    if (!iss.length) return;
-    const d = drafts.find((x) => x.id === assign[r.emp]);
-    const others = drafts.filter((x) => x.id !== d.id && fits(r.emp, x));
-    problems.push({
-      key: "seat-" + r.emp,
-      sev: "issue",
-      text: nameOf(r.emp) + " in " + d.label + " breaks a rule.",
-      why: iss.map((x) => x.text).join("; ") + ".",
-      target: "p-" + r.emp,
-      fixes: [...others.map((x) => ({ id: x.id, label: "Move to " + x.label + ", " + fmtDay(x.date) + " " + fmtT(x.start), effect: "Fits every rule", run: () => move(r.emp, x.id) })), { id: "out", label: "Take " + nameOf(r.emp) + " out of " + d.label, effect: "They go back to Not seated", run: () => move(r.emp, null) }],
-      acceptable: true,
-      acceptLabel: "Keep the override"
-    });
-  });
-  drafts.filter((d) => d.breaks && d.breaks.length).forEach((d) => problems.push({ ...breakProblem(d, days, result.drafts, cfg, obj, onMove), target: "s-" + d.id }));
-  un.filter((r) => !deferred[r.emp]).forEach((r) => {
-    const e = res(r.emp);
-    const w = unassignedWhy(r.emp, drafts, assign, cfg, p.durH);
-    const fx = drafts.filter((x) => fits(r.emp, x)).map((x) => ({ id: x.id, label: "Seat in " + x.label + ", " + fmtDay(x.date) + " " + fmtT(x.start), effect: "Fits every rule", run: () => move(r.emp, x.id) }));
-    if (!fx.length) {
-      const fOnly = drafts.filter((x) => x.shift === e.shift && openSeats(x) > 0).find((x) => {
-        const iss = seatIssues(r.emp, x, assign, drafts, cfg, dur);
-        return iss.length === 1 && iss[0].why === "F";
-      });
-      if (fOnly) fx.push({ id: "raise", label: "Let " + (cfg.F[e.area] + 1) + " " + AREAS[e.area] + " people off the floor per shift, then seat in " + fOnly.label, effect: "Changes a shop rule for this run only. Saved with the sessions.", run: () => {
-        setCfg({ ...cfg, F: { ...cfg.F, [e.area]: cfg.F[e.area] + 1 } });
-        setAssign({ ...assign, [r.emp]: fOnly.id });
-      } });
-    }
-    const opts = drafts.filter((x) => openSeats(x) > 0);
-    problems.push({
-      key: "wait-" + r.emp,
-      sev: "warning",
-      text: nameOf(r.emp) + " is not seated.",
-      why: w.text + ".",
-      target: "w-" + r.emp,
-      fixes: fx,
-      defer: () => setDeferred({ ...deferred, [r.emp]: true }),
-      override: opts.length ? { options: opts.map((x) => ({ x, n: seatIssues(r.emp, x, assign, drafts, cfg, dur).length })).sort((a, b) => a.n - b.n || (a.x.shift === e.shift ? 0 : 1) - (b.x.shift === e.shift ? 0 : 1) || byTime(a.x, b.x)).map(({ x, n }) => ({ id: x.id, label: x.label + ", " + fmtShort(x.date) + (n ? " (breaks " + plural(n, "rule", "rules") + ")" : "") })), run: (sid, reason, note) => {
-        setAssign({ ...assign, [r.emp]: sid });
-        onAccept("seat-" + r.emp, reason, note);
-      } } : null
-    });
-  });
-  recs.filter((r) => assign[r.emp]).forEach((r) => {
-    const d = drafts.find((x) => x.id === assign[r.emp]);
-    if (!(r.due >= TODAY && d.date > r.due)) return;
-    const earlier = drafts.filter((x) => x.date <= r.due && x.id !== d.id && fits(r.emp, x));
-    const text = nameOf(r.emp) + " is seated on " + fmtShort(d.date) + ", after their due date of " + fmtShort(r.due);
-    if (earlier.length) problems.push({ key: "late-" + r.emp, sev: "warning", text: text + ".", why: "An earlier session has a seat that fits.", target: "p-" + r.emp, fixes: earlier.map((x) => ({ id: x.id, label: "Move to " + x.label + ", " + fmtDay(x.date), effect: "Before their due date", run: () => move(r.emp, x.id) })), acceptable: true });
-    else problems.push({ key: "late-" + r.emp, sev: "note", text: text + ". No earlier session has a seat that fits." });
-  });
-  const parts = splitProblems(problems, accepted);
-  const deferredList = un.filter((r) => deferred[r.emp]);
-  const waiting = un.filter((r) => !deferred[r.emp]);
-  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(Result, { tone: parts.items.length ? "warn" : "good", sub: "Seats go to people on the session's shift" + (cfg.P1 ? ", soonest due first" : "") + ". Anyone booked, on leave or over the shop limits is skipped. You can override any seat." }, seated, " of ", recs.length, " people have a seat.", waiting.length ? " " + waiting.length + " could not be seated." : "", deferredList.length ? " " + deferredList.length + " left for the next run." : "", breaks ? " " + plural(breaks, "seat breaks", "seats break") + " a rule." : ""), /* @__PURE__ */ React.createElement(ProblemBar, { ...parts, onGo: (x) => setFocus(x.target), onAccept, onUndo }), /* @__PURE__ */ React.createElement("div", { className: "fill2" }, /* @__PURE__ */ React.createElement("div", { className: "sessions" }, drafts.map((d) => {
-    const people = inS(d.id);
-    return /* @__PURE__ */ React.createElement("section", { key: d.id, id: "s-" + d.id, className: "sess2" + (focus === "s-" + d.id ? " focus" : "") }, /* @__PURE__ */ React.createElement("header", null, /* @__PURE__ */ React.createElement("span", { className: "slabel" }, d.label), /* @__PURE__ */ React.createElement("span", { className: "swhen" }, /* @__PURE__ */ React.createElement("b", null, fmtDay(d.date)), " ", fmtT(d.start), " to ", fmtT(d.end)), /* @__PURE__ */ React.createElement("span", { className: "quiet" }, res(d.room).name), /* @__PURE__ */ React.createElement("span", { className: "count" + (people.length >= d.capacity ? " full" : "") }, people.length, " of ", d.capacity)), /* @__PURE__ */ React.createElement("ul", { className: "people" }, people.map((r) => {
-      const e = res(r.emp);
-      const due = dueLabel(r.due);
-      const iss = issuesFor(r);
-      return /* @__PURE__ */ React.createElement("li", { key: r.emp, id: "p-" + r.emp, className: (iss.length ? "breaks" : "") + (focus === "p-" + r.emp ? " focus" : "") }, /* @__PURE__ */ React.createElement("span", { className: "pname" }, e.name, /* @__PURE__ */ React.createElement("span", { className: "osub" }, AREAS[e.area])), /* @__PURE__ */ React.createElement("span", { className: "pflags" }, due && /* @__PURE__ */ React.createElement(Tag, { tone: due.tone }, due.text), iss.map((x, i) => /* @__PURE__ */ React.createElement(Tag, { key: i, tone: "bad" }, x.text))), /* @__PURE__ */ React.createElement("select", { "aria-label": "Move " + e.name, value: d.id, onChange: (ev) => move(r.emp, ev.target.value) }, drafts.map((x) => /* @__PURE__ */ React.createElement("option", { key: x.id, value: x.id, disabled: x.id !== d.id && openSeats(x) <= 0 }, x.id === d.id ? "In " + x.label : "Move to " + x.label + ", " + fmtShort(x.date))), /* @__PURE__ */ React.createElement("option", { value: "" }, "Remove")));
-    }), openSeats(d) > 0 && /* @__PURE__ */ React.createElement("li", { className: "openseat2" }, plural(openSeats(d), "open seat", "open seats"))));
-  })), /* @__PURE__ */ React.createElement("aside", { className: "waiting" }, /* @__PURE__ */ React.createElement("h2", null, "Not seated"), !waiting.length && /* @__PURE__ */ React.createElement("p", { className: "quiet" }, deferredList.length ? "Nobody else is waiting." : "Everyone who needs this course has a seat."), /* @__PURE__ */ React.createElement("ul", null, waiting.map((r) => {
-    const e = res(r.emp);
-    const w = unassignedWhy(r.emp, drafts, assign, cfg, p.durH);
-    const opts = drafts.filter((x) => openSeats(x) > 0);
-    return /* @__PURE__ */ React.createElement("li", { key: r.emp, id: "w-" + r.emp, className: focus === "w-" + r.emp ? "focus" : "" }, /* @__PURE__ */ React.createElement("b", null, e.name), /* @__PURE__ */ React.createElement("span", { className: "osub" }, AREAS[e.area], ", ", e.shift, " shift"), /* @__PURE__ */ React.createElement("span", { className: "why2" }, w.text), /* @__PURE__ */ React.createElement("select", { "aria-label": "Seat " + e.name, value: "", disabled: !opts.length, onChange: (ev) => move(r.emp, ev.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "" }, opts.length ? "Seat anyway" : "No open seats"), opts.map((x) => {
-      const n = seatIssues(r.emp, x, assign, drafts, cfg, p.durH * 60);
-      return /* @__PURE__ */ React.createElement("option", { key: x.id, value: x.id }, x.label, ", ", fmtShort(x.date), n.length ? " (breaks a rule)" : "");
-    })));
-  })), deferredList.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "deferred" }, /* @__PURE__ */ React.createElement("h3", null, "Left for the next run"), /* @__PURE__ */ React.createElement("ul", null, deferredList.map((r) => /* @__PURE__ */ React.createElement("li", { key: r.emp }, /* @__PURE__ */ React.createElement("span", null, res(r.emp).name, /* @__PURE__ */ React.createElement("span", { className: "osub" }, AREAS[res(r.emp).area], ", ", res(r.emp).shift, " shift")), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", onClick: () => {
-    const n = { ...deferred };
-    delete n[r.emp];
-    setDeferred(n);
-  } }, "Undo")))), /* @__PURE__ */ React.createElement("p", { className: "quiet" }, "They stay in Needs scheduling and are offered first next time.")))), /* @__PURE__ */ React.createElement("div", { className: "footer" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: onBack }, "Back"), /* @__PURE__ */ React.createElement("span", { className: "spacer" }), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-primary", onClick: onNext }, "Review and publish")));
-};
-const Publish = ({ obj, p, cfg, result, assign, onBack, onPublish, done, onRestart, accepted, deferred }) => {
   const drafts = [...result.drafts].sort(byTime);
-  const recs = RECORDS.filter((r) => r.obj === obj.id);
-  const seated = recs.filter((r) => assign[r.emp]);
-  const breaks = seated.filter((r) => seatIssues(r.emp, drafts.find((d) => d.id === assign[r.emp]), assign, drafts, cfg, p.durH * 60).length).length;
+  const objs = run.courses.map((c) => c.obj);
+  const recs = RECORDS.filter((r) => objs.includes(r.obj));
+  const isMulti = (emp) => recs.filter((r) => r.emp === emp).length > 1;
+  const shownRec = (r) => (course === "all" || r.obj === course) && (!multiOnly || isMulti(r.emp));
+  const inS = (id) => recs.filter((r) => assign[r.key] === id).sort((a, b) => a.due < b.due ? -1 : 1);
+  const openSeats = (d) => d.capacity - inS(d.id).length;
+  const move = (key, did) => setAssign({ ...assign, [key]: did || null });
+  const defer = (keys) => {
+    const n = { ...deferred };
+    keys.forEach((k) => {
+      n[k] = true;
+    });
+    setDeferred(n);
+  };
+  const h = { move, setAssign, setCfg, defer, onMove, goReview };
+  const problems = fillProblems(run, cfg, result, assign, deferred, h);
+  const parts = splitProblems(problems, accepted);
+  const seated = recs.filter((r) => assign[r.key]).length;
+  const waiting = recs.filter((r) => !assign[r.key] && !deferred[r.key]);
+  const deferredList = recs.filter((r) => !assign[r.key] && deferred[r.key]);
+  const multiCount = [...new Set(recs.filter((r) => isMulti(r.emp)).map((r) => r.emp))].length;
+  const others = (r) => recs.filter((x) => x.emp === r.emp && x.key !== r.key);
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(Result, { tone: parts.items.length ? "warn" : "good", sub: /* @__PURE__ */ React.createElement("p", null, "Seats go to people on the session's shift, most overdue first, across all courses. The same person is never double-booked, and shared limits count everyone off the floor, whatever the course.") }, seated, " of ", recs.length, " course seats filled.", waiting.length ? " " + waiting.length + " not seated." : "", deferredList.length ? " " + deferredList.length + " left for the next run." : ""), /* @__PURE__ */ React.createElement(ProblemBar, { ...parts, onGo: (x) => {
+    setCourse("all");
+    setMultiOnly(false);
+    setFocus(x.target);
+  }, onAccept, onUndo }), /* @__PURE__ */ React.createElement("div", { className: "fillbar" }, /* @__PURE__ */ React.createElement("div", { className: "seg", role: "tablist", "aria-label": "Course" }, /* @__PURE__ */ React.createElement("button", { type: "button", role: "tab", "aria-selected": course === "all", className: "segb" + (course === "all" ? " on" : ""), onClick: () => setCourse("all") }, "All courses"), run.courses.map((c) => /* @__PURE__ */ React.createElement("button", { type: "button", role: "tab", key: c.obj, "aria-selected": course === c.obj, className: "segb" + (course === c.obj ? " on" : ""), onClick: () => setCourse(c.obj) }, /* @__PURE__ */ React.createElement(CourseDot, { obj: c.obj }), " ", objById(c.obj).code))), /* @__PURE__ */ React.createElement("label", { className: "cb" }, /* @__PURE__ */ React.createElement("input", { id: "f-multi", type: "checkbox", checked: multiOnly, onChange: (e) => setMultiOnly(e.target.checked) }), " Only people in 2 or more courses (", multiCount, ")")), /* @__PURE__ */ React.createElement("div", { className: "fill2" }, /* @__PURE__ */ React.createElement("div", { className: "sessions" }, drafts.filter((d) => course === "all" || d.obj === course).map((d) => {
+    const people = inS(d.id).filter(shownRec);
+    if (multiOnly && !people.length) return null;
+    return /* @__PURE__ */ React.createElement("section", { key: d.id, id: "s-" + d.id, className: "sess2" + (focus === "s-" + d.id ? " focus" : ""), style: { "--cc": objById(d.obj).color } }, /* @__PURE__ */ React.createElement("header", null, /* @__PURE__ */ React.createElement("span", { className: "slabel course" }, d.label), /* @__PURE__ */ React.createElement("span", { className: "swhen" }, /* @__PURE__ */ React.createElement("b", null, fmtDay(d.date)), " ", fmtT(d.start), " to ", fmtT(d.end)), /* @__PURE__ */ React.createElement("span", { className: "quiet" }, objById(d.obj).name, ", ", res(d.room).name), /* @__PURE__ */ React.createElement("span", { className: "count" + (inS(d.id).length >= d.capacity ? " full" : "") }, inS(d.id).length, " of ", d.capacity)), /* @__PURE__ */ React.createElement("ul", { className: "people" }, people.map((r) => {
+      const due = dueLabel(r.due);
+      const iss = seatIssues(r.key, d, assign, result.drafts, cfg);
+      const also = others(r);
+      return /* @__PURE__ */ React.createElement("li", { key: r.key, id: "p-" + r.key, className: (iss.length ? "breaks" : "") + (focus === "p-" + r.key ? " focus" : "") }, /* @__PURE__ */ React.createElement("span", { className: "pname" }, res(r.emp).name, /* @__PURE__ */ React.createElement("span", { className: "osub" }, AREAS[res(r.emp).area])), /* @__PURE__ */ React.createElement("span", { className: "pflags" }, due && /* @__PURE__ */ React.createElement(Tag, { tone: due.tone }, due.text), also.map((x) => {
+        const sd = drafts.find((z) => z.id === assign[x.key]);
+        return /* @__PURE__ */ React.createElement("span", { key: x.key, className: "also" }, /* @__PURE__ */ React.createElement(CourseTag, { obj: x.obj }), sd ? " " + sd.label.split(" ")[1] + ", " + fmtShort(sd.date) : " not seated");
+      }), iss.map((x, i) => /* @__PURE__ */ React.createElement(Tag, { key: i, tone: "bad" }, x.text))), /* @__PURE__ */ React.createElement("select", { "aria-label": "Move " + res(r.emp).name, value: d.id, onChange: (ev) => move(r.key, ev.target.value) }, drafts.filter((x) => x.obj === d.obj).map((x) => /* @__PURE__ */ React.createElement("option", { key: x.id, value: x.id, disabled: x.id !== d.id && openSeats(x) <= 0 }, x.id === d.id ? "In " + x.label : "Move to " + x.label + ", " + fmtShort(x.date))), /* @__PURE__ */ React.createElement("option", { value: "" }, "Remove")));
+    }), !multiOnly && openSeats(d) > 0 && /* @__PURE__ */ React.createElement("li", { className: "openseat2" }, plural(openSeats(d), "open seat", "open seats"))));
+  })), /* @__PURE__ */ React.createElement("aside", { className: "waiting" }, /* @__PURE__ */ React.createElement("h2", null, "Not seated"), !waiting.filter(shownRec).length && /* @__PURE__ */ React.createElement("p", { className: "quiet" }, deferredList.length ? "Nobody else is waiting." : "Everyone has a seat."), /* @__PURE__ */ React.createElement("ul", null, waiting.filter(shownRec).map((r) => {
+    const opts = drafts.filter((x) => x.obj === r.obj && openSeats(x) > 0);
+    return /* @__PURE__ */ React.createElement("li", { key: r.key, id: "w-" + r.key, className: focus === "w-" + r.key ? "focus" : "" }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement(CourseTag, { obj: r.obj }), " ", /* @__PURE__ */ React.createElement("b", null, res(r.emp).name)), /* @__PURE__ */ React.createElement("span", { className: "osub" }, AREAS[res(r.emp).area], ", ", res(r.emp).shift, " shift"), /* @__PURE__ */ React.createElement("span", { className: "why2" }, unseatedWhy(r.key, result.drafts, assign, cfg)), /* @__PURE__ */ React.createElement("select", { "aria-label": "Seat " + res(r.emp).name, value: "", disabled: !opts.length, onChange: (ev) => move(r.key, ev.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "" }, opts.length ? "Seat anyway" : "No open seats"), opts.map((x) => {
+      const n = seatIssues(r.key, x, assign, result.drafts, cfg).length;
+      return /* @__PURE__ */ React.createElement("option", { key: x.id, value: x.id }, x.label, ", ", fmtShort(x.date), n ? " (breaks " + plural(n, "rule", "rules") + ")" : "");
+    })));
+  })), deferredList.filter(shownRec).length > 0 && /* @__PURE__ */ React.createElement("div", { className: "deferred" }, /* @__PURE__ */ React.createElement("h3", null, "Left for the next run"), /* @__PURE__ */ React.createElement("ul", null, deferredList.filter(shownRec).map((r) => /* @__PURE__ */ React.createElement("li", { key: r.key }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement(CourseTag, { obj: r.obj }), " ", res(r.emp).name), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-text", onClick: () => {
+    const n = { ...deferred };
+    delete n[r.key];
+    setDeferred(n);
+  } }, "Undo"))))))), /* @__PURE__ */ React.createElement("div", { className: "footer" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: onBack }, "Back"), /* @__PURE__ */ React.createElement("span", { className: "spacer" }), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-primary", onClick: onNext }, "Review and publish")));
+};
+const Publish = ({ run, cfg, result, assign, deferred, accepted, published, onPublish, onBack, onRestart }) => {
+  const drafts = [...result.drafts].sort(byTime);
+  const rp = reviewProblems(run, cfg, result, [], NOOP);
+  const fp = fillProblems(run, cfg, result, assign, deferred, NOOP);
+  const openFor = (obj) => [...rp, ...fp].filter((p) => p.obj === obj && p.sev !== "note" && !accepted[p.key]).length;
+  const rows = run.courses.map((c) => {
+    const ds = drafts.filter((d) => d.obj === c.obj);
+    const seats = RECORDS.filter((r) => r.obj === c.obj && assign[r.key]).length;
+    return { obj: c.obj, ds, seats, open: openFor(c.obj), done: published.includes(c.obj) };
+  });
+  const ready = rows.filter((r) => !r.open && !r.done && r.ds.length);
+  const remaining = rows.filter((r) => !r.done && r.ds.length);
   const changes = changedRules(cfg);
-  return /* @__PURE__ */ React.createElement("div", { className: "narrow" }, /* @__PURE__ */ React.createElement(Result, { tone: done ? "good" : "plain" }, done ? "Published " + plural(drafts.length, "session", "sessions") + ". " + seated.length + " people are scheduled." : "Publish " + plural(drafts.length, "session", "sessions") + " for " + seated.length + " people?"), /* @__PURE__ */ React.createElement("ul", { className: "pubrows" }, drafts.map((d) => {
-    const n = seated.filter((r) => assign[r.emp] === d.id).length;
-    return /* @__PURE__ */ React.createElement("li", { key: d.id }, /* @__PURE__ */ React.createElement("span", { className: "slabel" }, d.label), /* @__PURE__ */ React.createElement("span", { className: "swhen" }, /* @__PURE__ */ React.createElement("b", null, fmtDay(d.date)), " ", fmtT(d.start), " to ", fmtT(d.end)), /* @__PURE__ */ React.createElement("span", { className: "swho" }, res(d.instructor).name.split(", ").reverse().join(" "), ", ", res(d.room).name), /* @__PURE__ */ React.createElement("span", { className: "sseats" }, n, " of ", d.capacity));
-  })), /* @__PURE__ */ React.createElement("ul", { className: "effects" }, recs.length - seated.length > 0 && /* @__PURE__ */ React.createElement("li", null, plural(recs.length - seated.length, "person stays", "people stay"), " in Needs scheduling."), breaks > 0 && /* @__PURE__ */ React.createElement("li", null, plural(breaks, "seat publishes", "seats publish"), " with the rule it breaks, so supervisors can see it."), drafts.some((x) => x.breaks && x.breaks.length) && /* @__PURE__ */ React.createElement("li", null, plural(drafts.filter((x) => x.breaks && x.breaks.length).length, "session publishes", "sessions publish"), " at a time you chose that breaks a rule. The break is recorded with the session."), Object.keys(deferred).filter((k) => !assign[k]).length > 0 && /* @__PURE__ */ React.createElement("li", null, plural(Object.keys(deferred).filter((k) => !assign[k]).length, "person was", "people were"), " left for the next run and will be offered first."), Object.keys(accepted).length > 0 && /* @__PURE__ */ React.createElement("li", null, "Accepted with a reason, saved with the sessions:", /* @__PURE__ */ React.createElement("ul", { className: "accl" }, Object.entries(accepted).map(([k, a]) => /* @__PURE__ */ React.createElement("li", { key: k }, /* @__PURE__ */ React.createElement("b", null, a.label), ": ", a.reason, a.note ? ". " + a.note : "")))), /* @__PURE__ */ React.createElement("li", null, changes.length ? "Rules changed for this run, saved with each session: " + changes.join("; ") + "." : "Default shop rules were used. They are saved with each session for audit.")), /* @__PURE__ */ React.createElement("div", { className: "footer" }, !done && /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: onBack }, "Back"), /* @__PURE__ */ React.createElement("span", { className: "spacer" }), !done ? /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-primary", onClick: onPublish }, "Publish ", plural(drafts.length, "session", "sessions")) : /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: onRestart }, "Start another run")));
+  const acc = Object.values(accepted);
+  const allDone = !remaining.length;
+  return /* @__PURE__ */ React.createElement("div", { className: "narrow" }, /* @__PURE__ */ React.createElement(Result, { tone: allDone ? "good" : "plain" }, allDone ? "Published every course in this run." : published.length ? "Published " + plural(published.length, "course", "courses") + ". The rest stay as a draft run." : "Publish " + plural(ready.length, "ready course", "ready courses") + ", or all of them."), /* @__PURE__ */ React.createElement("ul", { className: "pubcourses" }, rows.map((r) => /* @__PURE__ */ React.createElement("li", { key: r.obj, style: { "--cc": objById(r.obj).color } }, /* @__PURE__ */ React.createElement("div", { className: "pcrow" }, /* @__PURE__ */ React.createElement(CourseDot, { obj: r.obj }), /* @__PURE__ */ React.createElement("b", null, objById(r.obj).name), /* @__PURE__ */ React.createElement("span", { className: "quiet" }, plural(r.ds.length, "session", "sessions"), ", ", r.seats, " people"), /* @__PURE__ */ React.createElement("span", { className: "pstat " + (r.done ? "done" : r.open ? "open" : "ready") }, r.done ? "Published" : r.open ? plural(r.open, "open problem", "open problems") : "Ready")), /* @__PURE__ */ React.createElement("ul", { className: "pubrows" }, r.ds.map((d) => /* @__PURE__ */ React.createElement("li", { key: d.id }, /* @__PURE__ */ React.createElement("span", { className: "slabel course" }, d.label), /* @__PURE__ */ React.createElement("span", { className: "swhen" }, /* @__PURE__ */ React.createElement("b", null, fmtDay(d.date)), " ", fmtT(d.start), " to ", fmtT(d.end)), /* @__PURE__ */ React.createElement("span", { className: "swho" }, personName(d.instructor), ", ", res(d.room).name), /* @__PURE__ */ React.createElement("span", { className: "sseats" }, RECORDS.filter((x) => assign[x.key] === d.id).length, " of ", d.capacity))))))), /* @__PURE__ */ React.createElement("ul", { className: "effects" }, Object.keys(deferred).filter((k) => !assign[k]).length > 0 && /* @__PURE__ */ React.createElement("li", null, plural(Object.keys(deferred).filter((k) => !assign[k]).length, "seat was", "seats were"), " left for the next run and will be offered first."), acc.length > 0 && /* @__PURE__ */ React.createElement("li", null, "Accepted with a reason, saved with the sessions:", /* @__PURE__ */ React.createElement("ul", { className: "accl" }, acc.map((a, i) => /* @__PURE__ */ React.createElement("li", { key: i }, /* @__PURE__ */ React.createElement("b", null, a.text), ": ", a.reason, a.note ? ". " + a.note : "")))), /* @__PURE__ */ React.createElement("li", null, changes.length ? "Rules changed for this run, saved with each session: " + changes.join("; ") + "." : "Default rules were used. They are saved with each session for audit."), published.length > 0 && !allDone && /* @__PURE__ */ React.createElement("li", null, "Published sessions now count as booked, so the courses still in draft are re-checked around them.")), /* @__PURE__ */ React.createElement("div", { className: "footer" }, !allDone && /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: onBack }, "Back"), /* @__PURE__ */ React.createElement("span", { className: "spacer" }), allDone ? /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", onClick: onRestart }, "Start another run") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-out", disabled: !ready.length || ready.length === remaining.length, onClick: () => onPublish(ready.map((r) => r.obj)) }, "Publish ", plural(ready.length, "ready course", "ready courses")), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn btn-primary", onClick: () => onPublish(remaining.map((r) => r.obj)) }, "Publish all ", remaining.length))));
 };
 const STEPS = ["Set up", "Review drafts", "Fill seats", "Publish"];
-const paramsFor = (o) => ({ obj: o.id, n: o.n, occ: o.occ, durH: o.durH, from: "2026-10-21", to: "2026-10-30", instructors: [...o.instructors], rooms: [...o.rooms] });
 const SCENES = [
-  { obj: "hf", label: "Everything fits", hint: "Human Factors Recurrent: leave, travel and shifts respected" },
-  { obj: "bsi", label: "Blocked by a shared kit", hint: "Borescope Theory: one demo kit, loaned out next week" },
-  { obj: "lw", label: "Production limit", hint: "Lockwire: Module Bay can release 3 people per shift" }
+  { label: "Quarter plan, Oct 21 to 30", kits: false, run: { from: "2026-10-21", to: "2026-10-30", courses: ["hf", "ewis", "sms"].map(courseFor), first: null } },
+  { label: "Crunch week, Oct 21 to 23", kits: false, run: { from: "2026-10-21", to: "2026-10-23", courses: ["hf", "ewis", "sms"].map(courseFor), first: null } },
+  { label: "With teaching kits (future)", kits: true, run: { from: "2026-10-21", to: "2026-10-30", courses: ["hf", "bsi", "lw"].map(courseFor), first: null } }
 ];
 const App = () => {
   const [scene, setScene] = useState(0);
-  const [p, setP] = useState(paramsFor(objById("hf")));
+  const [run, setRun] = useState(SCENES[0].run);
   const [cfg, setCfg] = useState(DEFAULT_CFG);
   const [step, setStep] = useState(1);
   const [result, setResult] = useState(null);
@@ -1406,64 +1595,57 @@ const App = () => {
   const [assign, setAssign] = useState({});
   const [accepted, setAccepted] = useState({});
   const [deferred, setDeferred] = useState({});
+  const [published, setPublished] = useState([]);
   const [running, setRunning] = useState(false);
-  const [done, setDone] = useState(false);
-  const obj = objById(p.obj);
-  const locked = result ? result.drafts.filter((d) => d.locked) : [];
-  const fixes = useMemo(() => result ? fixesFor(result, p, cfg, locked) : [], [result, p, cfg]);
-  const go = (i) => {
+  const fixes = useMemo(() => result ? fixesFor(result, run, cfg) : [], [result, run, cfg]);
+  const reset = (i) => {
     setScene(i);
-    setP(paramsFor(objById(SCENES[i].obj)));
+    setRun(SCENES[i].run);
     setCfg(DEFAULT_CFG);
     setResult(null);
     setPreview(null);
     setAssign({});
     setAccepted({});
     setDeferred({});
+    setPublished([]);
     setStep(1);
-    setDone(false);
   };
-  const labelFor = (key) => {
-    const [kind, id] = [key.split("-")[0], key.slice(key.indexOf("-") + 1)];
-    const d = result && result.drafts.find((x) => x.id === id);
-    return kind === "unplaced" ? "Fewer sessions on " + id + " shift" : kind === "break" ? (d ? d.label : "Session") + " kept at a time that breaks a rule" : kind === "seat" ? res(id).name.split(", ").reverse().join(" ") + " seated against a rule" : kind === "late" ? res(id).name.split(", ").reverse().join(" ") + " seated after their due date" : kind === "early" ? "First " + id + " shift session after some due dates" : key;
-  };
-  const onAccept = (key, reason, note) => setAccepted((a) => ({ ...a, [key]: { reason, note, label: labelFor(key) } }));
-  const onUndo = (key) => setAccepted((a) => {
-    const n = { ...a };
-    delete n[key];
-    return n;
-  });
-  const run = (keep = []) => {
-    setAccepted({});
-    setDeferred({});
+  const go = () => {
     setRunning(true);
     setPreview(null);
+    setAccepted({});
+    setDeferred({});
+    setPublished([]);
     setTimeout(() => {
-      setResult(runSolver(p, cfg, keep));
+      setResult(runPlan(run, cfg));
       setRunning(false);
       setStep(2);
     }, 700);
   };
   const apply = () => {
-    setP(preview.p);
+    setRun(preview.run);
     setCfg(preview.cfg);
     setResult(preview.result);
     setPreview(null);
   };
-  const lock = (id) => setResult({ ...result, drafts: result.drafts.map((d) => d.id === id ? { ...d, locked: !d.locked } : d) });
-  const remove = (id) => setResult({ ...result, drafts: result.drafts.filter((d) => d.id !== id) });
-  const moveDraft = (id, date, start, breaks) => setResult((r) => ({ ...r, drafts: r.drafts.map((d) => d.id !== id ? d : { ...d, orig: d.orig || { date: d.date, start: d.start }, date, start, end: start + (d.end - d.start), breaks, moved: !(d.orig && d.orig.date === date && d.orig.start === start), trace: [], why: breaks.length ? "Moved by you to a time that breaks a Must hold rule. It stays flagged until you move it back or publish it with the break recorded." : "Moved by you. Every Must hold rule still passes." }) }));
+  const onMove = (id, date, start, breaks) => setResult((r) => ({ ...r, drafts: r.drafts.map((d) => d.id !== id ? d : { ...d, orig: d.orig || { date: d.date, start: d.start }, date, start, end: start + (d.end - d.start), breaks, moved: !(d.orig && d.orig.date === date && d.orig.start === start), trace: [], why: breaks.length ? "Moved by you to a time that breaks a rule. It stays flagged until you move it or keep it with a reason." : "Moved by you. Every rule still passes." }) }));
+  const onRemove = (id) => setResult((r) => ({ ...r, drafts: r.drafts.filter((d) => d.id !== id), courses: r.courses.map((c) => ({ ...c, placed: r.drafts.filter((d) => d.obj === c.obj && d.id !== id).length })) }));
+  const onAccept = (key, text, reason, note) => setAccepted((a) => ({ ...a, [key]: { text, reason, note } }));
+  const onUndo = (key) => setAccepted((a) => {
+    const n = { ...a };
+    delete n[key];
+    return n;
+  });
   const toFill = () => {
-    setAssign(autoFill(result.drafts, obj, cfg, p.durH));
+    setAssign(autoFill(result.drafts, run, cfg));
     setStep(3);
   };
-  return /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("div", { className: "proto" }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, "Prototype"), " Auto-schedule r5"), /* @__PURE__ */ React.createElement("span", { className: "scenes" }, SCENES.map((s, i) => /* @__PURE__ */ React.createElement("button", { type: "button", key: s.obj, className: scene === i ? "on" : "", title: s.hint, onClick: () => go(i) }, s.label))), /* @__PURE__ */ React.createElement("span", { className: "pnote" }, "Fixed today: Tue Oct 20, 2026. Covalent Aerospace, Cincinnati Engine Works MRO shop (fictional)")), /* @__PURE__ */ React.createElement("div", { className: "appbar" }, /* @__PURE__ */ React.createElement("span", { className: "brand" }, "Covalent"), /* @__PURE__ */ React.createElement("span", { className: "env" }, "TEST"), /* @__PURE__ */ React.createElement("nav", null, /* @__PURE__ */ React.createElement("span", null, "Map"), /* @__PURE__ */ React.createElement("span", { className: "on" }, "Manage"), /* @__PURE__ */ React.createElement("span", null, "Analyze")), /* @__PURE__ */ React.createElement("span", { className: "spacer" }), /* @__PURE__ */ React.createElement("span", { className: "avatar" }, "YR")), /* @__PURE__ */ React.createElement("main", { className: "main" }, /* @__PURE__ */ React.createElement("div", { className: "paper" }, /* @__PURE__ */ React.createElement("div", { className: "page-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", { className: "crumb" }, "Scheduling backlog"), /* @__PURE__ */ React.createElement("h1", null, "Auto-schedule ", /* @__PURE__ */ React.createElement("span", { className: "objname" }, obj.name))), /* @__PURE__ */ React.createElement("ol", { className: "stepper" }, STEPS.map((s, i) => /* @__PURE__ */ React.createElement("li", { key: s, className: i + 1 === step ? "on" : i + 1 < step ? "done" : "" }, /* @__PURE__ */ React.createElement("span", { className: "sdot" }, i + 1 < step ? "\u2713" : i + 1), s)))), running && /* @__PURE__ */ React.createElement("div", { className: "running", role: "status" }, /* @__PURE__ */ React.createElement("span", { className: "spin" }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "Checking ", plural(p.instructors.length, "instructor", "instructors"), ", ", plural(p.rooms.length, "room", "rooms"), obj.assets.length ? " and " + res(obj.assets[0]).name.toLowerCase() : "", " across ", between(p.from, p.to).length, " working days"), /* @__PURE__ */ React.createElement("span", { className: "help" }, "Applying ", Object.keys(RULES).length, " rules from the Objective Template and site policy"))), !running && step === 1 && /* @__PURE__ */ React.createElement(Setup, { obj, p, setP, cfg, setCfg, onRun: () => run([]) }), !running && step === 2 && result && /* @__PURE__ */ React.createElement(Review, { obj, p, cfg, result, preview, setPreview, fixes, onApply: apply, onLock: lock, onRemove: remove, onMove: moveDraft, accepted, onAccept, onUndo, onRerun: () => run(locked), onBack: () => {
+  const totalSessions = run.courses.reduce((a, c) => a + c.n, 0);
+  const sharedText = runHasKits(run) ? "Shared instructors, rooms, kits and off-the-floor limits" : "Shared instructors, rooms and off-the-floor limits";
+  return /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("div", { className: "proto" }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, "Prototype"), " Auto-schedule r7, several courses in one run"), /* @__PURE__ */ React.createElement("span", { className: "scenes" }, SCENES.map((s, i) => /* @__PURE__ */ React.createElement("button", { type: "button", key: s.label, className: scene === i ? "on" : "", onClick: () => reset(i) }, s.label))), /* @__PURE__ */ React.createElement("span", { className: "pnote" }, "Fixed today: Tue Oct 20, 2026. Covalent Aerospace, Cincinnati Engine Works MRO shop (fictional)")), /* @__PURE__ */ React.createElement("div", { className: "appbar" }, /* @__PURE__ */ React.createElement("span", { className: "brand" }, "Covalent"), /* @__PURE__ */ React.createElement("span", { className: "env" }, "TEST"), /* @__PURE__ */ React.createElement("nav", null, /* @__PURE__ */ React.createElement("span", null, "Map"), /* @__PURE__ */ React.createElement("span", { className: "on" }, "Manage"), /* @__PURE__ */ React.createElement("span", null, "Analyze")), /* @__PURE__ */ React.createElement("span", { className: "spacer" }), /* @__PURE__ */ React.createElement("span", { className: "avatar" }, "YR")), /* @__PURE__ */ React.createElement("main", { className: "main" }, /* @__PURE__ */ React.createElement("div", { className: "paper" }, /* @__PURE__ */ React.createElement("div", { className: "page-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", { className: "crumb" }, "Scheduling backlog"), /* @__PURE__ */ React.createElement("h1", null, "Planning run ", /* @__PURE__ */ React.createElement("span", { className: "objname" }, run.courses.map((c) => objById(c.obj).code).join(", "), ", ", fmtShort(run.from), " to ", fmtShort(run.to)))), /* @__PURE__ */ React.createElement("ol", { className: "stepper" }, STEPS.map((s, i) => /* @__PURE__ */ React.createElement("li", { key: s, className: i + 1 === step ? "on" : i + 1 < step ? "done" : "" }, /* @__PURE__ */ React.createElement("span", { className: "sdot" }, i + 1 < step ? "\u2713" : i + 1), s)))), running && /* @__PURE__ */ React.createElement("div", { className: "running", role: "status" }, /* @__PURE__ */ React.createElement("span", { className: "spin" }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "Placing ", plural(totalSessions, "session", "sessions"), " for ", plural(run.courses.length, "course", "courses"), ", most overdue first"), /* @__PURE__ */ React.createElement("span", { className: "help" }, sharedText, " are checked across every course"))), !running && step === 1 && /* @__PURE__ */ React.createElement(Setup, { run, setRun, cfg, setCfg, onRun: go, allowKits: SCENES[scene].kits }), !running && step === 2 && result && /* @__PURE__ */ React.createElement(Review, { run, cfg, result, preview, setPreview, fixes, onApply: apply, onRemove, onMove, onBack: () => {
     setPreview(null);
     setStep(1);
-  }, onNext: toFill }), !running && step === 3 && result && /* @__PURE__ */ React.createElement(Fill, { obj, p, cfg, setCfg, onMove: moveDraft, accepted, onAccept, onUndo, deferred, setDeferred, result, assign, setAssign, onBack: () => setStep(2), onNext: () => setStep(4) }), !running && step === 4 && result && /* @__PURE__ */ React.createElement(Publish, { obj, p, cfg, accepted, deferred, result, assign, done, onBack: () => setStep(3), onPublish: () => setDone(true), onRestart: () => go(scene) }))));
+  }, onNext: toFill, accepted, onAccept, onUndo }), !running && step === 3 && result && /* @__PURE__ */ React.createElement(Fill, { run, cfg, setCfg, result, assign, setAssign, deferred, setDeferred, onMove, onBack: () => setStep(2), onNext: () => setStep(4), goReview: () => setStep(2), accepted, onAccept, onUndo }), !running && step === 4 && result && /* @__PURE__ */ React.createElement(Publish, { run, cfg, result, assign, deferred, accepted, published, onPublish: (objs) => setPublished((p) => [...p, ...objs]), onBack: () => setStep(3), onRestart: () => reset(scene) }))));
 };
 ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(App, null));
-</script>
-</body>
-</html>
+</script></body></html>
