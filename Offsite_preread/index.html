@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>2027 Strategy Offsite Pre-Read</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F6F5; --surface:#FFFFFF; --ink:#0F2340; --ink-2:#4A5A70; --rule:#D6DCE2;
+  --fill-1:#0F2340; --fill-2:#9DAEC4; --on-fill:#FFFFFF; --on-fill-2:#C3CFDE;
+  --accent:#C98A12; --accent-ink:#875A00; --accent-soft:#F5E6C4;
+  --risk:#A8432F; --risk-soft:#F4DDD6; --tint:#E8EDF2;
+  --sans:"Montserrat","Helvetica Neue",Arial,sans-serif;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0B1424; --surface:#111D31; --ink:#E6EBF2; --ink-2:#A4B1C3; --rule:#26354D;
+    --fill-1:#9DB4D3; --fill-2:#4A5F80; --on-fill:#0B1424; --on-fill-2:#22324C;
+    --accent:#E2A93C; --accent-ink:#EDC06A; --accent-soft:#3A2E15;
+    --risk:#E07E68; --risk-soft:#3B1F1A; --tint:#17253C;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0B1424; --surface:#111D31; --ink:#E6EBF2; --ink-2:#A4B1C3; --rule:#26354D;
+  --fill-1:#9DB4D3; --fill-2:#4A5F80; --on-fill:#0B1424; --on-fill-2:#22324C;
+  --accent:#E2A93C; --accent-ink:#EDC06A; --accent-soft:#3A2E15;
+  --risk:#E07E68; --risk-soft:#3B1F1A; --tint:#17253C;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 96px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.62 var(--serif);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+img,svg{max-width:100%}
+.wrap{max-width:1060px;margin:0 auto;padding:0 24px}
+h1,h2,h3,h4{font-family:var(--sans);color:var(--ink);margin:0}
+h2{font-size:30px;font-weight:800;letter-spacing:-0.015em;line-height:1.15}
+h3{font-size:20px;font-weight:700;letter-spacing:-0.005em;margin:48px 0 12px;line-height:1.25}
+h4{font-size:15px;font-weight:700;margin:0 0 6px}
+p{margin:0 0 14px}
+.prose{max-width:68ch}
+.muted{color:var(--ink-2)}
+strong{font-weight:600}
+a{color:inherit}
+
+/* Masthead */
+.masthead{padding:44px 0 30px}
+.brand{display:flex;align-items:center;gap:10px;font:700 15px/1 var(--sans);letter-spacing:.01em;margin-bottom:34px}
+.brand svg{width:30px;height:20px}
+.brand svg circle{fill:none;stroke:var(--ink);stroke-width:2.2}
+.title-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 24px;border-top:2px solid var(--ink);padding-top:14px;margin-bottom:22px}
+h1{font-size:17px;font-weight:700}
+.byline{font:500 14px var(--sans);color:var(--ink-2)}
+.thesis{font:800 clamp(34px,5.6vw,62px)/1.04 var(--sans);letter-spacing:-0.028em;max-width:19ch;margin:0}
+
+/* Day strip */
+.daybar{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--paper);border-bottom:1px solid var(--rule)}
+.daybar .wrap{display:flex;gap:8px;padding-top:10px;padding-bottom:10px;align-items:stretch}
+.strip{display:flex;gap:4px;flex:1;min-width:0}
+.tabbtn{appearance:none;text-align:left;border:1px solid var(--rule);background:var(--surface);color:var(--ink);border-radius:6px;padding:8px 10px;font:700 13px/1.25 var(--sans);cursor:pointer;min-width:0}
+.tabbtn .n{font-weight:800;margin-right:4px}
+.tabbtn .t{display:block;font-weight:500;font-size:12px;color:var(--ink-2);margin-top:2px;white-space:nowrap}
+.tabbtn .nm{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabbtn:hover{border-color:var(--ink-2)}
+.tabbtn[aria-selected="true"]{background:var(--fill-1);border-color:var(--fill-1);color:var(--on-fill)}
+.tabbtn[aria-selected="true"] .t{color:var(--on-fill-2)}
+.tabbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.strip .tabbtn,.strip .lunch{flex:var(--m) 1 0}
+.start-btn{flex:0 0 auto}
+.lunch{border:1px dashed var(--rule);border-radius:6px;padding:8px 10px;font:600 13px/1.25 var(--sans);color:var(--ink-2)}
+.lunch .t{display:block;font-weight:500;font-size:12px;margin-top:2px}
+@media (max-width:760px){
+  .daybar .wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .strip{flex:none}
+  .strip .tabbtn,.strip .lunch{flex:0 0 auto;min-width:104px}
+}
+
+/* Panels */
+main{padding:34px 0 90px}
+.panel[hidden]{display:none}
+.sess-head{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px 40px;align-items:start;margin-bottom:8px}
+.sess-head .lead{font-size:19px;line-height:1.5;margin-top:12px;max-width:58ch}
+.output{border-left:3px solid var(--accent);padding:4px 0 4px 14px;font-size:15px}
+.output .k{font:700 13px var(--sans);display:block;margin-bottom:2px}
+.output .mins{font:800 26px/1 var(--sans);display:block;margin-bottom:8px;letter-spacing:-0.01em}
+@media (max-width:760px){.sess-head{grid-template-columns:1fr}}
+
+/* Run of show */
+.ros{display:flex;gap:3px;margin:16px 0 6px;border-radius:6px;overflow:hidden}
+.ros div{flex:var(--m) 1 0;background:var(--tint);padding:9px 10px;font:600 13px/1.25 var(--sans);min-width:0}
+.ros div span{display:block;font-weight:500;color:var(--ink-2);font-size:12px}
+.ros div.hi{background:var(--accent-soft)}
+@media (max-width:620px){.ros{flex-direction:column}.ros div{flex:none}}
+
+/* Figures */
+figure{margin:24px 0 28px;background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:20px 20px 14px}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-size:14px;color:var(--ink-2);margin-top:10px;max-width:72ch}
+.fig-title{font:700 15px var(--sans);margin-bottom:12px}
+.scroll-x{overflow-x:auto}
+.scroll-x svg{min-width:560px}
+
+/* SVG text */
+.s-lbl{font:600 13px var(--sans);fill:var(--ink)}
+.s-val{font:800 17px var(--sans);fill:var(--ink)}
+.s-sub{font:400 13px var(--serif);fill:var(--ink-2)}
+.s-axis{stroke:var(--ink-2);stroke-width:1.2}
+.s-stem{stroke:var(--ink-2);stroke-width:1}
+.s-band{fill:var(--accent-soft)}
+.s-dot{fill:var(--fill-1)}
+.s-dot-acc{fill:var(--accent)}
+.s-dot-open{fill:var(--surface);stroke:var(--fill-1);stroke-width:2}
+.s-fill1{fill:var(--fill-1)}
+.s-fill2{fill:var(--fill-2)}
+.s-acc{fill:var(--accent)}
+.s-box{fill:var(--surface);stroke:var(--ink-2);stroke-width:1.2}
+.s-box-strong{fill:var(--tint);stroke:var(--ink);stroke-width:1.4}
+.s-box-acc{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.4}
+.s-arrow{stroke:var(--ink-2);stroke-width:1.5;fill:none}
+.s-head{fill:var(--ink-2)}
+.s-halo{paint-order:stroke;stroke:var(--surface);stroke-width:5px;stroke-linejoin:round}
+.s-on-fill{font:700 13px var(--sans);fill:var(--on-fill)}
+
+/* Lists and blocks */
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 28px}
+.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 28px}
+@media (max-width:860px){.grid-3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:600px){.grid-3,.grid-2{grid-template-columns:1fr}}
+.item{border-top:2px solid var(--ink);padding-top:10px;font-size:16px}
+.item p{margin:0}
+.truths{list-style:none;margin:16px 0 0;padding:0;counter-reset:t}
+.truths li{counter-increment:t;display:grid;grid-template-columns:44px minmax(0,1fr);gap:0 14px;padding:18px 0;border-top:1px solid var(--rule)}
+.truths li::before{content:counter(t);font:800 30px/1 var(--sans);color:var(--ink)}
+.truths h4{font-size:17px;margin-bottom:6px}
+.sowhat{margin-top:10px;background:var(--accent-soft);border-radius:6px;padding:10px 14px;font-size:16px}
+.sowhat b{font:700 14px var(--sans);margin-right:6px}
+ul.clean{margin:8px 0 16px;padding-left:20px}
+ul.clean li{margin:6px 0}
+ol.steps{margin:8px 0 16px;padding-left:24px}
+ol.steps li{margin:8px 0;padding-left:4px}
+.callout{border:1.5px solid var(--accent);border-radius:10px;padding:16px 20px;margin:22px 0;background:var(--surface)}
+.callout h4{font-size:16px;margin-bottom:6px}
+.callout p:last-child{margin-bottom:0}
+.note{border-left:3px solid var(--fill-2);padding:2px 0 2px 14px;margin:18px 0;max-width:68ch}
+
+/* Tables */
+.tbl{overflow-x:auto;margin:14px 0 22px}
+table{border-collapse:collapse;width:100%;font-size:15px;line-height:1.45}
+th{font:700 13px/1.3 var(--sans);text-align:left;padding:10px 12px 8px;border-bottom:2px solid var(--ink);vertical-align:bottom}
+td{padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+td.num{white-space:nowrap;font:700 15px var(--sans)}
+tr.base td{background:var(--accent-soft)}
+
+/* Split bar */
+.split{display:flex;height:46px;border-radius:6px;overflow:hidden;margin:14px 0 8px;font:700 14px var(--sans)}
+.split div{display:flex;align-items:center;padding:0 14px;white-space:nowrap}
+.split .a{flex:75;background:var(--fill-1);color:var(--on-fill)}
+.split .b{flex:25;background:var(--accent);color:#1A1200}
+.prep{border:1.5px dashed var(--fill-2);border-radius:6px;padding:10px 14px;font:600 14px var(--sans);color:var(--ink-2);margin-bottom:18px}
+.motions{display:grid;grid-template-columns:3fr 1fr;gap:14px 28px;margin-top:10px}
+@media (max-width:760px){.motions{grid-template-columns:1fr}}
+.motions .item{font-size:15px}
+.kv{font:600 13px var(--sans);color:var(--ink-2);margin:6px 0 4px}
+
+/* Risk grid */
+.riskgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:16px 0 24px}
+@media (max-width:820px){.riskgrid{grid-template-columns:1fr}}
+.riskcol{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px 16px 6px}
+.riskcol h4{font-size:15px}
+.riskcol .def{font-size:14px;color:var(--ink-2);margin-bottom:10px}
+.riskcol ul{list-style:none;margin:0;padding:0}
+.riskcol li{border-top:1px solid var(--rule);padding:9px 0;font-size:15px;line-height:1.45}
+.pinned{background:var(--accent-soft);border-radius:6px;padding:10px 12px !important;border-top:none !important;margin-bottom:6px}
+.pinned b{font:700 13px var(--sans);display:block;margin-bottom:2px}
+
+/* AI rubric and pricing */
+.rubric{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+@media (max-width:600px){.rubric{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.rubric div{border:1px solid var(--rule);background:var(--surface);border-radius:6px;padding:10px 12px;font:600 14px/1.3 var(--sans)}
+.rubric div.on{background:var(--accent-soft);border-color:var(--accent)}
+.meter{display:flex;gap:4px;align-items:center;font:600 13px var(--sans);margin:10px 0 4px;flex-wrap:wrap}
+.meter i{width:26px;height:10px;border-radius:2px;background:var(--tint);border:1px solid var(--rule)}
+.meter i.f{background:var(--accent);border-color:var(--accent)}
+.meter .gate{margin:0 6px;color:var(--ink-2)}
+.tiers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0 8px}
+@media (max-width:700px){.tiers{grid-template-columns:1fr}}
+.tier{border-radius:10px;padding:14px 16px;background:var(--surface);border:1px solid var(--rule);font-size:15px}
+.tier.hi{border:1.5px solid var(--accent);background:var(--accent-soft)}
+.tier .k{font:800 18px var(--sans);display:block}
+.tier .r{font:600 13px var(--sans);color:var(--ink-2);display:block;margin:2px 0 8px}
+.tier.hi .r{color:var(--accent-ink)}
+
+/* Platform unit chart */
+.units{margin:10px 0 6px}
+.urow{display:grid;grid-template-columns:230px minmax(0,1fr) 30px;gap:12px;align-items:center;padding:9px 0;border-top:1px solid var(--rule)}
+.urow:first-child{border-top:none}
+.urow .nm{font:700 14px var(--sans)}
+.urow .nm span{display:block;font-weight:500;font-size:12px;color:var(--ink-2)}
+.sq{display:flex;gap:5px;flex-wrap:wrap}
+.sq i{width:22px;height:22px;border-radius:4px;display:block}
+.c{background:var(--fill-1)} .r{background:var(--risk)} .w{background:var(--fill-2)} .nb{background:var(--accent)}
+.urow .ct{font:700 14px var(--sans);text-align:right}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font:500 13px var(--sans);color:var(--ink-2);margin-top:12px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+@media (max-width:560px){.urow{grid-template-columns:1fr 30px}.urow .sq{grid-column:1 / -1;order:3}}
+details{border-top:1px solid var(--rule);padding:4px 0}
+details:last-of-type{border-bottom:1px solid var(--rule)}
+summary{cursor:pointer;padding:12px 0;font:700 16px var(--sans);list-style-position:outside}
+summary span{font:500 14px var(--sans);color:var(--ink-2);margin-left:8px}
+summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+details .body{padding:0 0 10px}
+.type{font:600 12px var(--sans);padding:2px 8px;border-radius:999px;white-space:nowrap;display:inline-block}
+.type.nb{background:var(--accent-soft);color:var(--accent-ink)}
+.type.c{background:var(--tint);color:var(--ink)}
+.type.r{background:var(--risk-soft);color:var(--risk)}
+.type.w{background:var(--tint);color:var(--ink-2)}
+
+/* Pillars */
+.pillars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0 8px}
+@media (max-width:820px){.pillars{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.pillars{grid-template-columns:1fr}}
+.roof{background:var(--fill-1);color:var(--on-fill);border-radius:10px 10px 0 0;padding:12px 16px;font:700 14px var(--sans);margin-top:18px}
+.pillar{background:var(--surface);border:1px solid var(--rule);border-top:4px solid var(--fill-1);padding:14px 14px 12px;display:flex;flex-direction:column;gap:8px;font-size:15px}
+.pillar h4{font-size:16px}
+.pillar .know{margin-top:auto;font:600 13px var(--sans);color:var(--ink-2);border-top:1px dashed var(--rule);padding-top:8px}
+
+/* Timeline */
+.timeline{list-style:none;margin:18px 0 6px;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;counter-reset:m}
+.timeline li{position:relative;padding:28px 14px 0 0;font-size:14px;line-height:1.45}
+.timeline li::before{content:"";position:absolute;top:8px;left:0;right:0;height:2px;background:var(--rule)}
+.timeline li::after{content:"";position:absolute;top:2px;left:0;width:14px;height:14px;border-radius:50%;background:var(--surface);border:2px solid var(--fill-1)}
+.timeline li.now::after{background:var(--accent);border-color:var(--accent)}
+.timeline li:last-child::before{right:auto;width:0}
+.timeline b{display:block;font:700 14px var(--sans);margin-bottom:4px}
+@media (max-width:820px){
+  .timeline{grid-template-columns:1fr}
+  .timeline li{padding:0 0 18px 30px}
+  .timeline li::before{top:16px;bottom:0;left:6px;right:auto;width:2px;height:auto}
+  .timeline li::after{top:2px}
+}
+
+/* Checklist */
+.checks{list-style:none;margin:12px 0 0;padding:0;max-width:72ch}
+.checks li{border-top:1px solid var(--rule);padding:12px 0}
+.checks label{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;cursor:pointer;font-size:16px}
+.checks input{width:20px;height:20px;margin:3px 0 0;accent-color:var(--fill-1)}
+.checks .who{font:700 13px var(--sans);display:block;margin-bottom:2px}
+
+.nextbtn{margin-top:46px;display:flex;justify-content:flex-end}
+.nextbtn button{appearance:none;border:1.5px solid var(--ink);background:transparent;color:var(--ink);border-radius:6px;padding:11px 16px;font:700 14px var(--sans);cursor:pointer}
+.nextbtn button:hover{background:var(--ink);color:var(--paper)}
+.nextbtn button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:no-preference){.tabbtn,.nextbtn button{transition:background-color .15s,color .15s,border-color .15s}}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="brand" aria-label="Covalent">
+      <svg viewBox="0 0 30 20" aria-hidden="true"><circle cx="10" cy="10" r="8"/><circle cx="20" cy="10" r="8"/></svg>
+      Covalent
+    </div>
+    <div class="title-row">
+      <h1>2027 Strategy Offsite Pre-Read</h1>
+      <div class="byline">October 29, 2026</div>
+    </div>
+    <p class="thesis">2027 is about focus on the ICP and making our growth repeatable.</p>
+  </div>
+</header>
+
+<nav class="daybar" aria-label="Offsite sessions">
+  <div class="wrap" role="tablist">
+    <button class="tabbtn start-btn" role="tab" data-target="start" aria-controls="v-start"><span class="nm">Start here</span><span class="t">Purpose and pre-work</span></button>
+    <div class="strip">
+      <button class="tabbtn" role="tab" style="--m:90" data-target="session-1" aria-controls="v-session-1"><span class="nm"><span class="n">1</span>Overview</span><span class="t">90 min</span></button>
+      <button class="tabbtn" role="tab" style="--m:60" data-target="session-2" aria-controls="v-session-2"><span class="nm"><span class="n">2</span>Risks</span><span class="t">60 min</span></button>
+      <button class="tabbtn" role="tab" style="--m:60" data-target="session-3" aria-controls="v-session-3"><span class="nm"><span class="n">3</span>AI alignment</span><span class="t">60 min</span></button>
+      <div class="lunch" style="--m:60" aria-hidden="true">Lunch<span class="t">60 min</span></div>
+      <button class="tabbtn" role="tab" style="--m:60" data-target="session-4" aria-controls="v-session-4"><span class="nm"><span class="n">4</span>Platform</span><span class="t">60 min</span></button>
+      <button class="tabbtn" role="tab" style="--m:45" data-target="session-5" aria-controls="v-session-5"><span class="nm"><span class="n">5</span>Wrap-up</span><span class="t">45 min</span></button>
+    </div>
+  </div>
+</nav>
+
+<main id="main">
+<div class="wrap">
+
+<!-- START HERE -->
+<section class="panel" id="v-start" data-view="start" role="tabpanel">
+  <div class="sess-head">
+    <div>
+      <h2>Purpose and agenda</h2>
+      <p class="lead">This pre-read sets a shared baseline so the offsite spends its time on decisions, not on catching up. Each session has its own tab with the context, structure and pre-work you need.</p>
+    </div>
+    <div class="output"><span class="mins">5 sessions</span><span class="k">The day</span>Five hours and fifteen minutes of working time, plus lunch. The strip above is sized to each session’s length.</div>
+  </div>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Session</th><th>Time</th><th>Focus</th><th>Output</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1. Overview</strong></td><td class="num">90 min</td><td>2026 wins and hard truths, business context, the long view, the 2027 investment envelope, and the 2027 growth plan (Joe and Matt)</td><td>A shared baseline for the day</td></tr>
+        <tr><td><strong>2. Risks and improvements</strong></td><td class="num">60 min</td><td>The largest risks to the growth plan, ranked and solved, with retention as a named focus</td><td>A risk grid with owners</td></tr>
+        <tr><td><strong>3. AI alignment</strong></td><td class="num">60 min</td><td>AI’s role in the 2027 commercial plan, then Covalent’s guiding principles for AI</td><td>AI guiding principles, AI’s targeted 2027 impact, and a pricing working group</td></tr>
+        <tr><td class="muted">Lunch</td><td class="num muted">60 min</td><td></td><td></td></tr>
+        <tr><td><strong>4. Platform decisions</strong></td><td class="num">60 min</td><td>Goals, impact scores and ranking by platform category</td><td>Ranked categories and what we will and won’t do in 2027</td></tr>
+        <tr><td><strong>5. Wrap-up</strong></td><td class="num">45 min</td><td>Pillars, a second look at the risk grid, decisions and actions</td><td>Draft pillars, an updated risk grid and owned next steps</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Pre-work</h3>
+  <p class="prose">Read this pre-read, then come prepared for the three sessions that ask for input. Your checkmarks are saved in this browser only.</p>
+  <ul class="checks">
+    <li><label><input type="checkbox" data-check="read"><span><span class="who">Everyone</span>Read the pre-read, all five session tabs.</span></label></li>
+    <li><label><input type="checkbox" data-check="risks"><span><span class="who">Session 2: Risks</span>Submit your top three items per risk category: process and internal capability, capacity constraints, and external risks. Name each in one line and say why it matters to the 2027 plan.</span></label></li>
+    <li><label><input type="checkbox" data-check="ai"><span><span class="who">Session 3: AI alignment</span>Bring your answer on AI’s role in the 2027 plan, your answer to each of the four principle questions, and which candidate principles you’d keep, change or drop.</span></label></li>
+    <li><label><input type="checkbox" data-check="platform"><span><span class="who">Session 4: Platform</span>Bring a solid understanding of the categories, one or two goals you’d set for each, and a first view of how you’d rank them.</span></label></li>
+  </ul>
+
+  <div class="nextbtn"><button type="button" data-target="session-1">Go to Session 1: Overview</button></div>
+</section>
+
+<!-- SESSION 1 -->
+<section class="panel" id="v-session-1" data-view="session-1" role="tabpanel" hidden>
+  <div class="sess-head">
+    <div>
+      <h2>Session 1: Overview</h2>
+      <p class="lead">This session sets a shared baseline: where 2026 landed, where we’re headed, what 2027 can fund, and how we plan to deliver 2027 growth.</p>
+    </div>
+    <div class="output"><span class="mins">90 min</span><span class="k">Output</span>A shared baseline for the day</div>
+  </div>
+
+  <h3>2026 wins</h3>
+  <p class="prose">We made the most important commitment of the year real, and we built several assets 2027 can use.</p>
+  <div class="grid-3">
+    <div class="item"><h4>Stability was our number-one priority, and we lived up to it.</h4><p>We expect to cover the top 10 systems in the application by year end, with about 35–40% of engineering capacity (roughly $500K of development cost) invested. System-related issues are already declining. Client-reported issues now trace back to code from before the stabilization project, and any not yet identified are added to the plan.</p></div>
+    <div class="item"><h4>We landed and grew in the core ICP.</h4><p>BWXT became a core new ICP account, opening up nuclear. We executed upsells at Pratt &amp; Whitney, pipeline grew in substance, and we brought in new GTM leadership.</p></div>
+    <div class="item"><h4>We deepened the Develop module.</h4><p>SCORM, CMS and training scheduling are implemented, allowing us to compete directly with LMS functionality.</p></div>
+    <div class="item"><h4>AI made us more productive.</h4><p>Development output rose from 527 points in Q3 2025 to 819 in Q3 2026, up 55%, with personnel changes in between. Kurt went from 106 to 259 points (up 144%). We also gained efficiency in top-of-funnel work, moving from Looker to native reporting, frontline support and services automation. These gains carry tooling costs, which we’ll need to budget for if we add development capacity.</p></div>
+    <div class="item"><h4>We describe ourselves much better.</h4><p>Plan, Develop, Deploy now frames our story across the website, pricing and value communication.</p></div>
+    <div class="item"><h4>We’re ready to invest in AI in 2027.</h4><p>FB’s work gives us the infrastructure and a POC to build from.</p></div>
+  </div>
+
+  <h3>2026 hard truths</h3>
+  <p class="prose">Four truths shape 2027. Each one points to a decision we need to make at the offsite.</p>
+  <ol class="truths">
+    <li><div><h4>We have real retention pressure in our largest accounts.</h4><p>GE is mid-renewal, and we’re at risk of losing a division, though ARR may hold because we’re above the user tier. At Boeing, this is the first contract year where active users set ACV, putting $100–200K at risk. We churned our first real customer, Quickturn, now part of FTAI and possibly a larger opportunity. NPS came in lower than we expected.</p><div class="sowhat"><b>So what</b>Protecting footprint and revenue in our top accounts is a core 2027 job. We’ll take it on directly in Session 2.</div></div></li>
+    <li><div><h4>We’ve built more than we’ve sold.</h4><p>SCORM, CMS and scheduling are live as capabilities, but we have no SCORM or CMS commitments, and scheduling is committed only at GE. IWA isn’t live yet, with long lags at Great Dane and Pratt &amp; Whitney.</p><div class="sowhat"><b>So what</b>We built it; now we have to sell it. New builds should require a committed market plan before we start.</div></div></li>
+    <li><div><h4>Deal timing is our binding constraint, and it compounds.</h4><p>Long cycles (20+ months on average) and lumpy bookings drive cash timing. That means a January low point, debt to bridge the gap until invoices arrive, and GTM hiring gated behind the profitability threshold, which slows pipeline in turn.</p><div class="sowhat"><b>So what</b>Break the loop, or plan honestly around it.</div></div></li>
+    <li><div><h4>We’ll likely finish below plan.</h4><p>We expect to exit 2026 around $4.5M of ARR, against a plan of more than $5M and last year’s $6M aspiration. Both new ARR and expansion are expected below targets.</p><div class="sowhat"><b>So what</b>2027 has to be built on what we actually convert, not on what we hope to book.</div></div></li>
+  </ol>
+  <p class="note">We also deprioritized Automotive mid-year. Joe took ownership of new GTM instead of us hiring an Automotive GM, and A&amp;D tailwinds gave us conviction that $10M is reachable without aggressively opening the OEM market. That choice is covered under the long view.</p>
+
+  <h3>Where our 2026 platform investment went</h3>
+  <div class="prose">
+    <p>We used 2026 to solidify the core product. More than 30% of our engineering investment went to stabilization, and we invested heavily in the Develop module: SCORM, scheduling, notifications and native tables.</p>
+    <p>What we didn’t do was make meaningful headway on the Plan module, or invest significantly in AI beyond POC-level infrastructure. Both gaps set up the AI and platform discussions later in the day.</p>
+  </div>
+
+  <h3>Where 2026 lands</h3>
+  <p class="prose">We plan on $4.5M of 2026 exit ARR, our high-confidence number. We get to $5M or more if one or more of the open deals below goes our way early.</p>
+  <figure>
+    <div class="fig-title">2026 exit ARR scenarios and the 2027 starting base</div>
+    <div class="scroll-x">
+    <svg viewBox="0 0 720 210" role="img" aria-label="Number line from $4.0M to $5.2M. Booked today $4.1M, high confidence $4.5M, upside of $5.0M or more if deals land early. Boeing's most likely adjustment of minus $100K puts the 2027 base at about $4.4M.">
+      <defs><marker id="ah1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="s-head"/></marker></defs>
+      <rect x="306.7" y="114" width="266.6" height="12" rx="3" class="s-band"/>
+      <line x1="40" y1="120" x2="680" y2="120" class="s-axis"/>
+      <text x="40" y="146" class="s-sub" text-anchor="start">$4.0M</text>
+      <text x="680" y="146" class="s-sub" text-anchor="end">$5.2M</text>
+      <!-- booked -->
+      <line x1="93.3" y1="72" x2="93.3" y2="114" class="s-stem"/>
+      <circle cx="93.3" cy="120" r="6" class="s-dot-open"/>
+      <text x="93.3" y="44" class="s-val" text-anchor="middle">$4.1M</text>
+      <text x="93.3" y="62" class="s-sub" text-anchor="middle">Booked today</text>
+      <!-- high confidence -->
+      <line x1="306.7" y1="72" x2="306.7" y2="113" class="s-stem"/>
+      <circle cx="306.7" cy="120" r="8" class="s-dot-acc"/>
+      <text x="306.7" y="44" class="s-val" text-anchor="middle">$4.5M</text>
+      <text x="306.7" y="62" class="s-sub" text-anchor="middle">High confidence, planning base</text>
+      <!-- best case -->
+      <line x1="573.3" y1="72" x2="573.3" y2="113" class="s-stem"/>
+      <circle cx="573.3" cy="120" r="6" class="s-dot"/>
+      <text x="573.3" y="44" class="s-val" text-anchor="middle">$5.0M+</text>
+      <text x="573.3" y="62" class="s-sub" text-anchor="middle">If deals land early</text>
+      <!-- boeing -->
+      <path d="M300,130 Q280,160 258,131" class="s-arrow" marker-end="url(#ah1)"/>
+      <text x="246" y="178" class="s-val" text-anchor="end">$4.4M</text>
+      <text x="246" y="196" class="s-sub" text-anchor="end">2027 base after Boeing (−$100K likely)</text>
+      <text x="440" y="146" class="s-sub" text-anchor="middle">Upside if one or more open deals land early</text>
+    </svg>
+    </div>
+    <figcaption>Boeing adjusts the 2027 starting base, not 2026 bookings. Best case is no change, the most likely outcome is about −$100K, and the worst case is about −$280K. We’ll know within 30 days.</figcaption>
+  </figure>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Scenario</th><th>What’s included</th><th>Exit ARR</th></tr></thead>
+      <tbody>
+        <tr class="base"><td><strong>High confidence</strong></td><td>$4.1M booked today, plus the IWA upsell PO ($100K), Great Dane IWA ($25K), and StandardAero, Westinghouse and Collins ($300K)</td><td class="num">~$4.5M</td></tr>
+        <tr><td><strong>Upside</strong></td><td>One or more open deals land early: GDEB, Honeywell and FTAI ($350K), United (~$500K), or commitments not yet known</td><td class="num">$5.0M+</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="prose"><strong>We’re running at about breakeven.</strong> About $4.5M of ARR plus roughly 10% in services revenue comes to about $375K a month, matching our roughly $375K of monthly opex and COGS. Depending on Q4 deal timing, one-time revenue and headcount changes, the cash low point in January falls between −$200K and +$200K. There’s a good chance we enter 2027 at a profitable run rate.</p>
+
+  <h3>Market context</h3>
+  <p class="prose">Demand in our core market is at record levels, and skilled labor is the constraint. At the same time, our deals are more competitive and AI is redefining what buyers expect, which gives us a limited window to establish our position.</p>
+  <div class="grid-2">
+    <div class="item"><h4>Record backlog, constrained by labor.</h4><p>The commercial aircraft order backlog is above 17,000 aircraft, close to 12 years of current production. IATA names skilled-labor shortages, especially in engine and component manufacturing, as a constraint on ramp-up and doesn’t expect supply and demand to normalize before 2031–2034 (IATA).</p></div>
+    <div class="item"><h4>The pressure is inside our accounts.</h4><p>Boeing ended Q2 2026 with a $715B backlog. GE Aerospace relies on more than 500 direct suppliers, any of which can slow an engine through a labor shortage. At Textron Aviation, about half the workforce has less than five years of experience (GlobalAir). Honeywell Aerospace plans to add more than 1,200 engineering and manufacturing roles this year, and Boeing is increasing its hiring (People Matters, citing Reuters).</p></div>
+    <div class="item"><h4>Our ICP is widening through accounts we already have.</h4><p>Neo-primes like Anduril are potential net-new key accounts in A&amp;D. Westinghouse and BWXT open nuclear as part of our ICP, and the United Airlines opportunity does the same for commercial airlines and MRO.</p></div>
+    <div class="item"><h4>Our top deals are all competitive now.</h4><p>AG5 and Kahuna show up in our largest deals, and build-your-own is a real alternative, including IT groups using AI to build internal tools.</p></div>
+    <div class="item"><h4>AI questions are now standard in every deal.</h4><p>Buyers ask whether we have AI, how we support their own LLMs, and how we secure their data. If we’re seen mainly as raw data that plugs into a broader workforce system, we risk being pigeonholed as an OJT workflow tool rather than a workforce operations system.</p></div>
+    <div class="item"><h4>SaaS pricing is under scrutiny.</h4><p>SaaS consolidation and pressure on subscription pricing are well underway in other markets. Ours is behind, but we should expect more scrutiny of how per-seat pricing reflects the value we deliver.</p></div>
+  </div>
+  <div class="sowhat" style="margin-top:20px"><b>So what</b>Our customers are hiring inexperienced workers into production ramps they can’t afford to slow. Getting people qualified and deployed faster is a board-level problem for them, which supports the A&amp;D focus. And we have a limited window to establish ourselves as more than a workflow tool, which is the focus of the AI session.</div>
+
+  <h3>The long view: why $10M matters</h3>
+  <p class="prose">$10M of ARR is a milestone, not the end of the road. It’s the point where both how the market values us and what our profits can fund change meaningfully.</p>
+  <div class="grid-2">
+    <div class="item"><h4>It changes how buyers value us.</h4><p>For strategic and private equity buyers, about $10M is roughly the threshold where sub-scale discounts start to fall away. At that point we can be compared with vertical software businesses in the $10–100M ARR range. An MES buyer, for example, wouldn’t discount our ARR purely for lack of scale. We’d still be small, but big enough to move a strategic buyer’s P&amp;L within one to two years of further growth, if that buyer plans to fold us into a $100–200M line of business.</p></div>
+    <div class="item"><h4>It changes what we can fund.</h4><p>At about $4M of ARR, roughly $400K of profit pays for expected variable increases. At $10M, with $1M or more of profit, we can fund meaningful investment in market expansion from our own earnings.</p></div>
+    <div class="item"><h4>It only pays off if we build intelligence, not just scale.</h4><p>Industrial buyers are paying a premium, well above common multiples, for proprietary data and intelligence systems. If we can’t both reach scale and build a true intelligence system, we’ll look like a less attractive investment or acquisition target in three to five years.</p></div>
+    <div class="item"><h4>We chose depth to get there.</h4><p>We deprioritized Automotive mid-year, moving it from a pillar to an initiative and then lower. A&amp;D tailwinds gave us conviction that $10M is reachable without aggressively opening the OEM market in 2026 or 2027.</p></div>
+  </div>
+
+  <figure>
+    <div class="fig-title">2027 is the step that makes 2028 possible</div>
+    <div class="scroll-x">
+    <svg viewBox="0 0 720 290" role="img" aria-label="Bar chart. End of 2026 about $4.5M. End of 2027 about $6.9M, built from a $4.4M starting base, $1.9M of new business and $0.6M of expansion, about 53% growth. End of 2028 $10M, about 45% growth.">
+      <line x1="30" y1="240" x2="700" y2="240" class="s-axis"/>
+      <!-- 2026 -->
+      <rect x="70" y="159" width="100" height="81" class="s-fill2"/>
+      <text x="120" y="150" class="s-val" text-anchor="middle">$4.5M</text>
+      <text x="120" y="262" class="s-lbl" text-anchor="middle">End of 2026</text>
+      <!-- 2027 stacked -->
+      <rect x="290" y="160.8" width="100" height="79.2" class="s-fill2"/>
+      <rect x="290" y="126.6" width="100" height="34.2" class="s-fill1"/>
+      <rect x="290" y="115.8" width="100" height="10.8" class="s-acc"/>
+      <text x="340" y="106" class="s-val" text-anchor="middle">$6.9M</text>
+      <text x="340" y="262" class="s-lbl" text-anchor="middle">End of 2027</text>
+      <line x1="394" y1="121" x2="404" y2="121" class="s-stem"/>
+      <text x="410" y="125" class="s-lbl">$0.6M expansion</text>
+      <line x1="394" y1="144" x2="404" y2="147" class="s-stem"/>
+      <text x="410" y="151" class="s-lbl">$1.9M new business</text>
+      <line x1="394" y1="200" x2="404" y2="200" class="s-stem"/>
+      <text x="410" y="204" class="s-sub">$4.4M starting base</text>
+      <!-- 2028 -->
+      <rect x="580" y="60" width="100" height="180" class="s-fill2"/>
+      <text x="630" y="51" class="s-val" text-anchor="middle">$10M</text>
+      <text x="630" y="262" class="s-lbl" text-anchor="middle">End of 2028</text>
+      <!-- growth -->
+      <text x="230" y="128" class="s-val" text-anchor="middle">+53%</text>
+      <text x="230" y="146" class="s-sub" text-anchor="middle">in 2027</text>
+      <text x="485" y="78" class="s-val" text-anchor="middle">+45%</text>
+      <text x="485" y="96" class="s-sub" text-anchor="middle">in 2028</text>
+    </svg>
+    </div>
+    <figcaption>Our path runs from about $4.5M at the end of 2026 to about $6.9M at the end of 2027 and $10M by the end of 2028. The 2027 increment is about $2.5M of new ARR.</figcaption>
+  </figure>
+
+  <h3>2027 “investment envelope”</h3>
+  <p class="prose">Every trade-off later in the day is made against what 2027 can actually fund. We run at about breakeven, GTM hiring is gated behind the core profitability threshold, and AI tooling costs rise if we add development capacity. Lauren will keep track of decisioning and provide details covering:</p>
+  <div class="tbl">
+    <table>
+      <tbody>
+        <tr><td style="width:32%"><strong>Starting run rate</strong></td><td>About $375K a month of revenue against about $375K of opex and COGS, and a January cash low point between −$200K and +$200K.</td></tr>
+        <tr><td><strong>Committed 2027 cost increases</strong></td><td>Payroll, benefits, other.</td></tr>
+        <tr><td><strong>Discretionary investment available</strong></td><td>At $4.5M, and at $5M if deals land early.</td></tr>
+        <tr><td><strong>The GTM hiring gate</strong></td><td>The profitability threshold that unlocks hiring, and when we expect to cross it.</td></tr>
+        <tr><td><strong>Debt</strong></td><td>What’s available to bridge timing, and the rule for using it.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>2027 focus: the core ICP plus two outlets for expansion</h3>
+  <p class="prose">In 2027, most of our effort goes to the core ICP. Two smaller outlets give us efficient growth now and a runway beyond the core for 2028–2030. We won’t make big pushes into other verticals.</p>
+  <div class="split" role="img" aria-label="Share of GTM effort: 75% core ICP, 25% horizontal Pro deals">
+    <div class="a">75% core ICP</div><div class="b">25% horizontal Pro</div>
+  </div>
+  <div class="prep">Plus research into one of five candidate verticals: preparation only, no 2027 ARR</div>
+  <div class="motions">
+    <div class="item"><h4>Core ICP: A&amp;D, nuclear, heavy equipment, shipbuilding, MRO and airlines</h4><div class="kv">Joe. Most of the new-business target.</div><p>Where demand, references and right-to-win are strongest.</p></div>
+    <div class="item"><h4>Horizontal Pro deals outside the core ICP</h4><div class="kv">Nick and Joe. $300–500K.</div><p>Run efficiently through automation and lead scoring. Efficient growth beyond enterprise sales cycles, using a motion we already run.</p></div>
+  </div>
+  <div class="item" style="margin-top:22px;border-top-style:dashed;border-top-color:var(--fill-2)"><h4>Research into five candidate verticals: DoD, military and federal; utilities and field services; medical devices; pharma; and automotive</h4><div class="kv">Matt. No 2027 ARR.</div><p>Five candidates today, downselected to one to three by the end of 2026, then one selected for focus in Q1 2027. That vertical builds toward 2028 GTM readiness, opening about $5M of pipeline value and runway beyond the core for 2028–2030. Each candidate vertical gets its own research path and validation criteria, so the downselect is based on evidence rather than preference.</p></div>
+  <p class="note">The horizontal motion is not the Essentials mid-market play of fully automated $10K deals. It’s a set of horizontal channels selling Pro deals at about $50K ACV with specific scoring criteria. At that ACV, $300–500K is roughly six to ten deals.</p>
+
+  <h3>2027 growth plan</h3>
+  <p class="prose">Joe and Matt will take about 20 minutes to present how they plan to deliver 2027 growth. Before then, we want everyone aligned on the broad strokes:</p>
+  <div class="grid-2">
+    <div class="item"><h4>The path</h4><p>$10M of ARR by the end of 2028, which means getting to about $7M by the end of 2027.</p></div>
+    <div class="item"><h4>The 2027 increment</h4><p>About $2.5M of new ARR, roughly $1.9M from new business and $600K from existing accounts.</p></div>
+    <div class="item"><h4>The focus</h4><p>Most of our effort goes to the core ICP, with horizontal Pro deals and new-vertical research as smaller, deliberate outlets.</p></div>
+    <div class="item"><h4>The starting point</h4><p>Our 2026 exit can still move before January 1, so we plan on the increment and restate the year-end number once 2026 closes.</p></div>
+  </div>
+  <div class="prose" style="margin-top:26px">
+    <p><strong>New business (Joe).</strong> How we reach about $1.9M: where named pipeline stands today, how much pipeline we still need to create in 2027 for this year and for 2028, and the resourcing it takes. What are the critical plays and accounts we’re running.</p>
+    <p><strong>Expansion (Matt).</strong> How we reach about $600K from existing accounts: the upsell we expect from strategic accounts, cross-sell campaigns across the rest of the base, and what has to happen in each to close.</p>
+    <p><strong>Delivery implications.</strong> This plan means 5–10 accounts (some new enterprise programs) and 20–40 sites. We’ll treat it as a risk in Session 2: how large it is depends on how far we automate and standardize onboarding and level up services hours.</p>
+  </div>
+
+  <div class="nextbtn"><button type="button" data-target="session-2">Go to Session 2: Risks</button></div>
+</section>
+
+<!-- SESSION 2 -->
+<section class="panel" id="v-session-2" data-view="session-2" role="tabpanel" hidden>
+  <div class="sess-head">
+    <div>
+      <h2>Session 2: Risks and improvements to the growth plan</h2>
+      <p class="lead">This session identifies the largest risks to the growth plan and the biggest areas of improvement for the business, and leaves each one with an owner.</p>
+    </div>
+    <div class="output"><span class="mins">60 min</span><span class="k">Output</span>A one-page grid with the top items in each category, an agreed path for the number-one item in each, and an owner and due date for every item. It feeds the wrap-up and November functional plans.</div>
+  </div>
+
+  <div class="callout">
+    <h4>Retention is pre-seeded as the number-one external item</h4>
+    <p>Hard truth 1 makes protecting our top accounts a core 2027 job, so it gets solve time regardless of how the rest of the list ranks. The solve should cover a gross retention target, renewal plans for GE and Boeing, and our response to the NPS result.</p>
+  </div>
+
+  <h3>How we’ll run it</h3>
+  <div class="ros" role="img" aria-label="Run of show: frame 5 minutes, rank 15, solve 30, assign 10">
+    <div style="--m:5">Frame<span>5 min</span></div>
+    <div style="--m:15">Rank<span>15 min</span></div>
+    <div class="hi" style="--m:30">Solve<span>30 min</span></div>
+    <div style="--m:10">Assign<span>10 min</span></div>
+  </div>
+  <ol class="steps prose">
+    <li><strong>Frame:</strong> confirm the three categories and the goal.</li>
+    <li><strong>Rank:</strong> start from the consolidated pre-work list and agree on the top one to three in each category. Retention holds the top external slot.</li>
+    <li><strong>Solve:</strong> about 10 minutes on the number-one item in each category, covering options, a recommended path and an owner.</li>
+    <li><strong>Assign:</strong> owners and due dates for the remaining items, which carry into November planning.</li>
+  </ol>
+  <p class="note">We’ll come back to the grid at the wrap-up, after the AI and platform decisions, since those decisions change our capacity picture.</p>
+
+  <h3>The three categories, with starter examples</h3>
+  <p class="prose">Starter examples are there to prompt your thinking, not a final list.</p>
+  <div class="riskgrid">
+    <div class="riskcol">
+      <h4>Process and internal capability</h4>
+      <div class="def">How we sell, deliver, measure and run the business.</div>
+      <ul>
+        <li>SDLC information flows in an AI-driven development world.</li>
+        <li>Handoffs between sales, services and CS during pilots.</li>
+        <li>Limited measurement of value at the account level.</li>
+      </ul>
+    </div>
+    <div class="riskcol">
+      <h4>Capacity constraints</h4>
+      <div class="def">People, time and money we don’t yet have.</div>
+      <ul>
+        <li>GTM hiring gated by the profitability threshold.</li>
+        <li>Delivery load of 5–10 accounts and 20–40 sites, which depends on how far we automate and standardize onboarding and level up services hours.</li>
+        <li>Engineering capacity against committed work and new bets.</li>
+      </ul>
+    </div>
+    <div class="riskcol">
+      <h4>External risks</h4>
+      <div class="def">Customers, competitors and the market.</div>
+      <ul>
+        <li class="pinned"><b>Pre-seeded number one</b>Retention pressure in our largest accounts.</li>
+        <li>Competitive deals against AG5, Kahuna and build-your-own.</li>
+        <li>Long deal cycles and their effect on cash.</li>
+        <li>Rising AI expectations from buyers.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Pre-work</h3>
+  <p class="prose">Submit your top three items per category before the offsite. Name the risk or improvement in one line and say why it matters to the 2027 plan. Submissions will be consolidated into a single ranked starter list.</p>
+
+  <div class="nextbtn"><button type="button" data-target="session-3">Go to Session 3: AI alignment</button></div>
+</section>
+
+<!-- SESSION 3 -->
+<section class="panel" id="v-session-3" data-view="session-3" role="tabpanel" hidden>
+  <div class="sess-head">
+    <div>
+      <h2>Session 3: AI alignment</h2>
+      <p class="lead">This session decides what AI means for the 2027 commercial plan, then aligns the leadership team on Covalent’s view of AI and three to five guiding principles for AI decisions in 2027. Our agent foundation is real; the commercial surface isn’t built yet.</p>
+    </div>
+    <div class="output"><span class="mins">60 min</span><span class="k">Output</span>Three to five AI guiding principles, AI’s targeted 2027 impact, and a pricing working group with an owner and due date.</div>
+  </div>
+
+  <h3>Goals</h3>
+  <ul class="clean prose">
+    <li>Decide AI’s role in the 2027 plan: its own ARR target, or a lever to win and protect deals and lift expansion.</li>
+    <li>Align the leadership team on Covalent’s view of AI.</li>
+    <li>Generate three to five guiding principles, built on our foundation, that answer four questions: what are we, and what are we not going to be; how do we prioritize; how do we get to the vision; and how do we protect this vision.</li>
+    <li>Hand pricing mechanics to a small working group with an owner and due date.</li>
+  </ul>
+
+  <h3>How we’ll run it</h3>
+  <div class="ros" role="img" aria-label="Run of show: current state and vision 10 minutes, AI in the 2027 commercial plan 20, components and path 5, guiding principles 20, pricing hand-off 5">
+    <div style="--m:10">State and vision<span>10 min</span></div>
+    <div class="hi" style="--m:20">AI in the 2027 plan<span>20 min</span></div>
+    <div style="--m:5">Path<span>5 min</span></div>
+    <div class="hi" style="--m:20">Guiding principles<span>20 min</span></div>
+    <div style="--m:5">Pricing<span>5 min</span></div>
+  </div>
+  <ol class="steps prose">
+    <li><strong>Current state and vision (10 min):</strong> where we are today and where we want to go.</li>
+    <li><strong>AI in the 2027 commercial plan (20 min):</strong> the three commercial questions below, ending in a decision on AI’s targeted 2027 impact.</li>
+    <li><strong>Components and path (5 min):</strong> a quick check on the harness, platform features, agents and the commercial model. The detail stays in this pre-read.</li>
+    <li><strong>Guiding principles (20 min):</strong> refine the candidates below and agree on three to five.</li>
+    <li><strong>Pricing hand-off (5 min):</strong> name the working group, owner and due date for the pricing questions.</li>
+  </ol>
+
+  <h3>Current state: where are we today?</h3>
+  <div class="prose">
+    <p>Covy, our implementation agent, shipped to client tenants behind a flag in Q3. It runs inside our app on Bedrock in GovCloud, with permissions checked on every tool call, an approval gate for every write, and full audit records. Its roughly 12 tools are entity-shaped (list, view, create, update), which suits implementation. None are the computed “Reason” tools that answer questions like “who can cover this job?”, and there’s no external MCP access yet. A Claude Gov connector is recommended for Q4, and a GE external-agent beta is coming up.</p>
+    <p>Usage tells us where AI should start. Capability Management carries the volume, with about 2,000 users a month on sign-offs and about 680 on Start Renewal. IWA had one user in six months.</p>
+    <p>The main gaps are a draft state and approval inbox inside normal workflows, persona-level data scoping, an event architecture agents can subscribe to, and an eval framework run against a validated customer question set. We’re building with three engineers or fewer, with Scheduling due at the end of November.</p>
+  </div>
+
+  <h3>Vision: one tool layer, two front doors</h3>
+  <figure>
+    <div class="scroll-x">
+    <svg viewBox="0 0 720 360" role="img" aria-label="Architecture. Door 1, Covalent agents, and Door 2, customers' own agents over MCP, both use the same MCP tool surface of Read, Act, Reason and Signals tools. Beneath it sit the harness and the Covalent platform with its capability data and intelligence layer.">
+      <defs><marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="s-head"/></marker></defs>
+      <rect x="20" y="14" width="320" height="94" rx="8" class="s-box"/>
+      <text x="38" y="44" class="s-lbl">Door 1: Covalent agents</text>
+      <text x="38" y="68" class="s-sub">Covy, Ask Covalent, Shift Cover Copilot</text>
+      <text x="38" y="90" class="s-sub">Built where users have no AI seat of their own</text>
+      <rect x="380" y="14" width="320" height="94" rx="8" class="s-box"/>
+      <text x="398" y="44" class="s-lbl">Door 2: Customers’ own agents</text>
+      <text x="398" y="68" class="s-sub">Claude, Copilot and ChatGPT over MCP</text>
+      <text x="398" y="90" class="s-sub">A governed door instead of ungoverned exports</text>
+      <line x1="180" y1="108" x2="180" y2="146" class="s-arrow" marker-end="url(#ah2)"/>
+      <line x1="540" y1="108" x2="540" y2="146" class="s-arrow" marker-end="url(#ah2)"/>
+      <text x="360" y="133" class="s-sub" text-anchor="middle">Same tools, same rules</text>
+      <rect x="20" y="150" width="680" height="76" rx="8" class="s-box-strong"/>
+      <text x="36" y="172" class="s-lbl">MCP tool surface</text>
+      <rect x="36" y="182" width="156" height="32" rx="5" class="s-box"/>
+      <text x="114" y="203" class="s-lbl" text-anchor="middle">Read</text>
+      <rect x="200" y="182" width="156" height="32" rx="5" class="s-box"/>
+      <text x="278" y="203" class="s-lbl" text-anchor="middle">Act</text>
+      <rect x="364" y="182" width="156" height="32" rx="5" class="s-box-acc"/>
+      <text x="442" y="203" class="s-lbl" text-anchor="middle">Reason</text>
+      <rect x="528" y="182" width="156" height="32" rx="5" class="s-box"/>
+      <text x="606" y="203" class="s-lbl" text-anchor="middle">Signals</text>
+      <rect x="20" y="236" width="680" height="52" rx="8" class="s-box"/>
+      <text x="36" y="259" class="s-lbl">Harness</text>
+      <text x="36" y="278" class="s-sub">Build governance, event signals, evals and metering; adopt model access, the agent loop and observability</text>
+      <rect x="20" y="298" width="680" height="52" rx="8" class="s-box"/>
+      <text x="36" y="321" class="s-lbl">Covalent platform</text>
+      <text x="36" y="340" class="s-sub">Capability data and the intelligence layer that supplies the “why” behind Reason tools</text>
+    </svg>
+    </div>
+    <figcaption>Customers are rolling out Claude, Copilot and ChatGPT whether or not we participate. A governed door lets us see that usage, shape it and earn from it. The alternative is ungoverned exports and wrong answers attributed to us.</figcaption>
+  </figure>
+  <p class="prose">We’re also not alone for long. Nobody in frontline workforce software exposes a skills and eligibility graph to agents today: Cornerstone reaches agents through Salesforce’s marketplace, Tulip has an open-source MCP server, and we found nothing from Solumina, Augmentir or UKG. That white space won’t stay open.</p>
+
+  <h3>2027 commercial: what does AI mean for this year’s plan?</h3>
+  <p class="prose">The 2027 growth plan doesn’t depend on AI revenue today. These three questions decide whether it should, and how fast we move.</p>
+  <ol class="truths">
+    <li><div><h4>What are the major hurdles to selling AI to our customers and building it into our sales process?</h4><p>Consider data security and ITAR questions in core A&amp;D accounts, AI budgets coming out of existing tech spend, and how ready our team is to position AI against AG5, Kahuna and build-your-own.</p></div></li>
+    <li><div><h4>How important and how feasible is it for AI to affect our 2027 growth plan?</h4><p>Should AI carry its own ARR target, or should we count on it mainly to win and protect deals and lift expansion?</p></div></li>
+    <li><div><h4>How much validation do we need before any offering moves out of beta?</h4><p>The proposed governed beta is two or three customers, read-only, for 90 days, with close criteria agreed up front. What evidence, such as answer quality against our question set, customer usage and willingness to pay, is enough to move to general availability?</p></div></li>
+  </ol>
+
+  <h3>Components: what are the pieces?</h3>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Component</th><th>What it is</th><th>2027 direction</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Harness</strong> (foundational infrastructure)</td><td>What lets any model safely read and act on Covalent</td><td>Build the thin part, adopt the rest. Adopt model access, the agent loop and observability. Build governance, event signals, evals against a golden question set, and token metering that doubles as a billing ledger.</td></tr>
+        <tr><td><strong>MCP tool surface</strong></td><td>The tools both doors share: Read, Act, Reason and Signals</td><td>Consolidate 57 candidate tools to about 30, with a first set of 15 led by Capability Management. External access starts as a governed beta: off by default, two or three customers, read-only, 90 days, with a kill switch.</td></tr>
+        <tr><td><strong>Platform features</strong></td><td>Where people meet AI work in the product</td><td>Draft states and an approval inbox in normal workflows, persona-level data scoping, and events agents can subscribe to.</td></tr>
+        <tr><td><strong>Agents</strong></td><td>The AI that does the work</td><td>Vertical agents at the point of action, such as Shift Cover Copilot and Training Coordinator, chosen by a rubric. Horizontal agents across modules: Ask Covalent, Data Governance Assurance and Covy.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4 style="margin-top:28px">The agent rubric</h4>
+  <p class="prose">We build a vertical agent only when at least three of six are true:</p>
+  <div class="rubric">
+    <div class="on">Needs Reason tools</div>
+    <div>Users have no AI seat of their own</div>
+    <div>Works at the point of action</div>
+    <div>Touches compliance</div>
+    <div>Runs at high frequency</div>
+    <div>Runs in the background</div>
+  </div>
+  <div class="meter" aria-label="Workforce Planner scores one of six, below the threshold of three"><span style="margin-right:6px">Workforce Planner</span><i class="f"></i><i></i><i></i><span class="gate">threshold</span><i></i><i></i><i></i><span style="margin-left:6px;color:var(--ink-2)">1 of 6</span></div>
+  <p class="prose">Frontline users rarely have their own AI seats, so these agents are the least exposed to customers’ own tools. Workforce Planner scores one of six, so it ships first as Reason tools either door can use. The rubric, not the number of agents, is how we judge progress.</p>
+  <p class="note"><strong>The intelligence layer is covered in Session 4.</strong> AI answer quality is capped by what Covalent knows. Reason tools need our engines to supply the “why,” and higher-value questions need context and inference that don’t exist yet. How we balance and sequence AI and intelligence-layer investment is an open question. (Examples: time-based questions, inferred capability, worker match.)</p>
+
+  <h3>Path: open reads, metered intelligence</h3>
+  <p class="prose">Our proposed commercial principle is open reads, metered intelligence. The recommended model is a pooled credits allowance.</p>
+  <div class="tiers">
+    <div class="tier"><span class="k">Read</span><span class="r">Included, with a cap</span>Open access so customers’ agents come through the governed door.</div>
+    <div class="tier hi"><span class="k">Reason</span><span class="r">Metered, same rate on every surface</span>It doesn’t matter which door a question comes through.</div>
+    <div class="tier"><span class="k">Propose / Act</span><span class="r">Priced tool by tool</span>Writes still pass the approval gate.</div>
+  </div>
+  <ul class="clean prose">
+    <li>Launch terms sized so no customer hits overage in year one, with an annual pooled commitment, no automatic overage, and logging before billing.</li>
+    <li>Later, an outcome-pricing pilot on Shift Cover Copilot, charged per absence covered.</li>
+  </ul>
+  <p class="prose muted">What the market tells us (market check as of September 24, 2026; some rates directional):</p>
+  <div class="grid-2">
+    <div class="item"><h4>Credits are the enterprise norm.</h4><p>Atlassian, Salesforce, Workday and ServiceNow all use credits or metering. Atlassian’s model, with simple MCP reads free and cross-product calls metered, is the closest match to ours.</p></div>
+    <div class="item"><h4>The market is moving toward metering agent calls.</h4><p>Salesforce announced charges for agentic API and MCP calls in September 2026.</p></div>
+    <div class="item"><h4>Outcome pricing has precedent.</h4><p>Fin charges per resolution, a model for our Shift Cover pilot.</p></div>
+    <div class="item"><h4>Locking agents out backfires.</h4><p>SAP drew public pushback for restricting agent access, and JPMorgan called ServiceNow’s metering a tax on outside agents. Both support an open door with free reads.</p></div>
+    <div class="item"><h4>AI usually comes out of existing budgets.</h4><p>About 70% of companies say so, so expect AI to be packaged into tiers rather than sold as a new budget line. We’d also avoid default-on overage with manufacturing buyers.</p></div>
+  </div>
+
+  <div class="callout">
+    <h4>Open questions for the pricing working group</h4>
+    <p>Handed off at the end of the session, not solved in the room.</p>
+    <ul class="clean">
+      <li>What’s our pricing unit: seat, managed worker or site? It determines how much MCP use eats into engagement with our own UI.</li>
+      <li>Do we meter anything in year one, or launch fully bundled?</li>
+      <li>How do we package first-party agents, for example bundled into higher tiers?</li>
+    </ul>
+  </div>
+
+  <h3>Guiding principles: questions for the room</h3>
+  <p class="prose">Each of the four questions below needs an answer by the end of the session. Under each are candidate principles from the AI project work, framed as choices for the room to make.</p>
+  <div class="grid-2">
+    <div class="item"><h4>What are we, and what are we not going to be?</h4><ul class="clean"><li>Should Covalent own the reasoning, so external agents ask us for answers rather than reasoning outside Covalent and pushing commands in?</li><li>Is our value the answers only Covalent can calculate, rather than the raw data underneath them?</li></ul></div>
+    <div class="item"><h4>How do we prioritize?</h4><ul class="clean"><li>Should we build a vertical agent only when it passes the rubric, and judge progress by that rather than by the number of agents?</li><li>Should we start where usage already is, in Capability Management?</li></ul></div>
+    <div class="item"><h4>How do we get to the vision?</h4><ul class="clean"><li>Do we build only the thin, differentiating parts of the harness and adopt the rest?</li><li>Do we open a governed door to customers’ own agents now, rather than wait?</li><li>Should access be open while reasoning is metered: open reads, metered intelligence?</li></ul></div>
+    <div class="item"><h4>How do we protect this vision?</h4><ul class="clean"><li>Should agents prepare and people always certify, and should we make that a public commitment?</li><li>Should every answer show its evidence while our weights and solvers stay private?</li><li>Can we commit contractually to no model training on customer data and zero retention?</li></ul></div>
+  </div>
+  <div class="sowhat" style="margin-top:22px"><b>Come ready with</b>Your answer on AI’s role in the 2027 plan, your answer to each of the four questions, and which candidate principles you’d keep, change or drop.</div>
+
+  <div class="nextbtn"><button type="button" data-target="session-4">Go to Session 4: Platform</button></div>
+</section>
+
+<!-- SESSION 4 -->
+<section class="panel" id="v-session-4" data-view="session-4" role="tabpanel" hidden>
+  <div class="sess-head">
+    <div>
+      <h2>Session 4: Platform decisions</h2>
+      <p class="lead">This is a whiteboard session. We’ll set 2027 goals for each platform category, score and rank the categories, and agree on how we protect the plan once it’s set. We decide at the category level; the initiatives under each category are evidence and reference, not the unit we rank.</p>
+    </div>
+    <div class="output"><span class="mins">60 min</span><span class="k">Output</span>2027 goals by category, a category ranking with rough capacity share, and what we’re not doing.</div>
+  </div>
+
+  <h3>Questions we’ll answer</h3>
+  <ol class="steps prose">
+    <li><strong>Goals:</strong> what are the key goals for each category in 2027?</li>
+    <li><strong>Impact and ranking:</strong> how do the categories rank? We’ll score each on value and urgency, investment size (1 to 5) and rough sequencing, then set a rough share of engineering capacity.</li>
+    <li><strong>Trade-offs:</strong> what are we not doing, and what does that put at risk against our priorities?</li>
+    <li><strong>Principles and process:</strong> how do we de-risk the plan? That includes how we validate new bets and how we prioritize new requests from prospects and customers.</li>
+  </ol>
+  <div class="ros" role="img" aria-label="Run of show: goals by category 15 minutes, impact scoring and ranking 25, trade-offs 10, principles and process 10">
+    <div style="--m:15">Goals by category<span>15 min</span></div>
+    <div class="hi" style="--m:25">Impact scoring and ranking<span>25 min</span></div>
+    <div style="--m:10">Trade-offs<span>10 min</span></div>
+    <div style="--m:10">Principles<span>10 min</span></div>
+  </div>
+
+  <h3>The five categories</h3>
+  <p class="prose">Each initiative carries a type. Commitments and risk items are largely fixed; new bets and continued work are where the trade-offs happen. Each square below is one initiative.</p>
+  <figure>
+    <div class="units">
+      <div class="urow"><div class="nm">AI<span>Session 3 infrastructure and agents</span></div><div class="sq"><i class="nb" title="MCP and harness infrastructure"></i><i class="nb" title="Covalent agents"></i><i class="nb" title="External agent access"></i></div><div class="ct">3</div></div>
+      <div class="urow"><div class="nm">Platform infrastructure<span>Shared foundations</span></div><div class="sq"><i class="c" title="Personas and data scoping (Moog)"></i><i class="r" title="ITAR data tagging"></i><i class="w" title="MyActions and notifications"></i><i class="w" title="UX enhancements"></i><i class="w" title="Data stabilization"></i><i class="nb" title="Capability model and relationships"></i><i class="nb" title="Time-aware infrastructure"></i></div><div class="ct">7</div></div>
+      <div class="urow"><div class="nm">Plan<span>New module</span></div><div class="sq"><i class="nb" title="Plan authoring"></i><i class="nb" title="Resource availability"></i><i class="nb" title="Gap and risk identification"></i><i class="nb" title="Action planning and tracking"></i><i class="nb" title="Buy, build and borrow actions"></i></div><div class="ct">5</div></div>
+      <div class="urow"><div class="nm">Develop<span>Capability Management, our revenue base</span></div><div class="sq"><i class="c" title="Content approval workflows (Westinghouse)"></i><i class="w" title="Scheduling product gaps"></i><i class="w" title="SCORM"></i><i class="w" title="CMS and content version control"></i><i class="nb" title="Occupational pathways"></i></div><div class="ct">5</div></div>
+      <div class="urow"><div class="nm">Deploy<span>IWA</span></div><div class="sq"><i class="w" title="Interface enhancements"></i><i class="w" title="AI model configuration"></i></div><div class="ct">2</div></div>
+    </div>
+    <div class="legend"><span><i class="c"></i>Customer commitment</span><span><i class="r"></i>Risk mitigation</span><span><i class="w"></i>Continued work</span><span><i class="nb"></i>New bet</span></div>
+    <figcaption>Eleven of the 22 initiatives are new bets, and all five Plan initiatives are new bets. Hover a square to see the initiative.</figcaption>
+  </figure>
+
+  <details>
+    <summary>AI<span>The infrastructure and agents covered in Session 3</span></summary>
+    <div class="body tbl"><table>
+      <thead><tr><th>Initiative</th><th>What it is</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr><td><strong>MCP and harness infrastructure</strong></td><td>The tools, permissions and audit trail any agent uses to act on Covalent</td><td><span class="type nb">New bet</span></td></tr>
+        <tr><td><strong>Covalent agents</strong></td><td>Horizontal agents across the platform and vertical agents for each module</td><td><span class="type nb">New bet</span></td></tr>
+        <tr><td><strong>External agent access</strong></td><td>Customers’ own agents connecting securely to our MCP tools</td><td><span class="type nb">New bet</span></td></tr>
+      </tbody>
+    </table></div>
+  </details>
+  <details>
+    <summary>Platform infrastructure<span>The shared foundations every module and agent relies on</span></summary>
+    <div class="body tbl"><table>
+      <thead><tr><th>Initiative</th><th>What it is</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Capability model and relationships</strong></td><td>One model of how workers, jobs, objectives and competencies relate, with the source and confidence of each</td><td><span class="type nb">New bet</span></td></tr>
+        <tr><td><strong>Time-aware infrastructure</strong></td><td>Reading data as of past dates and projecting future changes</td><td><span class="type nb">New bet</span></td></tr>
+        <tr><td><strong>Personas and data scoping</strong></td><td>Access rules set by persona, so supervisors and trainees see only their scope</td><td><span class="type c">Commitment (Moog)</span></td></tr>
+        <tr><td><strong>ITAR data tagging</strong></td><td>Tagging export-controlled data and restricting who can see it</td><td><span class="type r">Risk mitigation</span></td></tr>
+        <tr><td><strong>MyActions and notifications</strong></td><td>One inbox and alert system across every module</td><td><span class="type w">Continued work</span></td></tr>
+        <tr><td><strong>UX enhancements</strong></td><td>Customer-requested improvements across the platform</td><td><span class="type w">Continued work</span></td></tr>
+        <tr><td><strong>Data stabilization</strong></td><td>Ongoing work on data accuracy and stability</td><td><span class="type w">Continued work</span></td></tr>
+      </tbody>
+    </table></div>
+  </details>
+  <details>
+    <summary>Plan<span>Can a zone-shift run next quarter’s production plan?</span></summary>
+    <div class="body">
+      <p class="prose" style="margin-top:4px">A new module that answers whether a zone-shift can run next quarter’s production plan, by comparing future demand with projected supply and recommending how to close the gap. Every initiative here is a new bet, so Plan is the clearest test of the market-plan principle below.</p>
+      <div class="tbl"><table>
+      <thead><tr><th>Initiative</th><th>What it is</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Plan authoring</strong></td><td>Setting a workforce target for a zone-shift, with an owner and dates</td><td><span class="type nb">New bet</span></td></tr>
+        <tr><td><strong>Resource availability</strong></td><td>Projected supply by zone-shift, including moves, leave and retirements</td><td><span class="type nb">New bet</span></td></tr>
+        <tr><td><strong>Gap and risk identification</strong></td><td>Where and when supply falls short of the target</td><td><span class="type nb">New bet</span></td></tr>
+        <tr><td><strong>Action planning and tracking</strong></td><td>Comparing options and tracking each gap to closure</td><td><span class="type nb">New bet</span></td></tr>
+        <tr><td><strong>Buy, build and borrow actions</strong></td><td>Simulating a hire, training or renewing people, or moving someone between zone-shifts</td><td><span class="type nb">New bet</span></td></tr>
+      </tbody>
+      </table></div>
+    </div>
+  </details>
+  <details>
+    <summary>Develop (Capability Management)<span>Our revenue base</span></summary>
+    <div class="body">
+      <p class="prose" style="margin-top:4px">Most 2027 work here finishes what we started in Q4.</p>
+      <div class="tbl"><table>
+      <thead><tr><th>Initiative</th><th>What it is</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Scheduling product gaps</strong></td><td>Conflicts, availability, bulk and recurring sessions, notifications and late alerts</td><td><span class="type w">Continued work</span></td></tr>
+        <tr><td><strong>SCORM</strong></td><td>E-learning results that count toward qualification</td><td><span class="type w">Continued work</span></td></tr>
+        <tr><td><strong>CMS and content version control</strong></td><td>Better content management, with one update published across every objective using it</td><td><span class="type w">Continued work</span></td></tr>
+        <tr><td><strong>Content approval workflows</strong></td><td>A gated accept or reject before an objective publishes</td><td><span class="type c">Commitment (Westinghouse)</span></td></tr>
+        <tr><td><strong>Occupational pathways</strong></td><td>Leveled job roles mapped to our existing entities</td><td><span class="type nb">New bet</span></td></tr>
+      </tbody>
+      </table></div>
+    </div>
+  </details>
+  <details>
+    <summary>Deploy (IWA)<span>Keep or convert</span></summary>
+    <div class="body">
+      <p class="prose" style="margin-top:4px">IWA took a long time to sell, and now we’ve sold it. It had no new investment in Q4, so 2027 is a keep-or-convert decision: keep investing in it as a module, or turn its matching model into a reasoning service that powers Plan and our agents.</p>
+      <div class="tbl"><table>
+      <thead><tr><th>Initiative</th><th>What it is</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Interface enhancements</strong></td><td>Capturing the nuances of new operation types, such as auto assembly and welding</td><td><span class="type w">Continued work</span></td></tr>
+        <tr><td><strong>AI model configuration</strong></td><td>New constraints and priorities in the matching model for new operation types</td><td><span class="type w">Continued work</span></td></tr>
+      </tbody>
+      </table></div>
+    </div>
+  </details>
+
+  <h3>What unlocks what</h3>
+  <figure>
+    <div class="scroll-x">
+    <svg viewBox="0 0 720 250" role="img" aria-label="Dependencies. Time-aware infrastructure lets Plan project future supply. Data stabilization underpins Plan's gap math and clean answers from agents. The intelligence layer lets agents give consistent, reasoned answers.">
+      <defs><marker id="ah3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="s-head"/></marker></defs>
+      <text x="20" y="12" class="s-sub">Foundations</text>
+      <text x="440" y="12" class="s-sub">What they unlock</text>
+      <rect x="20" y="22" width="250" height="48" rx="8" class="s-box"/>
+      <text x="38" y="51" class="s-lbl">Time-aware infrastructure</text>
+      <rect x="20" y="102" width="250" height="48" rx="8" class="s-box"/>
+      <text x="38" y="131" class="s-lbl">Data stabilization</text>
+      <rect x="20" y="182" width="250" height="48" rx="8" class="s-box"/>
+      <text x="38" y="211" class="s-lbl">Intelligence layer</text>
+      <rect x="440" y="48" width="260" height="56" rx="8" class="s-box-strong"/>
+      <text x="458" y="81" class="s-lbl">Plan module</text>
+      <rect x="440" y="150" width="260" height="56" rx="8" class="s-box-strong"/>
+      <text x="458" y="183" class="s-lbl">Covalent agents</text>
+      <path d="M270,46 C350,46 360,66 436,68" class="s-arrow" marker-end="url(#ah3)"/>
+      <path d="M270,120 C350,120 360,88 436,86" class="s-arrow" marker-end="url(#ah3)"/>
+      <path d="M270,132 C350,132 360,168 436,170" class="s-arrow" marker-end="url(#ah3)"/>
+      <path d="M270,206 C350,206 360,190 436,188" class="s-arrow" marker-end="url(#ah3)"/>
+      <text x="350" y="50" class="s-sub s-halo" text-anchor="middle">future supply</text>
+      <text x="350" y="108" class="s-sub s-halo" text-anchor="middle">gap math</text>
+      <text x="350" y="156" class="s-sub s-halo" text-anchor="middle">clean data</text>
+      <text x="350" y="216" class="s-sub s-halo" text-anchor="middle">reasoned answers</text>
+    </svg>
+    </div>
+    <figcaption>Plan can’t project future supply without time-aware infrastructure, and clean data underpins both Plan’s gap math and our agents. The intelligence layer is what lets agents give consistent, reasoned answers to inferred questions across modules. These dependencies will shape sequencing.</figcaption>
+  </figure>
+
+  <div class="callout">
+    <h4>A principle to test in the room</h4>
+    <p>Major new builds require a committed market plan before we start. SCORM should have had a commercialization plan before we built it; if the plan turns out wrong (IWA), that’s fine, but we build against one.</p>
+  </div>
+  <div class="sowhat"><b>Come ready with</b>A solid understanding of the categories, one or two goals you’d set for each category, and a first view of how you’d rank them. It’s as important that we descope and down-select as that we select.</div>
+
+  <div class="nextbtn"><button type="button" data-target="session-5">Go to Session 5: Wrap-up</button></div>
+</section>
+
+<!-- SESSION 5 -->
+<section class="panel" id="v-session-5" data-view="session-5" role="tabpanel" hidden>
+  <div class="sess-head">
+    <div>
+      <h2>Session 5: Wrap-up</h2>
+      <p class="lead">The wrap-up turns the day into the inputs for November planning: a draft set of 2027 strategy pillars, an updated risk grid, a clear record of what we decided and what’s still open, and an owner for every next step.</p>
+    </div>
+    <div class="output"><span class="mins">45 min</span><span class="k">Output</span>Draft pillars, an updated risk grid, a decision log and open questions, and an action list mapped to the November deliverables.</div>
+  </div>
+
+  <h3>Straw-man pillars</h3>
+  <p class="prose">We’ll start from a draft rather than a blank page. Each pillar connects to the path to $10M and to something we’ll execute in 2027.</p>
+  <div class="roof">The path to $10M by the end of 2028</div>
+  <div class="pillars" style="margin-top:0">
+    <div class="pillar"><h4>Win and protect the core ICP</h4><div>Land new core logos and hold footprint and revenue in our largest accounts.</div><div class="know">How we’d know: to refine in the room</div></div>
+    <div class="pillar"><h4>Make growth repeatable</h4><div>A standard path from land through rollout to expansion, with clear owners.</div><div class="know">How we’d know: to refine in the room</div></div>
+    <div class="pillar"><h4>Become the intelligence system</h4><div>AI plus the intelligence layer, so Covalent answers questions no one else can.</div><div class="know">How we’d know: to refine in the room</div></div>
+    <div class="pillar"><h4>Prepare the next engine</h4><div>Vertical research and evidence that open 2028–2030 runway beyond the core.</div><div class="know">How we’d know: to refine in the room</div></div>
+  </div>
+
+  <h3>What each session hands to the wrap-up</h3>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Session</th><th>Output carried into the wrap-up</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Overview</strong></td><td>Shared view of 2026, the path to $10M, the 2027 investment envelope and the 2027 growth plan</td></tr>
+        <tr><td><strong>Risks and improvements</strong></td><td>The ranked risk grid, with owners and a path for each top item, including retention</td></tr>
+        <tr><td><strong>AI alignment</strong></td><td>Three to five AI guiding principles, AI’s targeted impact on 2027, and a pricing working group</td></tr>
+        <tr><td><strong>Platform decisions</strong></td><td>2027 goals by category, the category ranking and rough capacity share, and what we’re not doing</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>How we’ll run it</h3>
+  <div class="ros" role="img" aria-label="Run of show: refine the pillars 15 minutes, revisit the risk grid 10, decisions and open questions 10, actions and owners 10">
+    <div class="hi" style="--m:15">Refine the pillars<span>15 min</span></div>
+    <div style="--m:10">Revisit risks<span>10 min</span></div>
+    <div style="--m:10">Decisions<span>10 min</span></div>
+    <div style="--m:10">Actions<span>10 min</span></div>
+  </div>
+  <ol class="steps prose">
+    <li><strong>Refine the pillars:</strong> edit the straw man into three or four pillars. For each, agree on a name, what it means in a sentence, and how we’d know it’s working.</li>
+    <li><strong>Revisit the risk grid:</strong> check the Session 2 grid against the AI and platform decisions, since those change our engineering and delivery capacity.</li>
+    <li><strong>Decisions and open questions:</strong> confirm what we decided today, and give each open question an owner and a due date.</li>
+    <li><strong>Actions and owners:</strong> consolidate next steps from every session and map them to the November deliverables.</li>
+  </ol>
+
+  <h3>What happens next</h3>
+  <ol class="timeline">
+    <li class="now"><b>The offsite</b>Pillars, decisions, risk grid and owned next steps.</li>
+    <li><b>The week after</b>Functional leaders draft specific goals for review with Andrew, and we hold a separate session on how this group works together in 2027.</li>
+    <li><b>Mid-November</b>Strategy deck for the leadership team, built on the pillars.</li>
+    <li><b>End of November</b>Key initiatives, OKRs, functional goals and org plans, aligned with the budget and forecast.</li>
+    <li><b>Mid-December</b>Board strategy meeting.</li>
+    <li><b>Early January</b>Kickoff with the full company.</li>
+  </ol>
+
+  <div class="nextbtn"><button type="button" data-target="start">Back to Start here</button></div>
+</section>
+
+</div>
+</main>
+
+<script>
+(function(){
+  var views = ['start','session-1','session-2','session-3','session-4','session-5'];
+  var panels = document.querySelectorAll('[data-view]');
+  var tabs = document.querySelectorAll('.daybar [data-target]');
+  function show(v, scroll){
+    if (views.indexOf(v) < 0) v = 'start';
+    panels.forEach(function(p){ p.hidden = p.getAttribute('data-view') !== v; });
+    tabs.forEach(function(b){ b.setAttribute('aria-selected', b.getAttribute('data-target') === v ? 'true' : 'false'); });
+    if (scroll) {
+      var main = document.getElementById('main');
+      var bar = document.querySelector('.daybar');
+      var top = main.getBoundingClientRect().top + window.scrollY - (bar ? bar.offsetHeight : 0);
+      if (window.scrollY > top) window.scrollTo(0, top);
+    }
+  }
+  function fromHash(scroll){ show((location.hash || '').replace('#',''), scroll); }
+  document.querySelectorAll('[data-target]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var t = b.getAttribute('data-target');
+      if (location.hash !== '#' + t) { location.hash = t; } else { show(t, true); }
+    });
+  });
+  window.addEventListener('hashchange', function(){ fromHash(true); });
+  fromHash(false);
+
+  var KEY = 'covalent-offsite-prework-2027', state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { state = {}; }
+  document.querySelectorAll('input[data-check]').forEach(function(c){
+    var k = c.getAttribute('data-check');
+    c.checked = !!state[k];
+    c.addEventListener('change', function(){
+      state[k] = c.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+    });
+  });
+})();
+</script>
+</body>
+</html>
