@@ -867,10 +867,12 @@ a{color:inherit}
     b.addEventListener("click", function(){ stopAuto(); b.parentNode.classList.add("is-done"); });
   });
   function paused(){ box.classList.toggle("is-paused", hover || !inView); }
-  box.addEventListener("mouseenter", function(){ hover = true; paused(); });
-  box.addEventListener("mouseleave", function(){ hover = false; paused(); });
-  box.addEventListener("focusin", function(){ hover = true; paused(); });
-  box.addEventListener("focusout", function(){ hover = false; paused(); });
+  $$(".cov-act .cov-btn", box).forEach(function(btn){
+    btn.addEventListener("mouseenter", function(){ hover = true; paused(); });
+    btn.addEventListener("mouseleave", function(){ hover = false; paused(); });
+    btn.addEventListener("focus", function(){ hover = true; paused(); });
+    btn.addEventListener("blur", function(){ hover = false; paused(); });
+  });
   var started = false;
   chips.forEach(function(c, k){ c.setAttribute("aria-selected", k === 0 ? "true" : "false"); });
   box.classList.add("is-paused");
